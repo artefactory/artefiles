@@ -5,7 +5,9 @@
 
 [user]
     name = # [[ .name ]] #
-{{ if ne .email "" }}    email = # [[ .email ]] #{{ end }}
+# [[ if ne .email "" ]] #
+    email = # [[ .email ]] #
+# [[ end ]] #
 
 [core]
     # Use Neovim as default editor

@@ -16,8 +16,29 @@ end
 
 # Use bat instead of cat if installed
 if type -q bat
+    # Function to determine if we're in VS Code's integrated terminal
+    function is_vscode_terminal
+        test -n "$VSCODE_INJECTION" -o -n "$VSCODE_PID"
+    end
+
+    # Smart bat function that handles VS Code terminal
+    function smart_bat
+        if is_vscode_terminal
+            if test -t 1  # If output is going to a terminal
+                command bat --style=numbers,changes --pager="less -FRX" $argv
+            else
+                command bat --style=plain --color=always --pager=never $argv
+            end
+        else
+            command bat --style=auto $argv
+        end
+    end
+
     # Set bat aliases
-    alias cat="bat --style=plain"
+    alias cat="smart_bat"
+else
+    # Fallback to plain cat if bat is not installed
+    alias cat="command cat"
 end
 
 # Use fd instead of find if installed
