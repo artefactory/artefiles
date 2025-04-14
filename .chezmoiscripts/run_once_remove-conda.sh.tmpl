@@ -9,32 +9,6 @@ set -eu
 
 echo "Checking for Anaconda/Miniconda installations..."
 
-# Function to clean PATH of conda entries
-clean_path() {
-  old_path=$1
-  new_path=""
-  save_ifs=$IFS
-  IFS=":"
-  
-  for p in $old_path; do
-    case "$p" in
-      *"/conda"*|*"/anaconda"*|*"/miniconda"*|*"/miniforge"*|*"/mambaforge"*) 
-        continue
-        ;;
-      *) 
-        if [ -z "$new_path" ]; then
-          new_path=$p
-        else
-          new_path=$new_path:$p
-        fi
-        ;;
-    esac
-  done
-  
-  IFS=$save_ifs
-  echo "$new_path"
-}
-
 # Function to remove conda completely
 remove_conda() {
   conda_path=$1
@@ -43,20 +17,12 @@ remove_conda() {
   echo "Found $conda_name at $conda_path"
   echo "Removing $conda_name..."
 
-  # Clean PATH before doing anything else
-  echo "Cleaning conda from PATH..."
-  PATH=$(clean_path "$PATH")
-  export PATH
-
-  # Run conda's uninstall script if it exists
-  if [ -f "$conda_path/bin/conda" ]; then
-    # Deactivate any conda environments first
-    if [ -n "${CONDA_PREFIX:-}" ]; then
-      echo "Deactivating conda environment..."
-      unset CONDA_PREFIX
-      unset CONDA_DEFAULT_ENV
-      unset CONDA_PYTHON_EXE
-    fi
+  # Deactivate any conda environments first
+  if [ -n "${CONDA_PREFIX:-}" ]; then
+    echo "Deactivating conda environment..."
+    unset CONDA_PREFIX
+    unset CONDA_DEFAULT_ENV
+    unset CONDA_PYTHON_EXE
   fi
 
   # Remove the entire directory
