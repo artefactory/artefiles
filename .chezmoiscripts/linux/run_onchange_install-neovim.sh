@@ -9,13 +9,13 @@ install_from_source() {
   # Download source code
   cd "${tmp_dir}"
 curl -L "https://github.com/neovim/neovim/archive/refs/tags/${version}.tar.gz" -o nvim-source.tar.gz || { echo "Failed to download Neovim source"; exit 1; }
-  tar xzf nvim-source.tar.gz
+tar xzf nvim-source.tar.gz || { echo "Failed to extract Neovim source"; exit 1; }
   cd "neovim-${version#v}"
 
   # Build with CMAKE_BUILD_TYPE=RelWithDebInfo for better compatibility
   echo "Building Neovim from source (this may take a while)..."
-  make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="${HOME}/.local"
-  make install
+make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="${HOME}/.local" || { echo "Failed to build Neovim"; exit 1; }
+make install || { echo "Failed to install Neovim"; exit 1; }
   cd ..
 }
 
