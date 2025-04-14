@@ -22,9 +22,8 @@ template_exists() {
 
 # Function to check if nbdime is already configured in git
 nbdime_configured() {
-  # Check for both diff.jupyternotebook.command and difftool.nbdime.cmd
-  if git config --global --get diff.jupyternotebook.command > /dev/null 2>&1 \
-    || git config --global --get difftool.nbdime.cmd > /dev/null 2>&1; then
+  # Check specifically for the jupyter notebook diff command configuration
+  if git config --global --get diff.jupyternotebook.command > /dev/null 2>&1; then
     return 0 # Already configured
   fi
   return 1 # Not configured
@@ -42,11 +41,13 @@ if ! command_exists uv; then
   fi
 fi
 
-# Install or update Python tools with a single command
+# Install Python tools with simple error handling
 echo "Installing/updating Python development tools..."
-"$UV_CMD" tool install --upgrade --force nbdime
-"$UV_CMD" tool install --upgrade pre-commit
-echo "Python tools installed/updated successfully."
+
+"$UV_CMD" tool install --upgrade --force nbdime || echo "Error: Failed to install nbdime"
+"$UV_CMD" tool install --upgrade --force pre-commit || echo "Error: Failed to install pre-commit"
+
+echo "All Python development tools installed successfully."
 
 # Initialize pre-commit git template directory
 echo "Checking pre-commit git templates..."
@@ -86,8 +87,6 @@ if ! nbdime_configured; then
     echo "Successfully configured nbdime git integration"
   else
     echo "Warning: Failed to configure nbdime git integration"
-    # Try alternative approach if the first attempt failed
-    nbdime config-git --global --enable --skip-git-and-pip-check
   fi
 else
   echo "nbdime git integration already configured, skipping"

@@ -6,7 +6,6 @@ packages:
       - 'neovim'
       - 'git'
       - 'git-lfs'
-      - 'gh'
       - 'bat'
       - 'eza'
       - 'zoxide'

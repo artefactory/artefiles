@@ -16,8 +16,8 @@
     symlinks = true
     # Ensure proper quoting of file names
     quotepath = false
-    # Use bat as pager
-    pager = bat --style=plain
+    # Use simple cat as pager for maximum terminal compatibility
+    pager = cat
     # Store global exclusions
     excludesfile = ~/.gitignore_global
     # Store global attributes
@@ -81,8 +81,8 @@
     ui = auto
 
 [diff]
-    # Use difftastic for all diffs by default
-    external = difft --display=inline
+    # Use difftastic for all diffs by default if available
+    external = "command -v difft >/dev/null 2>&1 && difft --display=inline || git diff"
     tool = difftastic
     # Add VSCode as an alternative diff tool
     guitool = vscode
@@ -101,6 +101,11 @@
     prompt = false
 
 [pager]
+    # Disable paging completely for better terminal compatibility
+    diff = false
+    show = false
+    log = false
+    # Always use a pager for difftool
     difftool = true
 
 [merge]
@@ -194,8 +199,8 @@
     nvimmerge = mergetool --tool=nvim
     # Use fugitive for resolving merge conflicts
     fugmerge = mergetool --tool=fugitive
-    # Show diff using difftastic
-    dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; }; f"
+    # Show diff using difftastic with fallback to standard git log
+    dlog = "!f() { if command -v difft >/dev/null 2>&1; then GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; else git log -p $@; fi; }; f"
 
 [credential]
     # Cache credentials for 1 hour (3600 seconds)
@@ -258,3 +263,16 @@
     smudge = git-lfs smudge -- %f
     process = git-lfs filter-process
     required = true
+
+[diff "jupyternotebook"]
+    command = git-nbdiffdriver diff
+
+[merge "jupyternotebook"]
+    driver = git-nbmergedriver merge %O %A %B %L %P
+    name = jupyter notebook merge driver
+
+[difftool "nbdime"]
+    cmd = git-nbdifftool diff "$LOCAL" "$REMOTE" "$BASE"
+
+[mergetool "nbdime"]
+    cmd = git-nbmergetool merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
