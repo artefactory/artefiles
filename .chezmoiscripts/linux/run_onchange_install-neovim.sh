@@ -30,7 +30,9 @@ if ! command -v nvim > /dev/null 2>&1; then
 
   # Get latest release from GitHub
   echo "Getting latest Neovim release version..."
-  API_RESPONSE=$(curl -s https://api.github.com/repos/neovim/neovim/releases/latest)
+if [[ -n "$API_RESPONSE" ]]; then
+  NVIM_VERSION=$(echo "$API_RESPONSE" | grep -o '"tag_name": "v[^\"]*"' | grep -o 'v[0-9.]*')
+fi
 
   # Check if we hit API rate limit or extract version
   if echo "$API_RESPONSE" | grep -q "API rate limit exceeded"; then
@@ -51,7 +53,7 @@ if ! command -v nvim > /dev/null 2>&1; then
   install_from_source "$NVIM_VERSION" "$TMP_DIR"
 
   # Clean up
-  rm -rf "${TMP_DIR}"
+if [ -d "${TMP_DIR}" ]; then rm -fr "${TMP_DIR}"; fi
   echo "Neovim ${NVIM_VERSION} installation completed"
 else
   echo "neovim is already installed."
