@@ -5,6 +5,7 @@ This guide explains how to test these dotfiles without modifying your actual sys
 ## Prerequisites
 
 - [chezmoi](https://chezmoi.io/) installed on your system
+- [GitHub CLI](https://cli.github.com/) installed and authenticated
 
 ## Testing with a Temporary Directory
 
@@ -16,10 +17,10 @@ Create a file named `tmp-config.yaml` with the following content:
 
 ```yaml
 data:
-  firstName: "Test"
-  lastName: "User"
+  # The name and email will be automatically fetched from GitHub CLI
+  # You can override them here if needed
+  name: "test-user"
   email: "test@example.com"
-  vault: "Personal"
 sourceDir: /path/to/artefiles/repo   # Replace with actual path to this repository
 destDir: /tmp/chezmoi-test           # Temporary destination directory
 ```

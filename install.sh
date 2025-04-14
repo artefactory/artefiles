@@ -33,54 +33,61 @@ install_github_cli() {
   fi
 }
 
-# Try to authenticate with GitHub CLI if we're in an interactive environment
-try_github_auth() {
+# Ensure GitHub CLI authentication, exit if authentication fails
+ensure_github_auth() {
+  # Check if already authenticated
+  if gh auth status >/dev/null 2>&1; then
+    echo "GitHub CLI already authenticated" >&2
+    return 0
+  fi
+
+  echo "GitHub CLI authentication required" >&2
+  
+  # Check if we have a token in environment variables
+  if [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
+    echo "Using token from environment variables" >&2
+    # Verify token works
+    if ! gh auth status >/dev/null 2>&1; then
+      echo "ERROR: Invalid GitHub token provided in environment variables" >&2
+      exit 1
+    fi
+    return 0
+  fi
+  
   # Check if we're in an interactive environment
   if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
-    # Check if already authenticated
-    if ! gh auth status >/dev/null 2>&1; then
-      echo "Attempting GitHub CLI authentication..." >&2
-      
-      # Check if we have a token in environment variables
-      if [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
-        echo "Using token from environment variables" >&2
-        return 0
-      fi
-      
-      # Default required scopes for full functionality
-      SCOPES="repo,read:org,gist"
-      
-      # Attempt browser-based authentication with SSH for git operations
-      # This is preferred as it's more secure and supports 2FA
-      if gh auth login \
-        --git-protocol ssh \
-        --scopes "${SCOPES}" \
-        --web || \
-        # Fallback to HTTPS if SSH fails
-        gh auth login \
-        --git-protocol https \
-        --scopes "${SCOPES}" \
-        --web; then
-        echo "GitHub CLI authentication successful" >&2
-      else
-        echo "GitHub CLI authentication failed. You can run 'gh auth login' manually later." >&2
-        echo "Alternatively, set GH_TOKEN environment variable for automated authentication." >&2
-        return 1
-      fi
-    else
-      echo "GitHub CLI already authenticated" >&2
+    echo "Starting interactive GitHub authentication..." >&2
+    
+    # Default required scopes for full functionality
+    SCOPES="repo,read:org,gist"
+    
+    # Attempt browser-based authentication with SSH for git operations
+    # This is preferred as it's more secure and supports 2FA
+    if gh auth login \
+      --git-protocol ssh \
+      --scopes "${SCOPES}" \
+      --web || \
+      # Fallback to HTTPS if SSH fails
+      gh auth login \
+      --git-protocol https \
+      --scopes "${SCOPES}" \
+      --web; then
+      echo "GitHub CLI authentication successful" >&2
+      return 0
     fi
-  else
-    echo "Non-interactive environment detected, skipping GitHub CLI authentication" >&2
-    echo "For automated environments, set GH_TOKEN environment variable" >&2
   fi
+
+  echo "ERROR: GitHub CLI authentication required." >&2
+  echo "For interactive environments, run this script in a terminal." >&2
+  echo "For non-interactive environments, set GH_TOKEN environment variable." >&2
+  exit 1
 }
 
-# Install GitHub CLI before anything else
+# Install and authenticate GitHub CLI before anything else
 install_github_cli
-# Try to authenticate if in interactive environment
-try_github_auth || true
+ensure_github_auth
 
+# Install chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
   bin_dir="${HOME}/.local/bin"
   chezmoi="${bin_dir}/chezmoi"

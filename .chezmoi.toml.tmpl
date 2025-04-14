@@ -1,17 +1,19 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-{{ $ghuser := output "gh" "api" "user" "--jq" ".login" | trim }}
-{{ $ghemail := output "gh" "api" "user" "--jq" ".email" | trim }}
-
 sourceDir = # [[ .chezmoi.sourceDir | quote ]] #
 
 [data]
-  name = {{ $ghuser | quote }}
-  email = {{ if $ghemail }}{{ $ghemail | quote }}{{ else }}{{ printf "%s@users.noreply.github.com" $ghuser | quote }}{{ end }}
+name = # [[ output "gh" "api" "user" "--jq" ".login" | trim | quote ]] #
+email = # [[ output "gh" "api" "user" "--jq" ".email" | trim | default (printf "%s@users.noreply.github.com" (output "gh" "api" "user" "--jq" ".login" | trim)) | quote ]] #
+
+[merge]
+  command = 'nvim'
+  args = [
+    "-d",
+    "{{ `{{ .Destination }}` }}",
+    "{{ `{{ .Source }}` }}",
+    "{{ `{{ .Target }}` }}",
+  ]
 
 [diff]
   command = "difft"
-  args = ["--display=inline", "{{ .Destination }}", "{{ .Target }}"]
-
-[merge]
-  command = "nvim"
-  args = ["-d", "{{ .Destination }}", "{{ .Source }}", "{{ .Target }}"]
+  args = ["--display", "inline"]
