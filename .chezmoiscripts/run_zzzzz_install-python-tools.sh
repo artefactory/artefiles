@@ -41,13 +41,16 @@ if ! command_exists uv; then
   fi
 fi
 
-# Install Python tools with simple error handling
-echo "Installing/updating Python development tools..."
+# Install/upgrade Python tools with proper error handling
+echo "Installing/upgrading Python development tools..."
 
-"$UV_CMD" tool install --upgrade --force nbdime || echo "Error: Failed to install nbdime"
-"$UV_CMD" tool install --upgrade --force pre-commit || echo "Error: Failed to install pre-commit"
+# Install or upgrade nbdime with force flag to handle existing installations
+"$UV_CMD" tool install --upgrade nbdime || echo "Error: Failed to install/upgrade nbdime"
 
-echo "All Python development tools installed successfully."
+# Install or upgrade pre-commit
+"$UV_CMD" tool install --upgrade pre-commit || echo "Error: Failed to install/upgrade pre-commit"
+
+echo "Python development tools installation complete."
 
 # Initialize pre-commit git template directory
 echo "Checking pre-commit git templates..."
