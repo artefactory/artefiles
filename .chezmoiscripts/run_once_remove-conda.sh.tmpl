@@ -1,8 +1,8 @@
 # [[ /* chezmoi:template:left-delimiter="# [[" right-delimiter="]] #" */ ]]
-#!/bin/bash
+#!/bin/sh
 
-# This script removes Anaconda/Miniconda installations and sets up blocking
-# It works on both macOS and Linux
+# Removes Anaconda/Miniconda installations and blocks future installations with shell functions.
+# Provides alternative tool recommendations (venv, uv) and cleans up related configurations.
 # [[ if ne .chezmoi.os "windows" ]] #
 
 set -eu

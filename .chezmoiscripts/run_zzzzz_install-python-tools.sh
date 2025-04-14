@@ -1,7 +1,8 @@
 #!/bin/sh
-# Script to install Python development tools using uv
-# Installs pre-commit and nbdime on both macOS and Linux
-# This script runs last due to "zzzzz" in the name
+# Installs and configures Python development tools using uv package manager:
+# - nbdime for Jupyter notebook diffing (--force flag handles existing installs)
+# - pre-commit for git hooks with template directory setup
+# Runs last (zzzzz prefix) to ensure dependencies are available
 
 set -eu
 
@@ -44,7 +45,7 @@ fi
 # Install/upgrade Python tools with proper error handling
 echo "Installing/upgrading Python development tools..."
 
-# Install or upgrade nbdime with force flag to handle existing installations
+# Install or upgrade nbdime to handle existing installations
 "$UV_CMD" tool install --upgrade nbdime || echo "Error: Failed to install/upgrade nbdime"
 
 # Install or upgrade pre-commit
