@@ -24,16 +24,5 @@ if ! fish -c "functions -q fisher" > /dev/null 2>&1; then
   fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
 fi
 
-# Check if plugins are already installed before installing them
-echo "Checking Fisher plugins..."
-
-# Check if catppuccin/fish is already installed
-if ! fish -c "fisher list" | grep -q "catppuccin/fish"; then
-  echo "Installing Catppuccin theme for Fish..."
-  fish -c "fisher install catppuccin/fish"
-else
-  echo "Catppuccin theme for Fish already installed, skipping"
-fi
-
 # Update Fisher plugins (non-installed plugins only)
 fish -c "fisher update"
