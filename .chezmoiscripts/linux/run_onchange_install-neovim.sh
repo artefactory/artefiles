@@ -8,7 +8,7 @@ install_from_source() {
   
   # Download source code
   cd "${tmp_dir}"
-  curl -L "https://github.com/neovim/neovim/archive/refs/tags/${version}.tar.gz" -o nvim-source.tar.gz
+curl -L "https://github.com/neovim/neovim/archive/refs/tags/${version}.tar.gz" -o nvim-source.tar.gz || { echo "Failed to download Neovim source"; exit 1; }
   tar xzf nvim-source.tar.gz
   cd "neovim-${version#v}"
 
