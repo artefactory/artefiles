@@ -11,11 +11,11 @@ echo "Checking for Anaconda/Miniconda installations..."
 
 # Function to clean PATH of conda entries
 clean_path() {
-  local old_path="$1"
-  local new_path=""
-  local IFS=":"
+  path_to_clean="$1"
+  new_path=""
+  IFS=":"
   
-  for p in $old_path; do
+  for p in $path_to_clean; do
     case "$p" in
       *"/conda"*|*"/anaconda"*|*"/miniconda"*|*"/miniforge"*|*"/mambaforge"*) ;;  # Skip conda-related paths
       *) 
@@ -33,11 +33,11 @@ clean_path() {
 
 # Function to remove conda completely
 remove_conda() {
-  local conda_path=$1
-  local conda_name=$2
+  target_path="$1"
+  install_name="$2"
 
-  echo "Found $conda_name installation at $conda_path"
-  echo "Removing $conda_name..."
+  echo "Found $install_name at $target_path"
+  echo "Removing $install_name..."
 
   # Clean PATH before doing anything else
   echo "Cleaning conda from PATH..."
@@ -45,7 +45,7 @@ remove_conda() {
   export PATH
 
   # Run conda's uninstall script if it exists
-  if [ -f "$conda_path/bin/conda" ]; then
+  if [ -f "$target_path/bin/conda" ]; then
     # Deactivate any conda environments first
     if [ -n "${CONDA_PREFIX:-}" ]; then
       echo "Deactivating conda environment..."
@@ -56,8 +56,8 @@ remove_conda() {
   fi
 
   # Remove the entire directory
-  echo "Removing $conda_path directory..."
-  rm -rf "$conda_path"
+  echo "Removing $target_path directory..."
+  rm -rf "$target_path"
 
   # Clean up .bashrc, .zshrc, and config.fish
   for rc_file in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
@@ -101,8 +101,7 @@ for path in \
   if [ -d "$path" ]; then
     if [ -f "$path/bin/conda" ] || [ -f "$path/condabin/conda" ]; then
       FOUND_CONDA=true
-      conda_name=$(basename "$path")
-      remove_conda "$path" "$conda_name"
+      remove_conda "$path" "$(basename "$path")"
     fi
   fi
 done
@@ -111,12 +110,10 @@ done
 if command -v conda > /dev/null 2>&1; then
   FOUND_CONDA=true
   CONDA_PATH=$(dirname "$(dirname "$(command -v conda)")")
-  conda_name="conda (in PATH)"
-  echo "Found $conda_name at $CONDA_PATH"
+  echo "Found conda in PATH at $CONDA_PATH"
 
-  # Get user confirmation before removing
-  echo "Removing conda executable from PATH ($CONDA_PATH)..."
-  remove_conda "$CONDA_PATH" "$conda_name"
+  echo "Removing conda executable from PATH..."
+  remove_conda "$CONDA_PATH" "conda"
 fi
 
 # Final message
