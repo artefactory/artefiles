@@ -1,6 +1,24 @@
 #!/bin/bash
 set -eu
 
+install_from_source() {
+  local version=$1
+  local tmp_dir=$2
+  echo "Installing Neovim ${version} from source..."
+  
+  # Download source code
+  cd "${tmp_dir}"
+  curl -L "https://github.com/neovim/neovim/archive/refs/tags/${version}.tar.gz" -o nvim-source.tar.gz
+  tar xzf nvim-source.tar.gz
+  cd "neovim-${version#v}"
+
+  # Build with CMAKE_BUILD_TYPE=RelWithDebInfo for better compatibility
+  echo "Building Neovim from source (this may take a while)..."
+  make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="${HOME}/.local"
+  make install
+  cd ..
+}
+
 # Install neovim on Linux in user space
 if ! command -v nvim > /dev/null 2>&1; then
   echo "Installing neovim..."
@@ -14,15 +32,12 @@ if ! command -v nvim > /dev/null 2>&1; then
   echo "Getting latest Neovim release version..."
   API_RESPONSE=$(curl -s https://api.github.com/repos/neovim/neovim/releases/latest)
 
-  # Check if we hit API rate limit
+  # Check if we hit API rate limit or extract version
   if echo "$API_RESPONSE" | grep -q "API rate limit exceeded"; then
     echo "GitHub API rate limit exceeded, using v0.10.4 as fallback."
     NVIM_VERSION="v0.10.4"
   else
-    # Extract version from API response
     NVIM_VERSION=$(echo "$API_RESPONSE" | grep -o '"tag_name": "v[^"]*"' | grep -o 'v[0-9.]*')
-
-    # Check if version was found
     if [ -z "$NVIM_VERSION" ]; then
       echo "Failed to get latest version from GitHub API, using v0.10.4 as fallback."
       NVIM_VERSION="v0.10.4"
@@ -31,101 +46,13 @@ if ! command -v nvim > /dev/null 2>&1; then
     fi
   fi
 
-  # Detect system architecture
-  ARCH=$(uname -m)
+  # Create temporary directory and build from source
   TMP_DIR=$(mktemp -d)
-
-  echo "Detected architecture: $ARCH"
-
-  # Choose the appropriate download based on architecture
-  if [ "$ARCH" = "x86_64" ]; then
-    # Use tar.gz instead of AppImage to avoid FUSE dependencies
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.tar.gz"
-    ARCHIVE_PATH="${TMP_DIR}/nvim.tar.gz"
-
-    echo "Downloading Neovim tar.gz for x86_64..."
-    curl -L "${NVIM_URL}" -o "$ARCHIVE_PATH"
-
-    echo "Extracting archive..."
-    cd "$TMP_DIR"
-    tar xzf "$ARCHIVE_PATH"
-
-    # Create the expected directory structure
-    mkdir -p squashfs-root/usr/bin
-    mkdir -p squashfs-root/usr/share/nvim
-
-    # Move files to match the expected structure
-    if [ -d "nvim-linux-x86_64" ]; then
-      cp nvim-linux-x86_64/bin/nvim squashfs-root/usr/bin/
-      cp -r nvim-linux-x86_64/share/nvim/runtime squashfs-root/usr/share/nvim/
-    else
-      echo "Unexpected structure in tarball. Using files as is."
-      find . -name "nvim" -type f -executable -exec cp {} squashfs-root/usr/bin/ \;
-      find . -path "*/share/nvim/runtime" -type d -exec cp -r {} squashfs-root/usr/share/nvim/ \;
-    fi
-  elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-    # Use tar.gz for ARM64
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-arm64.tar.gz"
-    ARCHIVE_PATH="${TMP_DIR}/nvim.tar.gz"
-
-    echo "Downloading Neovim tar.gz for ARM64..."
-    curl -L "${NVIM_URL}" -o "$ARCHIVE_PATH"
-
-    echo "Extracting archive..."
-    cd "$TMP_DIR"
-    tar xzf "$ARCHIVE_PATH"
-
-    # Create the expected directory structure
-    mkdir -p squashfs-root/usr/bin
-    mkdir -p squashfs-root/usr/share/nvim
-
-    # Move files to match the expected structure
-    if [ -d "nvim-linux-arm64" ]; then
-      cp nvim-linux-arm64/bin/nvim squashfs-root/usr/bin/
-      cp -r nvim-linux-arm64/share/nvim/runtime squashfs-root/usr/share/nvim/
-    else
-      echo "Unexpected structure in tarball. Using files as is."
-      find . -name "nvim" -type f -executable -exec cp {} squashfs-root/usr/bin/ \;
-      find . -path "*/share/nvim/runtime" -type d -exec cp -r {} squashfs-root/usr/share/nvim/ \;
-    fi
-  else
-    echo "Unsupported architecture: $ARCH. Trying tar.gz for x86_64 as fallback..."
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.tar.gz"
-    ARCHIVE_PATH="${TMP_DIR}/nvim.tar.gz"
-
-    echo "Downloading Neovim tar.gz..."
-    curl -L "${NVIM_URL}" -o "$ARCHIVE_PATH"
-
-    echo "Extracting archive..."
-    cd "$TMP_DIR"
-    tar xzf "$ARCHIVE_PATH"
-
-    # Create the expected directory structure
-    mkdir -p squashfs-root/usr/bin
-    mkdir -p squashfs-root/usr/share/nvim
-
-    # Move files to match the expected structure
-    if [ -d "nvim-linux-x86_64" ]; then
-      cp nvim-linux-x86_64/bin/nvim squashfs-root/usr/bin/
-      cp -r nvim-linux-x86_64/share/nvim/runtime squashfs-root/usr/share/nvim/
-    else
-      echo "Unexpected structure in tarball. Using files as is."
-      find . -name "nvim" -type f -executable -exec cp {} squashfs-root/usr/bin/ \;
-      find . -path "*/share/nvim/runtime" -type d -exec cp -r {} squashfs-root/usr/share/nvim/ \;
-    fi
-  fi
-
-  echo "Installing Neovim..."
-  cp squashfs-root/usr/bin/nvim "${HOME}/.local/bin/"
-
-  if [ -d "squashfs-root/usr/share/nvim/runtime" ]; then
-    cp -r squashfs-root/usr/share/nvim/runtime "${HOME}/.local/share/nvim/"
-  fi
+  install_from_source "$NVIM_VERSION" "$TMP_DIR"
 
   # Clean up
   rm -rf "${TMP_DIR}"
-
-  echo "Neovim ${NVIM_VERSION} installed to ${HOME}/.local/bin/nvim"
+  echo "Neovim ${NVIM_VERSION} installation completed"
 else
   echo "neovim is already installed."
 fi
