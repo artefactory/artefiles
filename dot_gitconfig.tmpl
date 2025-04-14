@@ -4,8 +4,8 @@
 # Platform-specific and best practices Git configuration
 
 [user]
-    name = # [[ .firstName ]] # # [[ .lastName ]] #
-    email = # [[ .email ]] #
+    name = # [[ .name ]] #
+{{ if ne .email "" }}    email = # [[ .email ]] #{{ end }}
 
 [core]
     # Use Neovim as default editor
