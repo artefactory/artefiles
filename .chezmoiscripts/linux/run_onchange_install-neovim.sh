@@ -34,7 +34,7 @@ if [[ -n "$API_RESPONSE" ]]; then
   NVIM_VERSION=$(echo "$API_RESPONSE" | grep -o '"tag_name": "v[^\"]*"' | grep -o 'v[0-9.]*')
 fi
 
-  # Check if we hit API rate limit or extract version
+  # Check if we hit API rate limit or extract version or extract version
   if echo "$API_RESPONSE" | grep -q "API rate limit exceeded"; then
     echo "GitHub API rate limit exceeded, using v0.10.4 as fallback."
     NVIM_VERSION="v0.10.4"
@@ -49,12 +49,14 @@ fi
   fi
 
   # Create temporary directory and build from source
+  # Create temporary directory and build from source
   TMP_DIR=$(mktemp -d)
   install_from_source "$NVIM_VERSION" "$TMP_DIR"
 
   # Clean up
-if [ -d "${TMP_DIR}" ]; then rm -fr "${TMP_DIR}"; fi
-  echo "Neovim ${NVIM_VERSION} installation completed"
+  rm -rf "${TMP_DIR}"
+
+  echo "Neovim ${NVIM_VERSION} installed to ${HOME}/.local/bin/nvim"
 else
   echo "neovim is already installed."
 fi
