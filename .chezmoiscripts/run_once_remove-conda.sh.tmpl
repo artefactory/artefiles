@@ -9,6 +9,28 @@ set -eu
 
 echo "Checking for Anaconda/Miniconda installations..."
 
+# Function to clean PATH of conda entries
+clean_path() {
+  local old_path="$1"
+  local new_path=""
+  local IFS=":"
+  
+  for p in $old_path; do
+    case "$p" in
+      *"/conda"*|*"/anaconda"*|*"/miniconda"*|*"/miniforge"*|*"/mambaforge"*) ;;  # Skip conda-related paths
+      *) 
+        if [ -z "$new_path" ]; then
+          new_path="$p"
+        else
+          new_path="$new_path:$p"
+        fi
+        ;;
+    esac
+  done
+  
+  echo "$new_path"
+}
+
 # Function to remove conda completely
 remove_conda() {
   local conda_path=$1
@@ -17,19 +39,19 @@ remove_conda() {
   echo "Found $conda_name installation at $conda_path"
   echo "Removing $conda_name..."
 
+  # Clean PATH before doing anything else
+  echo "Cleaning conda from PATH..."
+  PATH=$(clean_path "$PATH")
+  export PATH
+
   # Run conda's uninstall script if it exists
   if [ -f "$conda_path/bin/conda" ]; then
     # Deactivate any conda environments first
     if [ -n "${CONDA_PREFIX:-}" ]; then
       echo "Deactivating conda environment..."
-      # This is a safe way to deactivate since we don't have direct access to conda deactivate
       unset CONDA_PREFIX
       unset CONDA_DEFAULT_ENV
       unset CONDA_PYTHON_EXE
-
-      # Reset the PATH to remove conda paths
-      # This is a simplified approach as we can't directly modify PATH in a script that will be sourced
-      PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "conda" | tr '\n' ':' | sed 's/:$//')
     fi
   fi
 
@@ -74,7 +96,8 @@ for path in \
   "$HOME/.local/anaconda3" \
   "$HOME/.local/miniconda3" \
   "$HOME/.local/miniforge3" \
-  "$HOME/.local/mambaforge"; do
+  "$HOME/.local/mambaforge" \
+  "/opt/conda"; do
   if [ -d "$path" ]; then
     if [ -f "$path/bin/conda" ] || [ -f "$path/condabin/conda" ]; then
       FOUND_CONDA=true
