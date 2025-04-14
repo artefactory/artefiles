@@ -47,8 +47,9 @@ ensure_github_auth() {
   if [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
     echo "Using token from environment variables" >&2
     # Verify token works
-    if ! gh auth status >/dev/null 2>&1; then
+    if ! gh auth status 2> err_msg >/dev/null; then
       echo "ERROR: Invalid GitHub token provided in environment variables" >&2
+      echo "ERROR: Details: $err_msg" >&2
       exit 1
     fi
     return 0
@@ -77,7 +78,7 @@ ensure_github_auth() {
     fi
   fi
 
-  echo "ERROR: GitHub CLI authentication required." >&2
+  echo "ERROR: GitHub CLI authentication required to enable full functionality." >&2
   echo "For interactive environments, run this script in a terminal." >&2
   echo "For non-interactive environments, set GH_TOKEN environment variable." >&2
   exit 1
