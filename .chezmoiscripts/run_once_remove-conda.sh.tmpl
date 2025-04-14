@@ -1,5 +1,5 @@
 # [[ /* chezmoi:template:left-delimiter="# [[" right-delimiter="]] #" */ ]]
-#!/bin/sh
+#!/bin/bash
 
 # This script removes Anaconda/Miniconda installations and sets up blocking
 # It works on both macOS and Linux
@@ -111,17 +111,22 @@ echo "Created warning file at $HOME/.local/share/conda_warning.txt"
 # Add aliases to bash and zsh to block conda commands
 for shell_rc in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc"; do
   if [ -f "$shell_rc" ]; then
-    echo "Adding conda blocking aliases to $shell_rc..."
+    echo "Adding conda blocking functions to $shell_rc..."
 
     # Only add if not already present
     if ! grep -q "# Block conda/miniconda/anaconda" "$shell_rc"; then
       cat >> "$shell_rc" << 'EOF'
 
 # Block conda/miniconda/anaconda installation attempts
-alias conda="echo '⛔ Conda is not allowed in this environment.' && echo 'Please use alternative Python environment tools like venv, virtualenv, or uv.' && echo 'See \$HOME/.local/share/conda_warning.txt for more information.'"
-alias miniconda="conda"
-alias anaconda="conda"
-alias mamba="conda"
+conda() {
+    echo "⛔ Conda is not allowed in this environment."
+    echo "Please use alternative Python environment tools like venv, virtualenv, or uv."
+    echo "See $HOME/.local/share/conda_warning.txt for more information."
+    return 1
+}
+miniconda() { conda; }
+anaconda() { conda; }
+mamba() { conda; }
 EOF
     fi
   fi
