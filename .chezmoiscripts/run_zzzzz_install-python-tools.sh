@@ -44,7 +44,7 @@ fi
 
 # Install or update Python tools with a single command
 echo "Installing/updating Python development tools..."
-"$UV_CMD" tool install --upgrade nbdime
+"$UV_CMD" tool install --upgrade --force nbdime
 "$UV_CMD" tool install --upgrade pre-commit
 echo "Python tools installed/updated successfully."
 
