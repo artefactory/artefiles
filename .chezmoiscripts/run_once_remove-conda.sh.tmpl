@@ -1,9 +1,9 @@
-# [[ /* chezmoi:template:left-delimiter="#% [[" right-delimiter=%#"]]" */ ]]
+# [[ /* chezmoi:template:left-delimiter="# [[" right-delimiter="]] #" */ ]]
 #!/bin/sh
 
 # This script removes Anaconda/Miniconda installations and sets up blocking
 # It works on both macOS and Linux
-#% if ne .chezmoi.os "windows" -%#
+# [[ if ne .chezmoi.os "windows" ]] #
 
 set -eu
 
@@ -11,33 +11,37 @@ echo "Checking for Anaconda/Miniconda installations..."
 
 # Function to clean PATH of conda entries
 clean_path() {
-  path_to_clean="$1"
+  old_path=$1
   new_path=""
+  save_ifs=$IFS
   IFS=":"
   
-  for p in $path_to_clean; do
+  for p in $old_path; do
     case "$p" in
-      *"/conda"*|*"/anaconda"*|*"/miniconda"*|*"/miniforge"*|*"/mambaforge"*) ;;  # Skip conda-related paths
+      *"/conda"*|*"/anaconda"*|*"/miniconda"*|*"/miniforge"*|*"/mambaforge"*) 
+        continue
+        ;;
       *) 
         if [ -z "$new_path" ]; then
-          new_path="$p"
+          new_path=$p
         else
-          new_path="$new_path:$p"
+          new_path=$new_path:$p
         fi
         ;;
     esac
   done
   
+  IFS=$save_ifs
   echo "$new_path"
 }
 
 # Function to remove conda completely
 remove_conda() {
-  target_path="$1"
-  install_name="$2"
+  conda_path=$1
+  conda_name=$2
 
-  echo "Found $install_name at $target_path"
-  echo "Removing $install_name..."
+  echo "Found $conda_name at $conda_path"
+  echo "Removing $conda_name..."
 
   # Clean PATH before doing anything else
   echo "Cleaning conda from PATH..."
@@ -45,7 +49,7 @@ remove_conda() {
   export PATH
 
   # Run conda's uninstall script if it exists
-  if [ -f "$target_path/bin/conda" ]; then
+  if [ -f "$conda_path/bin/conda" ]; then
     # Deactivate any conda environments first
     if [ -n "${CONDA_PREFIX:-}" ]; then
       echo "Deactivating conda environment..."
@@ -56,18 +60,15 @@ remove_conda() {
   fi
 
   # Remove the entire directory
-  echo "Removing $target_path directory..."
-  rm -rf "$target_path"
+  echo "Removing $conda_path directory..."
+  rm -rf "$conda_path"
 
   # Clean up .bashrc, .zshrc, and config.fish
   for rc_file in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
     if [ -f "$rc_file" ]; then
       echo "Cleaning up $rc_file..."
-      # Create a temporary file
       tmp_file=$(mktemp)
-      # Filter out conda initialization lines
       grep -v "conda initialize\|conda.sh\|__conda\|Conda\|miniforge\|mambaforge\|anaconda\|miniconda" "$rc_file" > "$tmp_file" || true
-      # Replace the original file
       mv "$tmp_file" "$rc_file"
     fi
   done
@@ -111,7 +112,6 @@ if command -v conda > /dev/null 2>&1; then
   FOUND_CONDA=true
   CONDA_PATH=$(dirname "$(dirname "$(command -v conda)")")
   echo "Found conda in PATH at $CONDA_PATH"
-
   echo "Removing conda executable from PATH..."
   remove_conda "$CONDA_PATH" "conda"
 fi
@@ -161,4 +161,4 @@ EOF
   fi
 done
 
-#% end -%#
+# [[ end ]] #
