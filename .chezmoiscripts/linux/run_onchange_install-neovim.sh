@@ -84,7 +84,7 @@ install_or_update_appimage() {
   
   # Download AppImage with error handling
   echo "Downloading Neovim AppImage from ${download_url}..."
-  curl -L "${download_url}" -o "${appimage_path}" || { echo "Failed to download Neovim AppImage"; exit 1; }
+  curl -L "${download_url}" -o "${appimage_path}" || { echo "Failed to download Neovim AppImage from ${download_url}"; exit 1; }
   chmod u+x "${appimage_path}"
 
   # Handle FUSE vs no-FUSE systems
@@ -93,12 +93,12 @@ install_or_update_appimage() {
     cd "${install_dir}"
     local extract_dir="${install_dir}/nvim-extracted"
     # Clean up old extracted version if it exists
-    rm -rf "${extract_dir}"
+    [ -d "${extract_dir}" ] && rm -rf "${extract_dir}"
     mkdir -p "${extract_dir}"
     
     # Extract AppImage contents to directory (cd first to extract in the right location)
     cd "${extract_dir}"
-    "${appimage_path}" --appimage-extract || { echo "Failed to extract AppImage"; exit 1; }
+    "${appimage_path}" --appimage-extract || { echo "Failed to extract AppImage (check disk space and permissions)"; exit 1; }
     ln -sf "${extract_dir}/squashfs-root/usr/bin/nvim" "${install_dir}/nvim"
     rm -f "${appimage_path}"  # Remove AppImage after successful extraction
   else
@@ -107,7 +107,7 @@ install_or_update_appimage() {
   fi
   
   # Verify installation succeeded
-  "${install_dir}/nvim" --version || { echo "Failed to verify Neovim installation"; exit 1; }
+  "${install_dir}/nvim" --version || { echo "Failed to verify Neovim installation (expected ${NVIM_VERSION})"; exit 1; }
   echo "Neovim ${NVIM_VERSION} installation completed successfully"
 }
 
