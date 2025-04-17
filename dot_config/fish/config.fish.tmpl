@@ -1,6 +1,23 @@
 # Fish shell configuration file
 
 ###########################################
+# HOMEBREW INITIALIZATION - MUST COME FIRST
+###########################################
+
+{{ if eq .chezmoi.os "darwin" -}}
+# Initialize Homebrew first to ensure correct binary paths
+if command -v brew >/dev/null 2>&1
+    # Use brew shellenv to properly set up all Homebrew environment variables
+    eval "$(brew shellenv)"
+end
+{{- end }}
+
+# Add ~/.local/bin to PATH if it exists
+if test -d $HOME/.local/bin
+    fish_add_path $HOME/.local/bin
+end
+
+###########################################
 # ENVIRONMENT VARIABLES
 ###########################################
 
@@ -25,21 +42,7 @@ end
 # PATH CONFIGURATION
 ###########################################
 
-{{ if eq .chezmoi.os "darwin" -}}
-# Configure Homebrew paths based on architecture
-if test -d /opt/homebrew
-    # Apple Silicon (M1/M2) Mac
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-else if test -d /usr/local/Homebrew
-    # Intel Mac
-    eval "$(/usr/local/bin/brew shellenv)"
-end
-{{- end }}
 
-# Add ~/.local/bin to PATH if it exists
-if test -d $HOME/.local/bin
-    fish_add_path $HOME/.local/bin
-end
 
 # Add fzf bin directory to PATH if it exists
 if test -d $HOME/.fzf/bin
@@ -54,17 +57,14 @@ end
 # Google Cloud SDK configuration
 {{ if eq .chezmoi.os "darwin" -}}
 # Check for Google Cloud SDK in Homebrew locations on macOS
-if test -d /opt/homebrew/Caskroom/google-cloud-sdk
-    fish_add_path /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin
+if command -v brew >/dev/null 2>&1
+    set -l brew_prefix (brew --prefix)
+    if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
+        fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
 
-    if test -f /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc
-        source /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc
-    end
-else if test -d /usr/local/Caskroom/google-cloud-sdk
-    fish_add_path /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin
-
-    if test -f /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc
-        source /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc
+        if test -f "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+            source "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+        end
     end
 end
 {{ else -}}

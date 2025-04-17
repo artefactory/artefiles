@@ -1,4 +1,16 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# [[ if eq .chezmoi.os "darwin" -}}
+# Initialize Homebrew if available
+if [ -x "$(command -v brew)" ]; then
+  eval "$(brew shellenv)"
+fi
+# [[ else -}}
+# Add ~/.local/bin to PATH on Linux if it exists
+if [ -d "$HOME/.local/bin" ]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+# [[ end -}}
+
 if [ -x "$(command -v fish)" ]; then
   exec fish
 fi
