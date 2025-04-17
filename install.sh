@@ -4,12 +4,36 @@
 # -u: exit on unset variables
 set -eu
 
+# Set bin directory based on OS
+set_bin_dir() {
+  if [ "$(uname)" = "Darwin" ]; then
+    # Use Homebrew's bin directory on macOS if brew is installed
+    if command -v brew >/dev/null 2>&1; then
+      bin_dir="$(brew --prefix)/bin"
+    else
+      # Fallback to local bin if brew is not installed
+      bin_dir="${HOME}/.local/bin"
+    fi
+  else
+    # Use local bin directory on Linux
+    bin_dir="${HOME}/.local/bin"
+  fi
+  mkdir -p "${bin_dir}"
+  echo "${bin_dir}"
+}
+
 # Install GitHub CLI first if not already installed
 install_github_cli() {
   if ! command -v gh >/dev/null 2>&1; then
     echo "Installing GitHub CLI..." >&2
-    bin_dir="${HOME}/.local/bin"
-    mkdir -p "${bin_dir}"
+    bin_dir="$(set_bin_dir)"
+    
+    # On macOS, prefer Homebrew installation
+    if [ "$(uname)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
+      echo "Installing GitHub CLI via Homebrew..." >&2
+      brew install gh
+      return
+    fi
     
     # Get latest version
     latest_version=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
@@ -22,7 +46,13 @@ install_github_cli() {
       *) echo "Unsupported architecture: ${arch}" >&2; exit 1 ;;
     esac
     
-    download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_linux_${arch_name}.tar.gz"
+    # Set OS-specific download URL
+    os="linux"
+    if [ "$(uname)" = "Darwin" ]; then
+      os="macOS"
+    fi
+    
+    download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_${os}_${arch_name}.tar.gz"
     tmp_dir=$(mktemp -d)
     curl -sL "${download_url}" | tar xz -C "${tmp_dir}"
     cp "${tmp_dir}"/gh_*/bin/gh "${bin_dir}/"
@@ -90,7 +120,7 @@ ensure_github_auth
 
 # Install chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
-  bin_dir="${HOME}/.local/bin"
+  bin_dir="$(set_bin_dir)"
   chezmoi="${bin_dir}/chezmoi"
   echo "Installing chezmoi to '${chezmoi}'" >&2
   if command -v curl > /dev/null; then
