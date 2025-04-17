@@ -19,6 +19,7 @@ packages:
       - 'mactop'
       - 'rust'
       - 'git-extras'
+      - 'ripgrep'
       - 'pixi'
     casks:
       - 'wezterm'
