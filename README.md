@@ -4,6 +4,27 @@ A cross-platform dotfiles template managed with [chezmoi](https://chezmoi.io/). 
 
 ## Quick Start 🚀
 
+### macOS Prerequisites
+
+⚠️ **Important for macOS users:** Before installing these dotfiles, you must first:
+
+1. Install [Homebrew](https://brew.sh/) by running:
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. Install GitHub CLI using Homebrew:
+   ```bash
+   brew install gh
+   ```
+
+3. Authenticate with GitHub:
+   ```bash
+   gh auth login
+   ```
+
+These steps are essential as the dotfiles rely heavily on Homebrew for package management on macOS.
+
 ### One-Line Installation
 
 ```bash
@@ -38,10 +59,16 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 
 ## Prerequisites ✅
 
+### For All Platforms
 - A GitHub account (for git and GitHub-related features)
   - GitHub CLI authentication will be handled automatically during installation
   - For non-interactive environments, set `GH_TOKEN` environment variable before installation
 - SSH keys added to your GitHub account ([instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
+
+### macOS Specific
+- [Homebrew](https://brew.sh/) package manager (see [macOS Prerequisites](#macos-prerequisites) above)
+- GitHub CLI installed via Homebrew
+- Note: Many tools in these dotfiles depend on Homebrew-installed packages on macOS
 
 ## Common Tasks 🛠️
 
