@@ -7,8 +7,13 @@
 ###########################################
 
 # [[ if eq .chezmoi.os "darwin" -]] #
+# Helper function to check if Homebrew is installed
+function is_brew_installed
+    command -v brew >/dev/null 2>&1
+end
+
 # Initialize Homebrew first to ensure correct binary paths
-if command -v brew >/dev/null 2>&1
+if is_brew_installed
     # Use brew shellenv to properly set up all Homebrew environment variables
     eval "$(brew shellenv)"
 end
@@ -59,7 +64,7 @@ end
 # Google Cloud SDK configuration
 # [[ if eq .chezmoi.os "darwin" -]] #
 # Check for Google Cloud SDK in Homebrew locations on macOS
-if command -v brew >/dev/null 2>&1
+if is_brew_installed
     set -l brew_prefix (brew --prefix)
     if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
         fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
@@ -101,16 +106,27 @@ set -gx FZF_DEFAULT_OPTS "--layout=reverse --border"
 # TOOL INITIALIZATION
 ###########################################
 
-# Check if FiraCode Nerd Font is installed and install if needed
 # [[ if eq .chezmoi.os "darwin" -]] #
-# On macOS, use Homebrew to install fonts
-if command -v brew >/dev/null 2>&1
-    # Check if font-fira-code-nerd-font is installed via brew
-    if not brew list --formula | grep -q "font-fira-code-nerd-font"
-        echo "FiraCode Nerd Font not installed. Installing via Homebrew..."
-        brew install font-fira-code-nerd-font
+# On macOS, use Homebrew to install fonts if needed
+function ensure_nerd_font_installed --argument font_name
+    if is_brew_installed
+        # Convert font name to homebrew cask name format
+        set -l font_cask_name "font-"(string lower $font_name)"-nerd-font"
+        
+        # Check if the font is already installed via Homebrew
+        if not brew list --cask $font_cask_name &>/dev/null
+            echo "$font_name Nerd Font not installed. Installing via Homebrew..."
+            brew install --cask $font_cask_name
+        else
+            echo "$font_name Nerd Font is already installed."
+        end
+    else
+        echo "Homebrew is not installed. Cannot install $font_name Nerd Font."
     end
 end
+
+# Install FiraCode Nerd Font if needed
+ensure_nerd_font_installed "fira-code"
 # [[ else -]] #
 # Explicitly source the Nerd Font functions to ensure they are available
 if test -f $HOME/.config/fish/functions/install_nerd_font.fish
