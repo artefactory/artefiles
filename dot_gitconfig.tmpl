@@ -84,7 +84,7 @@
 
 [diff]
     # Use difftastic for all diffs by default if available
-    external = "command -v difft >/dev/null 2>&1 && difft --display=inline || git diff"
+    external = "command -v difft >/dev/null 2>&1 && difft --display=inline \"$@\" || git diff"
     tool = difftastic
     # Add VSCode as an alternative diff tool
     guitool = vscode

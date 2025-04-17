@@ -1,0 +1,6 @@
+[diff]
+    command = "difft"
+    args = ["--display=inline", "--color=always", "{{.Destination}}", "{{.Target}}"]
+
+[merge]
+    command = "vimdiff"
