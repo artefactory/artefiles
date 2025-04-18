@@ -25,10 +25,18 @@ A cross-platform dotfiles template managed with [chezmoi](https://chezmoi.io/). 
 
 These steps are essential as the dotfiles rely heavily on Homebrew for package management on macOS.
 
-### One-Line Installation
+### Installation
+
+#### Using Bash/Zsh/Sh
 
 ```bash
 sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefactory/artefiles
+```
+
+#### Using Fish Shell
+
+```fish
+curl -fsLS get.chezmoi.io | sh -s -- -b ~/.local/bin init --apply artefactory/artefiles
 ```
 
 ### GitHub Codespaces Support
