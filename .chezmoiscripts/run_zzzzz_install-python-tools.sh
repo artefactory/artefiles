@@ -30,12 +30,19 @@ nbdime_configured() {
   return 1 # Not configured
 }
 
+# Ensure local bin directory is in PATH
+LOCAL_BIN_DIR="$HOME/.local/bin"
+mkdir -p "$LOCAL_BIN_DIR"
+# Add to PATH for this script execution
+PATH="$LOCAL_BIN_DIR:$PATH"
+export PATH
+
 # Ensure uv is installed first - check both PATH and ~/.local/bin
 UV_CMD="uv"
 if ! command_exists uv; then
-  if [ -x "$HOME/.local/bin/uv" ]; then
-    UV_CMD="$HOME/.local/bin/uv"
-    echo "Using uv from $HOME/.local/bin"
+  if [ -x "$LOCAL_BIN_DIR/uv" ]; then
+    UV_CMD="$LOCAL_BIN_DIR/uv"
+    echo "Using uv from $LOCAL_BIN_DIR"
   else
     echo "uv is required but not installed. Install uv first."
     exit 1
@@ -74,8 +81,16 @@ done
 # Only run init-templatedir if there are missing templates
 if [ -n "$MISSING_TEMPLATES" ]; then
   echo "Setting up missing git templates..."
+  # Since we added LOCAL_BIN_DIR to PATH earlier, pre-commit should be available
+  # but let's add a fallback just in case
+  PRE_COMMIT_CMD="pre-commit"
+  if ! command_exists pre-commit && [ -x "$LOCAL_BIN_DIR/pre-commit" ]; then
+    PRE_COMMIT_CMD="$LOCAL_BIN_DIR/pre-commit"
+    echo "Using pre-commit from $LOCAL_BIN_DIR"
+  fi
+  
   # Use eval to properly handle the constructed command with multiple -t flags
-  eval "pre-commit init-templatedir $MISSING_TEMPLATES $HOME/.git_template"
+  eval "$PRE_COMMIT_CMD init-templatedir $MISSING_TEMPLATES $HOME/.git_template"
 else
   echo "All git hook templates already exist, skipping installation"
 fi
@@ -83,8 +98,15 @@ fi
 # Set up nbdime git integration only if not already configured
 if ! nbdime_configured; then
   echo "Setting up nbdime git integration..."
+  # Similar fallback for nbdime
+  NBDIME_CMD="nbdime"
+  if ! command_exists nbdime && [ -x "$LOCAL_BIN_DIR/nbdime" ]; then
+    NBDIME_CMD="$LOCAL_BIN_DIR/nbdime"
+    echo "Using nbdime from $LOCAL_BIN_DIR"
+  fi
+  
   # Run nbdime config-git with --global flag first to ensure it affects global gitconfig
-  nbdime config-git --global --enable
+  "$NBDIME_CMD" config-git --global --enable
 
   # Verify configuration was successful
   if nbdime_configured; then
@@ -97,3 +119,8 @@ else
 fi
 
 echo "Python development tools setup complete."
+
+# Note: We intentionally avoid running 'uv tool update-shell' here, as that would modify
+# shell configuration files like config.fish directly, bypassing chezmoi's management.
+# Instead, chezmoi should manage the PATH updates through its own templates.
+k
