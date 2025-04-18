@@ -77,7 +77,7 @@ install_or_update_appimage() {
     local download_url="https://github.com/neovim/neovim-releases/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.appimage"
   else
     echo "Using standard AppImage (glibc >= 2.34)"
-    local download_url="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim.appimage"
+    local download_url="https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage"
   fi
 
   local appimage_path="${install_dir}/nvim.appimage"
