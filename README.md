@@ -36,7 +36,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefac
 #### Using Fish Shell
 
 ```fish
-curl -fsLS get.chezmoi.io | sh -s -- -b ~/.local/bin init --apply artefactory/artefiles
+curl -fsLS get.chezmoi.io | sh -s -- -b ~/.local/bin init --apply artefactory/artefiles # Fish shell requires this pipe syntax
 ```
 
 ### GitHub Codespaces Support
