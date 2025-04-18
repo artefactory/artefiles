@@ -123,4 +123,3 @@ echo "Python development tools setup complete."
 # Note: We intentionally avoid running 'uv tool update-shell' here, as that would modify
 # shell configuration files like config.fish directly, bypassing chezmoi's management.
 # Instead, chezmoi should manage the PATH updates through its own templates.
-k
