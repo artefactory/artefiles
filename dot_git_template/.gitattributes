@@ -1,14 +1,5 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# Global .gitattributes file
-# This is a template managed by chezmoi
-
-# Jupyter notebooks
-*.ipynb diff=jupyternotebook
-*.ipynb merge=jupyternotebook
-
-# The following LFS configuration is commented out by default
-# To use Git LFS in a repository, create a .gitattributes file in the repo
-# and uncomment/copy these patterns, or run 'git lfs track' for specific file types
+# Git attributes for this repository
+# Uncomment the lines you need for Git LFS tracking
 
 # # LFS files
 # *.psd filter=lfs diff=lfs merge=lfs -text
