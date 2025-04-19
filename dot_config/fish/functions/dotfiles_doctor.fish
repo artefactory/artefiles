@@ -1,143 +1,126 @@
-function dotfiles_doctor --description "Check the health of your dotfiles installation and tools"
-  set -l tools_to_check \
-    "chezmoi" "fish" "starship" "wezterm" "direnv" \
-    "nvim" "code" \
-    "bat" "eza" "fd" "fzf" "zoxide" "atuin" \
-    "git" "git-lfs" "gh" "difft" "git-cliff" "git-extras" "pre-commit" \
-    "gcloud" "uv"
+function __check_tool_with_configs --description "Check tool installation and its configs"
+    set -l tool_name $argv[1]
+    set -l config_paths $argv[2]
+    set -l managed_files $argv[3]
+    set -l check_cmd $argv[4]
 
-  # Add platform-specific tools
-  if test (uname) = "Darwin" # macOS
-    set -a tools_to_check "brew"
-  end
+    set -l success_icon "✓"
+    set -l error_icon "✗"
 
-  # Print header
-  printf "%-10s %-30s %s\n" "RESULT" "CHECK" "MESSAGE"
+    # Check if tool is installed
+    if test -z "$check_cmd"
+        set check_cmd "$tool_name --version"
+    end
 
-  # Check for each tool
-  for tool in $tools_to_check
-    set -l cmd_name $tool
-    set -l display_name $tool
+    if command -v $tool_name >/dev/null 2>&1
+        # Get version info
+        set -l ver_info (eval $check_cmd 2>&1 | head -n 1)
+        echo "  $success_icon $tool_name: $ver_info"
+    else
+        echo "  $error_icon $tool_name: not installed"
+    end
 
-    # Special cases for command names that differ from tool names
-    switch $tool
-      case "nvim"
-        set display_name "neovim"
-      case "gh"
-        set display_name "github-cli"
-      case "difft"
-        set display_name "difftastic"
-      case "code"
-        set display_name "vscode"
-      case "eza"
-        # Handle potential exa to eza transition
-        if not command -q eza; and command -q exa
-          set cmd_name "exa"
-          set display_name "exa (eza)"
+    # Check config files
+    if test -n "$config_paths"
+        set -l config_list (string split ":" $config_paths)
+
+        for cfg in $config_list
+            set -l managed_status ""
+            if contains $cfg $managed_files
+                set managed_status "(managed by chezmoi)"
+            end
+
+            set -l file_path "$HOME/$cfg"
+            if test -f $file_path
+                echo "    $success_icon config: $cfg $managed_status"
+            else
+                echo "    $error_icon config: $cfg missing $managed_status"
+            end
+        end
+    end
+end
+
+function dotfiles_doctor --description "Check dotfiles health and tool installations"
+    set -l success_icon "✓"
+    set -l warning_icon "!"
+    set -l error_icon "✗"
+
+    echo "Dotfiles Health Check"
+    echo ""
+    echo "System information:"
+    echo "  $success_icon hostname:       "(hostname)
+    echo "  $success_icon os:             # [[ .chezmoi.os ]] #"
+    echo "  $success_icon arch:           # [[ .chezmoi.arch ]] #"
+    echo -n "  $success_icon chezmoi version: "
+    command -v chezmoi >/dev/null 2>&1 && chezmoi --version 2>/dev/null || echo "not installed"
+    echo ""
+
+    # Get managed files from chezmoi
+    set -l managed_files (chezmoi managed)
+
+    echo "Tools and Configuration:"
+    echo ""
+
+    # Shell Tools
+    echo "## Shell Tools"
+    __check_tool_with_configs "fish" ".config/fish/config.fish:.config/fish/aliases.fish" "$managed_files"
+    __check_tool_with_configs "starship" ".config/starship.toml" "$managed_files"
+    __check_tool_with_configs "wezterm" ".wezterm.lua" "$managed_files"
+
+    echo ""
+    echo "## File Utilities"
+    __check_tool_with_configs "bat" ".config/bat/config" "$managed_files"
+    __check_tool_with_configs "eza" "" "$managed_files"
+    __check_tool_with_configs "fd" "" "$managed_files"
+    __check_tool_with_configs "zoxide" "" "$managed_files"
+    __check_tool_with_configs "fzf" "" "$managed_files"
+
+    echo ""
+    echo "## Git Tools"
+    __check_tool_with_configs "git" ".gitconfig:.git_template/hooks/pre-commit" "$managed_files"
+    __check_tool_with_configs "git-lfs" "" "$managed_files"
+    __check_tool_with_configs "difft" "" "$managed_files"
+    __check_tool_with_configs "gh" "" "$managed_files"
+    # [[ if gt (len (glob ".config/glab-cli")) 0 -]] #
+    __check_tool_with_configs "glab" ".config/glab-cli/config.yml:.config/glab-cli/aliases.yml" "$managed_files"
+    # [[ end ]] #
+
+    echo ""
+    echo "## Development Tools"
+    __check_tool_with_configs "nvim" ".config/nvim/init.lua" "$managed_files"
+    __check_tool_with_configs "direnv" ".config/direnv/direnvrc" "$managed_files"
+    __check_tool_with_configs "atuin" ".config/atuin/config.toml" "$managed_files"
+    __check_tool_with_configs "uv" "" "$managed_files"
+    __check_tool_with_configs "rustc" "" "$managed_files" "rustc --version"
+    __check_tool_with_configs "cargo" "" "$managed_files" "cargo --version"
+
+    echo ""
+    echo "## Cloud Tools"
+    __check_tool_with_configs "gcloud" "" "$managed_files"
+    __check_tool_with_configs "op" "" "$managed_files"
+    # [[ if eq .chezmoi.os "darwin" -]] #
+    __check_tool_with_configs "aerospace" ".config/aerospace/aerospace.toml" "$managed_files"
+    # [[ end ]] #
+
+    echo ""
+    echo "Environment Variables:"
+    # Get current fish theme
+    set -l current_theme "Unknown"
+    if type -q fish_config
+        # Try to get the current theme
+        set -l theme_output (fish_config theme show 2>/dev/null)
+        if test $status -eq 0
+            # Extract theme name from output
+            set current_theme (string match -r 'theme: (.*)' -- "$theme_output" | string replace -r 'theme: (.*)' '$1')
         end
     end
 
-    # Check if tool exists
-    if command -q $cmd_name
-      set -l version ""
+    echo "  $success_icon EDITOR:         $EDITOR"
+    echo "  $success_icon TERM:           $TERM"
 
-      # Try to get version info using different approaches
-      switch $cmd_name
-        case "chezmoi" "fish" "starship" "bat" "fd" "fzf" "zoxide" "atuin" "git" "git-lfs" "gh" "git-cliff" "pre-commit" "gcloud" "brew" "uv"
-          set version (command $cmd_name --version 2>/dev/null | head -n 1)
-        case "nvim"
-          set version (command nvim --version 2>/dev/null | head -n 1)
-        case "wezterm"
-          set version (command wezterm --version 2>/dev/null)
-        case "direnv"
-          set version (command direnv --version 2>/dev/null)
-        case "code"
-          set version (command code --version 2>/dev/null | head -n 1)
-        case "eza" "exa"
-          set version (command $cmd_name --version 2>/dev/null | head -n 1)
-        case "difft"
-          set version (command difft --version 2>/dev/null | head -n 1)
-      end
-
-      # Display result
-      printf "%-10s %-30s %s\n" "ok" $display_name $version
-    else
-      # Tool not found
-      printf "%-10s %-30s %s\n" "warning" $display_name "not found"
+    if command -v chezmoi >/dev/null 2>&1
+        echo ""
+        echo "Chezmoi Status:"
+        chezmoi doctor
     end
-  end
-
-  # Check for fonts
-  set -l fonts_to_check "FiraCode" "SourceCodePro" "Monaspace"
-
-  echo ""
-  echo "Font Check:"
-
-  # Check fonts based on OS
-  if test (uname) = "Darwin" # macOS
-    for font in $fonts_to_check
-      if command -q system_profiler
-        if system_profiler SPFontsDataType 2>/dev/null | grep -i "$font" >/dev/null
-          printf "%-10s %-30s %s\n" "ok" "$font Nerd Font" "installed"
-        else
-          printf "%-10s %-30s %s\n" "info" "$font Nerd Font" "not found"
-        end
-      else
-        printf "%-10s %-30s %s\n" "info" "$font Nerd Font" "cannot check (system_profiler not available)"
-      end
-    end
-  else # Linux
-    if test -d "$HOME/.local/share/fonts" -o -d "/usr/share/fonts"
-      for font in $fonts_to_check
-        if fc-list | grep -i "$font" >/dev/null
-          printf "%-10s %-30s %s\n" "ok" "$font Nerd Font" "installed"
-        else
-          printf "%-10s %-30s %s\n" "info" "$font Nerd Font" "not found"
-        end
-      end
-    else
-      printf "%-10s %-30s %s\n" "info" "Fonts" "cannot check font directories"
-    end
-  end
-
-  # Additional environment checks
-  echo ""
-  echo "Environment Check:"
-
-  # Check if running in WezTerm
-  if set -q WEZTERM_EXECUTABLE
-    printf "%-10s %-30s %s\n" "ok" "WezTerm" "running in WezTerm"
-  else
-    printf "%-10s %-30s %s\n" "info" "WezTerm" "not running in WezTerm"
-  end
-
-  # Check if Git is properly configured
-  if command -q git
-    set -l git_user (git config --global user.name)
-    set -l git_email (git config --global user.email)
-
-    if test -n "$git_user" -a -n "$git_email"
-      printf "%-10s %-30s %s\n" "ok" "Git Config" "user.name and user.email are set"
-    else
-      printf "%-10s %-30s %s\n" "warning" "Git Config" "user.name or user.email not set"
-    end
-  end
-
-  # Check if GitHub CLI is authenticated
-  if command -q gh
-    if gh auth status 2>/dev/null >/dev/null
-      printf "%-10s %-30s %s\n" "ok" "GitHub Authentication" "authenticated"
-    else
-      printf "%-10s %-30s %s\n" "info" "GitHub Authentication" "not authenticated (run 'gh auth login')"
-    end
-  end
-
-  # Check if Atuin is syncing
-  if command -q atuin
-    if atuin status 2>/dev/null | grep -i "Sync:" | grep -i "enabled" >/dev/null
-      printf "%-10s %-30s %s\n" "ok" "Atuin Sync" "enabled"
-    else
-      printf "%-10s %-30s %s\n" "info" "Atuin Sync" "not enabled (run 'atuin login')"
-    end
-  end
 end
