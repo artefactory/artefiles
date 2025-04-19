@@ -3,19 +3,10 @@
 function is_nerd_font_installed --description "Check if a Nerd Font is installed" --argument font_name
     set -l found 1 # Default to not found (return false)
 
-    # [[ if eq .chezmoi.os "darwin" ]] #
-    # Fast check on macOS - check for common font filename patterns
-    if test -e "$HOME/Library/Fonts/$font_name"NerdFont-Regular.ttf -o \
-            -e "$HOME/Library/Fonts/$font_name Nerd Font Complete.ttf" -o \
-            -e "$HOME/Library/Fonts/$font_name Regular Nerd Font Complete.ttf"
-        set found 0 # Font found
-    end
-    # [[ else ]] #
     # Fast check on Linux - quick check in font directory
     if test -d "$HOME/.local/share/fonts" && ls "$HOME/.local/share/fonts/" 2>/dev/null | grep -q "$font_name.*Nerd"
         set found 0 # Font found
     end
-    # [[ end ]] #
 
     return $found
 end
@@ -72,15 +63,9 @@ function install_nerd_font --description "Install a Nerd Font" --argument font_n
         return $status
     end
 
-    # Set font directory based on OS using chezmoi templating
-    # [[ if eq .chezmoi.os "darwin" ]] #
-    # macOS fonts directory
-    set FONTS_DIR "$HOME/Library/Fonts"
-    # [[ else ]] #
-    # Linux fonts directory
+    # Set fonts directory for Linux
     set FONTS_DIR "$HOME/.local/share/fonts"
     mkdir -p "$FONTS_DIR"
-    # [[ end ]] #
 
     log_task "Installing $font_name Nerd Font"
 
@@ -137,13 +122,11 @@ function install_nerd_font --description "Install a Nerd Font" --argument font_n
     rm -rf "$DOWNLOAD_DIR"
 
     # Update font cache on Linux
-    # [[ if ne .chezmoi.os "darwin" ]] #
     if type -q fc-cache
         log_subtask "Updating font cache..."
         fc-cache -f
         log_success "Font cache updated"
     end
-    # [[ end ]] #
 
     log_success "$font_name Nerd Font installed"
     echo "You can update your WezTerm configuration to use $font_name Nerd Font"
