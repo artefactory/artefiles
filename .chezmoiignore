@@ -19,6 +19,7 @@ scripts/install-wezterm-remote.sh
 {{ if eq .chezmoi.os "darwin" }}
 # Exclude Linux-specific files on macOS
 .chezmoiscripts/linux/**
+dot_config/fish/functions/install_nerd_font.fish
 {{ else if eq .chezmoi.os "linux" }}
 # Exclude macOS-specific files on Linux
 .chezmoiscripts/darwin/**
