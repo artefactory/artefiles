@@ -8,7 +8,7 @@ set -eu
 set_bin_dir() {
   if [ "$(uname)" = "Darwin" ]; then
     # Use Homebrew's bin directory on macOS if brew is installed
-    if command -v brew >/dev/null 2>&1; then
+    if command -v brew > /dev/null 2>&1; then
       bin_dir="$(brew --prefix)/bin"
     else
       # Fallback to local bin if brew is not installed
@@ -24,34 +24,37 @@ set_bin_dir() {
 
 # Install GitHub CLI first if not already installed
 install_github_cli() {
-  if ! command -v gh >/dev/null 2>&1; then
+  if ! command -v gh > /dev/null 2>&1; then
     echo "Installing GitHub CLI..." >&2
     bin_dir="$(set_bin_dir)"
-    
+
     # On macOS, prefer Homebrew installation
-    if [ "$(uname)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
+    if [ "$(uname)" = "Darwin" ] && command -v brew > /dev/null 2>&1; then
       echo "Installing GitHub CLI via Homebrew..." >&2
       brew install gh
       return
     fi
-    
+
     # Get latest version
     latest_version=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    
+
     # Download and install for current architecture
     arch=$(uname -m)
     case "${arch}" in
       x86_64) arch_name="amd64" ;;
-      aarch64|arm64) arch_name="arm64" ;;
-      *) echo "Unsupported architecture: ${arch}" >&2; exit 1 ;;
+      aarch64 | arm64) arch_name="arm64" ;;
+      *)
+        echo "Unsupported architecture: ${arch}" >&2
+        exit 1
+        ;;
     esac
-    
+
     # Set OS-specific download URL
     os="linux"
     if [ "$(uname)" = "Darwin" ]; then
       os="macOS"
     fi
-    
+
     download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_${os}_${arch_name}.tar.gz"
     tmp_dir=$(mktemp -d)
     curl -sL "${download_url}" | tar xz -C "${tmp_dir}"
@@ -66,43 +69,46 @@ install_github_cli() {
 # Ensure GitHub CLI authentication, exit if authentication fails
 ensure_github_auth() {
   # Check if already authenticated
-  if gh auth status >/dev/null 2>&1; then
+  if gh auth status > /dev/null 2>&1; then
     echo "GitHub CLI already authenticated" >&2
     return 0
   fi
 
   echo "GitHub CLI authentication required" >&2
-  
+
   # Check if we have a token in environment variables
   if [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
     echo "Using token from environment variables" >&2
     # Verify token works
-    if ! gh auth status 2> err_msg >/dev/null; then
+    if ! gh auth status 2> /tmp/gh_auth_error > /dev/null; then
+      err_msg=$(cat /tmp/gh_auth_error)
       echo "ERROR: Invalid GitHub token provided in environment variables" >&2
       echo "ERROR: Details: $err_msg" >&2
+      rm -f /tmp/gh_auth_error
       exit 1
     fi
     return 0
   fi
-  
+
   # Check if we're in an interactive environment
   if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
     echo "Starting interactive GitHub authentication..." >&2
-    
+
     # Default required scopes for full functionality
     SCOPES="repo,read:org,gist"
-    
+
     # Attempt browser-based authentication with SSH for git operations
     # This is preferred as it's more secure and supports 2FA
     if gh auth login \
       --git-protocol ssh \
       --scopes "${SCOPES}" \
-      --web || \
+      --web \
+      ||
       # Fallback to HTTPS if SSH fails
       gh auth login \
-      --git-protocol https \
-      --scopes "${SCOPES}" \
-      --web; then
+        --git-protocol https \
+        --scopes "${SCOPES}" \
+        --web; then
       echo "GitHub CLI authentication successful" >&2
       return 0
     fi

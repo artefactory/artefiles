@@ -142,7 +142,7 @@ This cheatsheet provides quick reference for common commands and workflows. For 
 | Feature | Description | Example |
 |---------|-------------|---------|
 | Basic execution | Run command on remote server | `remote_exec server "ls -la"` |
-| Tab completion | Complete from SSH config | `remote_exec ser<TAB>` |
+| Tab completion | Complete from SSH config | `remote_exec set<TAB>` |
 | Host aliases | Use SSH config aliases | `remote_exec dev` |
 | Command completion | Complete from remote PATH | `remote_exec server pyth<TAB>` |
 | Terminal handling | Proper TTY allocation | `remote_exec server "htop"` |

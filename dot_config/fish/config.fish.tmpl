@@ -112,7 +112,7 @@ function ensure_nerd_font_installed --argument font_name
     if is_brew_installed
         # Convert font name to homebrew cask name format
         set -l font_cask_name "font-"(string lower $font_name)"-nerd-font"
-        
+
         # Check if the font is already installed via Homebrew
         if not brew list --cask $font_cask_name &>/dev/null
             echo "$font_name Nerd Font not installed. Installing via Homebrew..."

@@ -24,11 +24,13 @@ get_latest_version() {
   local is_legacy=$1
   local repo="neovim/neovim"
   [ "$is_legacy" = "true" ] && repo="neovim/neovim-releases"
-  
-  local API_RESPONSE=$(curl -s "https://api.github.com/repos/${repo}/releases/latest")
-  local VERSION=$(echo "$API_RESPONSE" | grep -o '"tag_name": "v[^"]*"' | grep -o 'v[0-9.]*')
+
+  local API_RESPONSE
+  API_RESPONSE=$(curl -s "https://api.github.com/repos/${repo}/releases/latest")
+  local VERSION
+  VERSION=$(echo "$API_RESPONSE" | grep -o '"tag_name": "v[^"]*"' | grep -o 'v[0-9.]*')
   if [ -z "$VERSION" ]; then
-    VERSION="v0.11.0"  # Fallback to known stable version
+    VERSION="v0.11.0" # Fallback to known stable version
   fi
   echo "$VERSION"
 }
@@ -45,9 +47,10 @@ get_current_version() {
 # - GitHub API fallback with stable version
 install_or_update_appimage() {
   local install_dir="${HOME}/.local/bin"
-  
+
   # Extract glibc version using ldd
-  local glibc_version=$(ldd --version | head -n1 | grep -o '[0-9.]*$')
+  local glibc_version
+  glibc_version=$(ldd --version | head -n1 | grep -o '[0-9.]*$')
   echo "Detected glibc version: ${glibc_version}"
 
   # Compare glibc versions using sort -V for proper version comparison
@@ -57,11 +60,13 @@ install_or_update_appimage() {
   fi
 
   # Get latest version
-  local NVIM_VERSION=$(get_latest_version "$is_legacy")
-  
+  local NVIM_VERSION
+  NVIM_VERSION=$(get_latest_version "$is_legacy")
+
   # For updates, check if we already have the latest version
   if command -v nvim > /dev/null 2>&1; then
-    local CURRENT_VERSION=$(get_current_version)
+    local CURRENT_VERSION
+    CURRENT_VERSION=$(get_current_version)
     if [ "$CURRENT_VERSION" = "$NVIM_VERSION" ]; then
       echo "Neovim is already at the latest version ($NVIM_VERSION)"
       return 0
@@ -72,19 +77,23 @@ install_or_update_appimage() {
   fi
 
   # Set download URL based on system compatibility
+  local download_url
   if [ "$is_legacy" = "true" ]; then
     echo "Using unsupported binary (glibc < 2.34)"
-    local download_url="https://github.com/neovim/neovim-releases/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.appimage"
+    download_url="https://github.com/neovim/neovim-releases/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.appimage"
   else
     echo "Using standard AppImage (glibc >= 2.34)"
-    local download_url="https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage"
+    download_url="https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage"
   fi
 
   local appimage_path="${install_dir}/nvim.appimage"
-  
+
   # Download AppImage with error handling
   echo "Downloading Neovim AppImage from ${download_url}..."
-  curl -L "${download_url}" -o "${appimage_path}" || { echo "Failed to download Neovim AppImage from ${download_url}"; exit 1; }
+  curl -L "${download_url}" -o "${appimage_path}" || {
+    echo "Failed to download Neovim AppImage from ${download_url}"
+    exit 1
+  }
   chmod u+x "${appimage_path}"
 
   # Handle FUSE vs no-FUSE systems
@@ -95,25 +104,31 @@ install_or_update_appimage() {
     # Clean up old extracted version if it exists
     [ -d "${extract_dir}" ] && rm -rf "${extract_dir}"
     mkdir -p "${extract_dir}"
-    
+
     # Extract AppImage contents to directory (cd first to extract in the right location)
     cd "${extract_dir}"
-    "${appimage_path}" --appimage-extract || { echo "Failed to extract AppImage (check disk space and permissions)"; exit 1; }
+    "${appimage_path}" --appimage-extract || {
+      echo "Failed to extract AppImage (check disk space and permissions)"
+      exit 1
+    }
     ln -sf "${extract_dir}/squashfs-root/usr/bin/nvim" "${install_dir}/nvim"
-    rm -f "${appimage_path}"  # Remove AppImage after successful extraction
+    rm -f "${appimage_path}" # Remove AppImage after successful extraction
   else
     echo "FUSE is available, using AppImage directly"
     ln -sf "${appimage_path}" "${install_dir}/nvim"
   fi
-  
+
   # Verify installation succeeded
-  "${install_dir}/nvim" --version || { echo "Failed to verify Neovim installation (expected ${NVIM_VERSION})"; exit 1; }
+  "${install_dir}/nvim" --version || {
+    echo "Failed to verify Neovim installation (expected ${NVIM_VERSION})"
+    exit 1
+  }
   echo "Neovim ${NVIM_VERSION} installation completed successfully"
 }
 
 # Create required directories if they don't exist
-mkdir -p "${HOME}/.local/bin"      # For the binary
-mkdir -p "${HOME}/.local/share/nvim"  # For plugins and data
+mkdir -p "${HOME}/.local/bin"        # For the binary
+mkdir -p "${HOME}/.local/share/nvim" # For plugins and data
 mkdir -p "${HOME}/.config/nvim"      # For configuration
 
 # Install or update Neovim

@@ -88,7 +88,7 @@ if [ -n "$MISSING_TEMPLATES" ]; then
     PRE_COMMIT_CMD="$LOCAL_BIN_DIR/pre-commit"
     echo "Using pre-commit from $LOCAL_BIN_DIR"
   fi
-  
+
   # Use eval to properly handle the constructed command with multiple -t flags
   eval "$PRE_COMMIT_CMD init-templatedir $MISSING_TEMPLATES $HOME/.git_template"
 else
@@ -104,7 +104,7 @@ if ! nbdime_configured; then
     NBDIME_CMD="$LOCAL_BIN_DIR/nbdime"
     echo "Using nbdime from $LOCAL_BIN_DIR"
   fi
-  
+
   # Run nbdime config-git with --global flag first to ensure it affects global gitconfig
   "$NBDIME_CMD" config-git --global --enable
 
