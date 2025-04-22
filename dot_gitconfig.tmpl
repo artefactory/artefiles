@@ -110,11 +110,17 @@
     # Always use a pager for difftool
     difftool = true
 
+# Check Git version and use the appropriate conflict style
+# Get Git version and set the appropriate conflict style
+# zdiff3 was introduced in Git 2.35.0
+# [[ $gitVersionCheck := "v=$(git --version | awk '{print $3}' | cut -d. -f1,2); if [ \"$(printf '%s\n' \"2.35\" \"$v\" | sort -V | head -n1)\" = \"2.35\" ]; then echo \"zdiff3\"; else echo \"diff3\"; fi" ]] #
+# [[ $conflictStyle := output $gitVersionCheck ]] #
+
 [merge]
     # Include summaries of merged commits in new merge commits
     log = true
-    # Use zdiff3 for more detailed conflict resolution
-    conflictstyle = zdiff3
+    # Use appropriate conflict style based on Git version
+    conflictstyle = # [[ $conflictStyle ]] #
     # Always use rebase for merging
     ff = only
     # Use fugitive as the default merge tool
