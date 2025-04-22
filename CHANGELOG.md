@@ -79,6 +79,8 @@ All notable changes to this project will be documented in this file.
 
 - Remove pyright and TypeScript language servers and fix lazy package manager errors ([c240d9c](c240d9c67577f190a2293a28c7b1d1a015338b4d))
 
+- Add Git version check for conflict style compatibility ([b22611f](b22611fe8878ab1f335dd86d4bf5b73b258fb7e6))
+
 
 ### Chores
 
