@@ -106,6 +106,8 @@ All notable changes to this project will be documented in this file.
 
 - Remove unused test-variables script ([02f240b](02f240b7620848fa46267e1b983f5ffd10ddd005))
 
+- Update fisher script and add rsync plugin ([2731d31](2731d3137b3d653ead93c006fc03c74b2d1ad2dd))
+
 
 ### Features
 
@@ -220,6 +222,8 @@ All notable changes to this project will be documented in this file.
 - Add 1Password CLI installation script for Linux ([b61aae0](b61aae09e39e80f9242c0d825b35da58ec4db301))
 
 - Add 1Password CLI integration to fish shell ([fb25cc9](fb25cc9cfd0ebdd67c17f4d8a4466e5e255d1bf7))
+
+- Add Catppuccin Mocha as default fish theme ([1eed3d0](1eed3d09c042571bf48957d5e14c18ff0ad9b97b))
 
 
 ### Fix
