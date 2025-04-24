@@ -1,59 +1,48 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
 
-# Fish shell configuration file
+# [[ if eq .chezmoi.os "darwin" -]] #
+# Fish shell configuration for macOS development environment
+# [[ else -]] #
+# Fish shell configuration for Linux development environment
+# [[ end -]] #
 
 ###########################################
-# HOMEBREW INITIALIZATION - MUST COME FIRST
+# PATH CONFIGURATION - ORDER MATTERS
 ###########################################
 
 # [[ if eq .chezmoi.os "darwin" -]] #
-# Initialize Homebrew first to ensure correct binary paths (macOS always has brew)
-eval "$(brew shellenv)"
+# Ensure Homebrew is in PATH before anything else
+# Handle both Apple Silicon (/opt/homebrew) and Intel (/usr/local) Mac architectures
+if test -d "/opt/homebrew/bin"
+    fish_add_path --prepend "/opt/homebrew/bin"
+    fish_add_path --prepend "/opt/homebrew/sbin"
+else if test -d "/usr/local/bin"
+    fish_add_path --prepend "/usr/local/bin"
+    fish_add_path --prepend "/usr/local/sbin"
+end
+
+# Set all Homebrew environment variables (PATH, MANPATH, INFOPATH)
+if type -q brew
+    eval "$(brew shellenv)"
+end
 # [[ end ]] #
 
-# Add ~/.local/bin to PATH if it exists
+# User-specific executables
 if test -d $HOME/.local/bin
     fish_add_path $HOME/.local/bin
 end
 
-###########################################
-# ENVIRONMENT VARIABLES
-###########################################
-
-# Basic environment variables
-set -gx EDITOR nvim
-set -gx VISUAL nvim
-# Use a widely supported terminal type
-set -gx TERM xterm-256color
-
-# WezTerm specific settings
-if test "$TERM_PROGRAM" = WezTerm
-    # Enable true color support and italics
-    set -gx COLORTERM truecolor
-end
-
-# Set Git external diff tool if available
-if type -q difft
-    set -gx GIT_EXTERNAL_DIFF difft
-end
-
-###########################################
-# PATH CONFIGURATION
-###########################################
-
-# Add fzf bin directory to PATH if it exists
+# Add language-specific and tool paths
 if test -d $HOME/.fzf/bin
     fish_add_path $HOME/.fzf/bin
 end
 
-# Add Rust/Cargo to PATH if it exists
 if test -d $HOME/.cargo/bin
     fish_add_path $HOME/.cargo/bin
 end
 
 # Google Cloud SDK configuration
 # [[ if eq .chezmoi.os "darwin" -]] #
-# Check for Google Cloud SDK in Homebrew locations on macOS
 set -l brew_prefix (brew --prefix)
 if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
     fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
@@ -63,116 +52,122 @@ if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
     end
 end
 # [[ else -]] #
-# Linux Google Cloud SDK installation
+# Linux-specific Google Cloud SDK path
 if test -d $HOME/.local/google-cloud-sdk
-    # Directly add the bin directory to PATH
     fish_add_path $HOME/.local/google-cloud-sdk/bin
-
-    # Set up Python for Google Cloud SDK
     set -gx CLOUDSDK_PYTHON /usr/bin/python3
 
-    # Source the completion file if it exists
     if test -f $HOME/.local/google-cloud-sdk/path.fish.inc
         source $HOME/.local/google-cloud-sdk/path.fish.inc
     end
 end
 # [[ end -]] #
 
-# Add atuin (shell history) bin directory to PATH if it exists
+# Atuin shell history tool
 if test -d $HOME/.atuin/bin
     fish_add_path $HOME/.atuin/bin
 end
 
 ###########################################
-# FZF CONFIGURATION
+# ENVIRONMENT VARIABLES
 ###########################################
 
-# Setup fzf to use terminal colors with sensible defaults
+# Text editors
+set -gx EDITOR nvim
+set -gx VISUAL nvim
+
+# Terminal capabilities
+set -gx TERM xterm-256color
+
+# WezTerm-specific settings for better color support
+if test "$TERM_PROGRAM" = WezTerm
+    set -gx COLORTERM truecolor
+end
+
+# Use difftastic for git diffs if available
+if type -q difft
+    set -gx GIT_EXTERNAL_DIFF difft
+end
+
+###########################################
+# TOOL CONFIGURATION
+###########################################
+
+# FZF fuzzy finder
 set -gx FZF_DEFAULT_OPTS "--layout=reverse --border"
 
-###########################################
-# TOOL INITIALIZATION
-###########################################
-
-# Initialize starship prompt if installed
+# Starship prompt - https://starship.rs
 if type -q starship
     starship init fish | source
 end
 
-# Initialize zoxide (smarter cd) if installed
+# Zoxide smarter cd - https://github.com/ajeetdsouza/zoxide
 if type -q zoxide
     zoxide init fish --cmd cd | source
 end
 
-# Initialize direnv if installed
+# Direnv for directory-specific environments - https://direnv.net
 if type -q direnv
     direnv hook fish | source
 end
 
-# Initialize chezmoi completions if installed
+# Chezmoi dotfile manager - https://chezmoi.io
 if type -q chezmoi
     chezmoi completion fish | source
 end
 
-# Initialize fzf if installed
+# FZF configuration with custom key bindings
+# Avoiding conflict with atuin on Ctrl+R
 if type -q fzf
-    # Set up fzf key bindings but tell it not to bind Ctrl-r since atuin will use it
     set -x FZF_DISABLE_KEYBINDINGS 1
     fzf --fish | source
 
-    # Manually bind fzf keys except for Ctrl-r
-    bind \ct __fzf_search_current_dir
-    bind \ec __fzf_search_history
-    bind \eC '__fzf_cd --hidden'
+    # Custom key bindings for FZF
+    bind \ct __fzf_search_current_dir      # Ctrl+T: search files
+    bind \ec __fzf_search_history          # Alt+C: search history
+    bind \eC '__fzf_cd --hidden'           # Alt+Shift+C: cd with hidden files
 end
 
-# Initialize atuin (shell history) if installed - after fzf to override any bindings
+# Atuin shell history with search - https://atuin.sh
 if type -q atuin
+    # Enable shell completions
+    atuin gen-completions --shell fish
+
     set -gx ATUIN_NOBIND true
     atuin init fish | source
 
-    # bind to ctrl-r in normal and insert mode, add any other bindings you want here too
+    # Bind Ctrl+R to search shell history with atuin
     bind \cr _atuin_search
     bind -M insert \cr _atuin_search
 end
 
-# Set up Docker completions if installed
+# Docker - https://www.docker.com
 if type -q docker
-    # Add docker completions if they exist
-    if test -d ~/.config/fish/completions
-        and not test -f ~/.config/fish/completions/docker.fish
-        # Docker provides completions via the CLI
-        docker completion fish >~/.config/fish/completions/docker.fish 2>/dev/null
-    end
+    docker completion fish | source
+end
+
+# 1Password CLI - https://developer.1password.com/docs/cli
+if type -q op
+    # Enable shell completions
+    op completion fish | source
+
+    # Service account creation example:
+    # op service-account create "My Service Account" --can-create-vaults --expires-in 24h --vault Production:read_items,write_items
 end
 
 ###########################################
-# ALIASES AND SHORTCUTS
+# ALIASES AND USER PREFERENCES
 ###########################################
 
-# Source aliases file
+# Disable fish greeting message
+set fish_greeting
+
+# Load separate aliases file
 if test -f $HOME/.config/fish/aliases.fish
     source $HOME/.config/fish/aliases.fish
 end
 
-###########################################
-# SSH AND AUTHENTICATION
-###########################################
-
-# 1Password SSH agent configuration is handled in conf.d/1password.fish.tmpl when available.
-
-###########################################
-# MISCELLANEOUS SETTINGS
-###########################################
-
-# Suppress fish greeting
-set fish_greeting
-
-###########################################
-# LOCAL CONFIGURATION
-###########################################
-
-# Source local config if it exists (not managed by chezmoi)
+# Load local machine-specific config (not managed by chezmoi)
 if test -f $HOME/.config/fish/local.config.fish
     source $HOME/.config/fish/local.config.fish
 end
