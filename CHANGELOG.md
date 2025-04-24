@@ -89,6 +89,8 @@ All notable changes to this project will be documented in this file.
 
 - Update Git version detection in dot_gitconfig.tmpl ([bc68d4a](bc68d4a3e8236fe4771b2a225e79a9415377ee07))
 
+- Update Git version detection in dot_gitconfig.tmpl and diff configuration ([05ee8cc](05ee8ccdebe654bc9bf46fedfc8a26e14f489e94))
+
 
 ### Chores
 

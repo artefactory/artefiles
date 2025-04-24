@@ -4,11 +4,17 @@
 # Platform-specific and best practices Git configuration
 
 [user]
+# Set name if available
+# [[ if hasKey . "name" ]] #
 # [[ if ne .name "" ]] #
     name = # [[ .name ]] #
 # [[ end ]] #
+# [[ end ]] #
+# Set email if available
+# [[ if hasKey . "email" ]] #
 # [[ if ne .email "" ]] #
     email = # [[ .email ]] #
+# [[ end ]] #
 # [[ end ]] #
 
 [core]
@@ -114,21 +120,22 @@
 
 # Check Git version and use the appropriate conflict style
 # zdiff3 was introduced in Git 2.35.0
-# [[ $gitVersionOutput := output "git" "--version" ]] #
-# [[ $gitVersion := index (splitList " " $gitVersionOutput) 2 ]] #
-# [[ $versionParts := splitList "." $gitVersion ]] #
-# [[ $majorVersion := index $versionParts 0 | atoi ]] #
-# [[ $minorVersion := index $versionParts 1 | atoi ]] #
+# [[ $gitVersionOutput := output "git" "--version" -]] #
+# [[ $gitVersion := index (splitList " " $gitVersionOutput) 2 -]] #
+# [[ $versionParts := splitList "." $gitVersion -]] #
+# [[ $majorVersion := index $versionParts 0 | atoi -]] #
+# [[ $minorVersion := index $versionParts 1 | atoi -]] #
+# [[ $useZdiff3 := or (gt $majorVersion 2) (and (eq $majorVersion 2) (ge $minorVersion 35)) -]] #
 
 [merge]
     # Include summaries of merged commits in new merge commits
     log = true
     # Use appropriate conflict style based on Git version
-    # [[ if or (gt $majorVersion 2) (and (eq $majorVersion 2) (ge $minorVersion 35)) ]] #
+    # [[ if $useZdiff3 -]] #
     conflictstyle = zdiff3
-    # [[ else ]] #
+    # [[ else -]] #
     conflictstyle = diff3
-    # [[ end ]] #
+    # [[ end -]] #
     # Always use rebase for merging
     ff = only
     # Use fugitive as the default merge tool
