@@ -77,9 +77,11 @@ All notable changes to this project will be documented in this file.
 
 - Resolve pre-commit errors in shell scripts and documentation ([769305e](769305e0fa3c66cc5f301202728e06fbedcfa797))
 
-- Remove pyright and TypeScript language servers and fix lazy package manager errors ([c240d9c](c240d9c67577f190a2293a28c7b1d1a015338b4d))
+- Remove pyright and TypeScript language servers and fix lazy package manager errors ([f3bce99](f3bce99b2dcd528bc88780b50ef4cc0101a826e9))
 
-- Add Git version check for conflict style compatibility ([b22611f](b22611fe8878ab1f335dd86d4bf5b73b258fb7e6))
+- Add Git version check for conflict style compatibility ([095f309](095f3094cc9a7ecb5503b14629b4248b958de72b))
+
+- Remove tsserver specific case from Neovim config ([21c3b67](21c3b67db2abf1d96c5c7b5c44e2465a693fc462))
 
 
 ### Chores
@@ -212,6 +214,12 @@ All notable changes to this project will be documented in this file.
 - Improve errors handling in the script ([4fca49b](4fca49b007425a199916bb42a8e541fddac5d99f))
 
 - Configure inline diff display for git and chezmoi ([cb9e064](cb9e064746f213ec0b9b4b9927a26bb5a4778c8e))
+
+- Add 1password-cli to macOS packages ([56a76ca](56a76cae00aec20484adbf818c5d55bf57250709))
+
+- Add 1Password CLI installation script for Linux ([b61aae0](b61aae09e39e80f9242c0d825b35da58ec4db301))
+
+- Add 1Password CLI integration to fish shell ([fb25cc9](fb25cc9cfd0ebdd67c17f4d8a4466e5e255d1bf7))
 
 
 ### Fix

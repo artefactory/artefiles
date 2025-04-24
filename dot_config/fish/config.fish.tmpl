@@ -162,6 +162,88 @@ end
 # Disable fish greeting message
 set fish_greeting
 
+# Theme management - Only apply in interactive sessions
+if status is-interactive
+    # Check for theme persistence file
+    set -l theme_file "$HOME/.config/fish/theme_preference"
+
+    # Function to detect if theme appears to be intentionally set by the user
+    # This checks common user configuration files for theme settings
+    function __is_theme_user_defined
+        # Check if any fish theme variables are set in fish_variables
+        if test -f "$HOME/.config/fish/fish_variables"
+            and grep -q "^SETUVAR fish_color_" "$HOME/.config/fish/fish_variables"
+            return 0
+        end
+
+        # Check if a theme file exists and has content
+        if test -f $theme_file
+            and test -s $theme_file
+            return 0
+        end
+
+        # Check for theme setting in universal variables
+        if set -q fish_colors
+            return 0
+        end
+
+        return 1
+    end
+
+    # Get current theme if possible
+    set -l current_theme ""
+    if type -q fish_config
+        # Try to get current theme - might not work in all fish versions
+        set current_theme (fish_config theme current 2>/dev/null)
+    end
+
+    # Default theme - Catppuccin Mocha
+    set -l default_theme ""
+
+    # Apply theme logic
+    if __is_theme_user_defined
+        # User has a theme set - save it if not already saved
+        if test -n "$current_theme"
+            and not test -f $theme_file
+            echo $current_theme > $theme_file 2>/dev/null
+        end
+    else
+        # No user-defined theme found - use Catppuccin Mocha as default
+        if type -q fish_config
+            set -l available_themes (fish_config theme list 2>/dev/null)
+
+            # First priority: Find Catppuccin Mocha specifically
+            for theme in $available_themes
+                if string match -q "*[Cc]atppuccin*[Mm]ocha*" $theme
+                    set default_theme $theme
+                    break
+                end
+            end
+
+            # Second priority: Any Catppuccin variant if Mocha isn't available
+            if test -z "$default_theme"
+                for theme in $available_themes
+                    if string match -q "*[Cc]atppuccin*" $theme
+                        set default_theme $theme
+                        break
+                    end
+                end
+            end
+
+            # Apply the default theme if found and different from current
+            if test -n "$default_theme" -a "$current_theme" != "$default_theme"
+                fish_config theme choose $default_theme 2>/dev/null
+                # Only show message when theme changes
+                echo "Theme changed to $default_theme"
+                echo $default_theme > $theme_file 2>/dev/null
+            end
+        end
+    end
+
+    # Clean up our temporary function
+    functions -e __is_theme_user_defined
+end
+
 # Load separate aliases file
 if test -f $HOME/.config/fish/aliases.fish
     source $HOME/.config/fish/aliases.fish
