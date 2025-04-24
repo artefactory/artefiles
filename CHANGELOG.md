@@ -87,7 +87,11 @@ All notable changes to this project will be documented in this file.
 
 - Update gitconfig template to handle empty name and email values ([0d2e253](0d2e253b2a689e417d24a1d3fd4bb181f2dde45e))
 
-- Update Git version detection in dot_gitconfig.tmpl ([bc68d4a](bc68d4a3e8236fe4771b2a225e79a9415377ee07))
+- Update Git version detection in dot_gitconfig.tmpl ([a606cb7](a606cb734ac8ea1537e41792c1e5a7e6a6e45d64))
+
+- Update Git version detection in dot_gitconfig.tmpl and diff configuration ([e12b781](e12b7817da43ad3af4bbe45f7430cbb005311f8a))
+
+- Correct Git version detection with proper whitespace trimming ([a853eee](a853eee6dcf7c5e1ffcba37b760898312d552dbc))
 
 
 ### Chores
@@ -113,6 +117,8 @@ All notable changes to this project will be documented in this file.
 - Remove unused test-variables script ([02f240b](02f240b7620848fa46267e1b983f5ffd10ddd005))
 
 - Update fisher script and add rsync plugin ([5a63d80](5a63d803ae2d3f3da8891f26f9f7b9fe48e6edc1))
+
+- Changelog ([60d139e](60d139ec26ba765aa7f108e886de33dfd4871f39))
 
 
 ### Features
