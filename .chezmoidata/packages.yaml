@@ -21,6 +21,7 @@ packages:
       - 'git-extras'
       - 'ripgrep'
       - 'pixi'
+      - '1password-cli'
     casks:
       - 'wezterm'
       - 'google-chrome'
