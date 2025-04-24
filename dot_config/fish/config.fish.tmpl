@@ -131,7 +131,7 @@ end
 # Atuin shell history with search - https://atuin.sh
 if type -q atuin
     # Enable shell completions
-    atuin gen-completions --shell fish
+    atuin gen-completions --shell fish | source
 
     set -gx ATUIN_NOBIND true
     atuin init fish | source

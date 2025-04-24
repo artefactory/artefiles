@@ -91,7 +91,7 @@ All notable changes to this project will be documented in this file.
 
 - Update Git version detection in dot_gitconfig.tmpl and diff configuration ([e12b781](e12b7817da43ad3af4bbe45f7430cbb005311f8a))
 
-- Correct Git version detection with proper whitespace trimming ([a853eee](a853eee6dcf7c5e1ffcba37b760898312d552dbc))
+- Correct Git version detection with proper whitespace trimming ([d8ef554](d8ef554940efe3e6e9d7ed7423f07dd0f5c99b03))
 
 
 ### Chores
@@ -118,7 +118,9 @@ All notable changes to this project will be documented in this file.
 
 - Update fisher script and add rsync plugin ([5a63d80](5a63d803ae2d3f3da8891f26f9f7b9fe48e6edc1))
 
-- Changelog ([60d139e](60d139ec26ba765aa7f108e886de33dfd4871f39))
+- Changelog ([8bb3f11](8bb3f11c577770097fec715368388d3b96a30d41))
+
+- Changelog ([f886819](f886819fbbf85508042c2963d1f8b2d04a087dd6))
 
 
 ### Features
@@ -236,6 +238,8 @@ All notable changes to this project will be documented in this file.
 - Add 1Password CLI integration to fish shell ([4f9afcc](4f9afcc321e90b131106ce04aa643052617775b4))
 
 - Add Catppuccin Mocha as default fish theme ([fbe2fde](fbe2fdeeb811beb1e57b285ddfa4f4f2f59099dc))
+
+- Enhance Git difftastic configuration with syntax highlighting ([0e431db](0e431db63574f42c953c8ed4ab9a8fc0fbb7dd0e))
 
 
 ### Fix

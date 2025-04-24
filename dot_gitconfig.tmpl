@@ -26,8 +26,8 @@
     symlinks = true
     # Ensure proper quoting of file names
     quotepath = false
-    # Use simple cat as pager for maximum terminal compatibility
-    pager = cat
+    # Use bat as pager for better syntax highlighting
+    pager = bat
     # Store global exclusions
     excludesfile = ~/.gitignore_global
     # Store global attributes
@@ -102,7 +102,7 @@
     algorithm = histogram
 
 [difftool "difftastic"]
-    cmd = difft --display=inline "$LOCAL" "$REMOTE"
+    cmd = difft --display=inline --syntax-highlight=on "$LOCAL" "$REMOTE"
 
 [difftool "vscode"]
     cmd = code --wait --diff "$LOCAL" "$REMOTE"
@@ -111,7 +111,7 @@
     prompt = false
 
 [pager]
-    # Disable paging completely for better terminal compatibility
+    # Use bat for most operations, but disable for diffs
     diff = false
     show = false
     log = false
@@ -174,6 +174,11 @@
     autocorrect = 10
 
 [alias]
+    # Use difftastic for diffs (recommended method)
+    dft = "!f() { GIT_EXTERNAL_DIFF=difft git diff $@; }; f"
+    dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p $@; }; f"
+    dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show $@; }; f"
+
     # Shorter status command
     st = status
     # Shorter checkout command
