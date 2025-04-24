@@ -83,7 +83,11 @@ All notable changes to this project will be documented in this file.
 
 - Remove tsserver specific case from Neovim config ([21c3b67](21c3b67db2abf1d96c5c7b5c44e2465a693fc462))
 
-- Improve 1Password CLI installation with templating and better download handling ([e7dba36](e7dba366698f35cb6730e5c3104033405eab609f))
+- Improve 1Password CLI installation with templating and better download handling ([a8c3e15](a8c3e15232b6036746bf7fdd450819090f31aabc))
+
+- Update gitconfig template to handle empty name and email values ([0d2e253](0d2e253b2a689e417d24a1d3fd4bb181f2dde45e))
+
+- Update Git version detection in dot_gitconfig.tmpl ([bc68d4a](bc68d4a3e8236fe4771b2a225e79a9415377ee07))
 
 
 ### Chores

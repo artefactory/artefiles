@@ -86,7 +86,7 @@
 
 [diff]
     # Use difftastic for all diffs by default if available
-    external = "command -v difft >/dev/null 2>&1 && difft --display=inline \"$@\" || git diff"
+    external = difft
     tool = difftastic
     # Add VSCode as an alternative diff tool
     guitool = vscode
@@ -203,8 +203,6 @@
     discard = reset --hard
     # List contributors with number of commits
     contributors = shortlog --summary --numbered
-    # Use difftastic for viewing changes
-    dft = difftool
     # Difftastic log for showing changes with syntax highlighting
     difflog = "ll -p --ext-diff"
     # Use VSCode for viewing changes
@@ -215,8 +213,6 @@
     nvimmerge = mergetool --tool=nvim
     # Use fugitive for resolving merge conflicts
     fugmerge = mergetool --tool=fugitive
-    # Show diff using difftastic with fallback to standard git log
-    dlog = "!f() { if command -v difft >/dev/null 2>&1; then GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; else git log -p $@; fi; }; f"
 
 [credential]
     # Cache credentials for 1 hour (3600 seconds)
