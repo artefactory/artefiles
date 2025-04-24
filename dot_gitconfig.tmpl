@@ -4,7 +4,9 @@
 # Platform-specific and best practices Git configuration
 
 [user]
+# [[ if ne .name "" ]] #
     name = # [[ .name ]] #
+# [[ end ]] #
 # [[ if ne .email "" ]] #
     email = # [[ .email ]] #
 # [[ end ]] #

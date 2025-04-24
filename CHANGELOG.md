@@ -83,6 +83,8 @@ All notable changes to this project will be documented in this file.
 
 - Remove tsserver specific case from Neovim config ([21c3b67](21c3b67db2abf1d96c5c7b5c44e2465a693fc462))
 
+- Improve 1Password CLI installation with templating and better download handling ([e7dba36](e7dba366698f35cb6730e5c3104033405eab609f))
+
 
 ### Chores
 
@@ -106,7 +108,7 @@ All notable changes to this project will be documented in this file.
 
 - Remove unused test-variables script ([02f240b](02f240b7620848fa46267e1b983f5ffd10ddd005))
 
-- Update fisher script and add rsync plugin ([2731d31](2731d3137b3d653ead93c006fc03c74b2d1ad2dd))
+- Update fisher script and add rsync plugin ([5a63d80](5a63d803ae2d3f3da8891f26f9f7b9fe48e6edc1))
 
 
 ### Features
@@ -217,13 +219,13 @@ All notable changes to this project will be documented in this file.
 
 - Configure inline diff display for git and chezmoi ([cb9e064](cb9e064746f213ec0b9b4b9927a26bb5a4778c8e))
 
-- Add 1password-cli to macOS packages ([56a76ca](56a76cae00aec20484adbf818c5d55bf57250709))
+- Add 1password-cli to macOS packages ([e48bfa1](e48bfa1d161256c1fbbe6144621855611acf131a))
 
-- Add 1Password CLI installation script for Linux ([b61aae0](b61aae09e39e80f9242c0d825b35da58ec4db301))
+- Add 1Password CLI installation script for Linux ([850ce20](850ce20de81dec3fe548f27da46f0da603ba29e0))
 
-- Add 1Password CLI integration to fish shell ([fb25cc9](fb25cc9cfd0ebdd67c17f4d8a4466e5e255d1bf7))
+- Add 1Password CLI integration to fish shell ([4f9afcc](4f9afcc321e90b131106ce04aa643052617775b4))
 
-- Add Catppuccin Mocha as default fish theme ([1eed3d0](1eed3d09c042571bf48957d5e14c18ff0ad9b97b))
+- Add Catppuccin Mocha as default fish theme ([fbe2fde](fbe2fdeeb811beb1e57b285ddfa4f4f2f59099dc))
 
 
 ### Fix
