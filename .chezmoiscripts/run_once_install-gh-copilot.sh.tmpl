@@ -1,0 +1,12 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+set -eu
+
+# Check if gh is installed
+if command -v gh > /dev/null 2>&1; then
+  echo "Installing GitHub Copilot extension for gh CLI..."
+  gh extension install github/gh-copilot
+else
+  echo "GitHub CLI (gh) is not installed. Please install it first."
+  exit 1
+fi
