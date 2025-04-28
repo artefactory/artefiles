@@ -62,6 +62,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 
 - 🐍 Python environment management with [uv](https://github.com/astral-sh/uv) and direnv
 - 🔄 Git configuration with useful defaults and integrations
+  - 🤖 GitHub Copilot CLI integration with [gh-copilot](https://github.com/github/gh-copilot)
 - 📊 Jupyter notebook support with nbdime
 - 🖥️ SSH configuration optimized for remote development
 
