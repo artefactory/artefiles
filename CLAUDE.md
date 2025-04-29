@@ -22,6 +22,15 @@ This is a dotfiles template repository managed with [chezmoi](https://chezmoi.io
 
 ## Installation Procedures
 
+### Chezmoi Script Naming Convention
+
+- Script files in `.chezmoiscripts/` follow specific naming patterns:
+  - `run_once_` - Run only once, never again
+  - `run_onchange_` - Run when script content changes
+  - `run_` - Run every time chezmoi apply is executed
+  - Optional ordering prefix can be added: `run_once_before_`, `run_once_after_`, etc.
+  - Scripts are automatically made executable by chezmoi
+
 ### Adding New Tools
 
 - **Linux Installation**:
@@ -53,6 +62,31 @@ This is a dotfiles template repository managed with [chezmoi](https://chezmoi.io
 - Document environment assumptions
 - Quote all variables: `"${var}"`
 - Avoid hardcoded paths when possible
+
+## Development Workflow
+
+### Adding New Features
+
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b feat/descriptive-name
+   ```
+
+2. **Make atomic commits**:
+   - Each commit should represent one logical change
+   - Use clear, descriptive commit messages following conventional commits format
+   - Example: `git commit -m "feat: Add GitHub Copilot CLI extension"`
+
+3. **Update documentation**:
+   - Add entries to README.md for user-facing features
+   - Changelog will be automatically updated using git-cliff based on commit messages
+
+4. **Create a pull request**:
+   - Summarize all changes in the PR description
+   - Explain the purpose and benefits of the changes
+   - List any testing performed
+
+This workflow must be followed for all new features added to the repository.
 
 ## Template Customization
 
