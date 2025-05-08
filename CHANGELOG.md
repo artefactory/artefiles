@@ -93,7 +93,7 @@ All notable changes to this project will be documented in this file.
 
 - Correct Git version detection with proper whitespace trimming ([d8ef554](d8ef554940efe3e6e9d7ed7423f07dd0f5c99b03))
 
-- Only execute fish shell in interactive sessions ([ee4f989](ee4f98943cd23086ba34435f71684e480b59211c))
+- Only execute fish shell in interactive sessions ([ee7696b](ee7696b5d89fb3e51c599ea7185776eed5e57c00))
 
 
 ### Chores
@@ -123,6 +123,8 @@ All notable changes to this project will be documented in this file.
 - Changelog ([8bb3f11](8bb3f11c577770097fec715368388d3b96a30d41))
 
 - Changelog ([f886819](f886819fbbf85508042c2963d1f8b2d04a087dd6))
+
+- Update changelog ([e42f2ab](e42f2ab5cc9e8b8518f8bbcd1809c2b01d854066))
 
 
 ### Features
@@ -243,7 +245,7 @@ All notable changes to this project will be documented in this file.
 
 - Enhance Git difftastic configuration with syntax highlighting ([bab5428](bab5428852a20aa98ab30bac00a3a718f2530480))
 
-- Add GitHub Copilot CLI extension installation script ([7aadca0](7aadca05e5ba6118db5fae66f71637b5cdbcf0da))
+- Add GitHub Copilot CLI extension installation script ([91492a5](91492a55bb046f79e9aa90ed43c4cddf5328f6eb))
 
 
 ### Fix
@@ -290,9 +292,11 @@ All notable changes to this project will be documented in this file.
 
 - Reorganize and enhance CHEATSHEET.md ([f9e7518](f9e7518186d1263edfc1601ccab0e74bcb8a12ab))
 
-- Update README with GitHub Copilot CLI extension information ([174187c](174187c50e6ddfb4cba25af8628e2a551c402c1b))
+- Update README with GitHub Copilot CLI extension information ([d9abc5c](d9abc5ccf38dc9182d2449ca4c159651206757db))
 
-- Add development workflow guidelines to CLAUDE.md ([cde0e84](cde0e841b9e8a8ad46bc8a7f313700b32536c64e))
+- Add development workflow guidelines to CLAUDE.md ([c5ffcaa](c5ffcaa50e050e303ea2347ea1d5b253ebfedb70))
+
+- Add comprehensive changelog management guidelines to CLAUDE.md ([861481e](861481ede93087363d88cfb68232cdc5ae6d32c4))
 
 
 ### Refactor
