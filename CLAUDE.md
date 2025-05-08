@@ -88,6 +88,54 @@ This is a dotfiles template repository managed with [chezmoi](https://chezmoi.io
 
 This workflow must be followed for all new features added to the repository.
 
+### Changelog Management
+
+#### Conventional Commits
+
+All commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Where `<type>` is one of:
+- `feat`: New features
+- `fix`: Bug fixes
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, indentation)
+- `refactor`: Code changes that neither fix bugs nor add features
+- `test`: Adding or updating tests
+- `chore`: Changes to the build process, tools, etc.
+- `ci`: Changes to CI configuration files
+
+#### Automatic Changelog Generation
+
+The repository uses [git-cliff](https://github.com/orhun/git-cliff) to automatically generate the CHANGELOG.md file based on commit messages.
+
+1. **Pre-push hook**:
+   - A pre-push hook automatically updates CHANGELOG.md when you push to the repository
+   - Configuration is defined in `cliff.toml`
+   - This ensures the changelog is always up-to-date with the latest changes
+   - The updated CHANGELOG.md will be included in your pull request automatically
+
+2. **Pull Request Workflow**:
+   - When you create a branch and make commits, ensure they follow the conventional format
+   - Before creating a pull request, push your changes which triggers the changelog generation
+   - The pre-push hook will:
+     - Run git-cliff to update the CHANGELOG.md with your new commits
+     - Add the modified CHANGELOG.md to your changes
+   - Create your pull request, which will now include the updated changelog
+
+3. **Troubleshooting**:
+   - If the pre-push hook fails, ensure git-cliff is installed
+   - On macOS: `brew install git-cliff`
+   - On Linux: use the installation script in `.chezmoiscripts/`
+   - You can manually update the changelog with: `git-cliff --output CHANGELOG.md`
+
 ## Template Customization
 
 - Chezmoi template delimiters can be customized in each file

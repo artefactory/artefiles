@@ -93,6 +93,8 @@ All notable changes to this project will be documented in this file.
 
 - Correct Git version detection with proper whitespace trimming ([d8ef554](d8ef554940efe3e6e9d7ed7423f07dd0f5c99b03))
 
+- Only execute fish shell in interactive sessions ([ee4f989](ee4f98943cd23086ba34435f71684e480b59211c))
+
 
 ### Chores
 
