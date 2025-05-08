@@ -239,7 +239,9 @@ All notable changes to this project will be documented in this file.
 
 - Add Catppuccin Mocha as default fish theme ([fbe2fde](fbe2fdeeb811beb1e57b285ddfa4f4f2f59099dc))
 
-- Enhance Git difftastic configuration with syntax highlighting ([0e431db](0e431db63574f42c953c8ed4ab9a8fc0fbb7dd0e))
+- Enhance Git difftastic configuration with syntax highlighting ([bab5428](bab5428852a20aa98ab30bac00a3a718f2530480))
+
+- Add GitHub Copilot CLI extension installation script ([7aadca0](7aadca05e5ba6118db5fae66f71637b5cdbcf0da))
 
 
 ### Fix
@@ -285,6 +287,10 @@ All notable changes to this project will be documented in this file.
 - Improve script documentation and POSIX compatibility ([3fc70b4](3fc70b472d1ea3d4fc05119cc9fb76b0d037d4a4))
 
 - Reorganize and enhance CHEATSHEET.md ([f9e7518](f9e7518186d1263edfc1601ccab0e74bcb8a12ab))
+
+- Update README with GitHub Copilot CLI extension information ([174187c](174187c50e6ddfb4cba25af8628e2a551c402c1b))
+
+- Add development workflow guidelines to CLAUDE.md ([cde0e84](cde0e841b9e8a8ad46bc8a7f313700b32536c64e))
 
 
 ### Refactor

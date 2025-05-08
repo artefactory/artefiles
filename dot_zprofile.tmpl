@@ -11,6 +11,7 @@ if [ -d "$HOME/.local/bin" ]; then
 fi
 # [[ end -]] #
 
-if [ -x "$(command -v fish)" ]; then
+# Only start fish in interactive shells
+if [[ -x "$(command -v fish)" && -o interactive ]]; then
   exec fish
 fi
