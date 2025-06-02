@@ -1,19 +1,55 @@
 -- chezmoi:template:left-delimiter="-- [[" right-delimiter="]] --"
--- Pull in the wezterm API
+--
+-- ██╗    ██╗███████╗███████╗████████╗███████╗██████╗ ███╗   ███╗
+-- ██║    ██║██╔════╝╚══███╔╝╚══██╔══╝██╔════╝██╔══██╗████╗ ████║
+-- ██║ █╗ ██║█████╗    ███╔╝    ██║   █████╗  ██████╔╝██╔████╔██║
+-- ██║███╗██║██╔══╝   ███╔╝     ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║
+-- ╚███╔███╔╝███████╗███████╗   ██║   ███████╗██║  ██║██║ ╚═╝ ██║
+--  ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
+--
+-- WezTerm Configuration
+-- This file controls terminal appearance, keybindings, and behavior
+--
+
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                          CORE INITIALIZATION                               ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 local wezterm = require 'wezterm'
 
--- This table will hold the configuration.
+-- Set up initial configuration
 local config = {}
 local act = wezterm.action
 local mux = wezterm.mux
 
--- In newer versions of wezterm, use the config_builder which will
--- help provide clearer error messages
+-- Use config_builder for better error reporting in newer WezTerm versions
 if wezterm.config_builder then
   config = wezterm.config_builder()
 end
 
--- This is where you actually apply your config choices
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                            EVENT HANDLERS                                  ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+-- Display toast notification when configuration is reloaded
+wezterm.on('window-config-reloaded', function(window, pane)
+  window:toast_notification('WezTerm', 'Configuration reloaded!', nil, 4000)
+end)
+
+-- OS-specific startup handlers
+-- [[ if eq .chezmoi.os "darwin" ]] --
+-- Maximize window on macOS startup
+wezterm.on("gui-startup", function()
+  local tab, pane, window = mux.spawn_window({})
+  window:gui_window():maximize()
+end)
+-- [[ else ]] --
+-- Linux-specific handlers would go here
+-- [[ end ]] --
+
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                        KEYBOARD & INPUT SETTINGS                           ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 -- Set leader key (Ctrl+b for tmux compatibility)
 config.leader = {
@@ -22,6 +58,19 @@ config.leader = {
   timeout_milliseconds = 1000,
 }
 
+-- International keyboard layout support settings
+config.use_ime = true                                  -- Enable Input Method Editor for international layouts
+config.treat_east_asian_ambiguous_width_as_wide = false-- Improve handling of East Asian characters
+config.allow_win32_input_mode = false                  -- Disable Windows-specific input handling
+config.enable_csi_u_key_encoding = false               -- Enable extended Unicode key support
+config.use_dead_keys = true                            -- Enable dead keys for accent/diacritic input
+config.enable_kitty_keyboard = false                   -- Enable Kitty keyboard protocol
+
+-- Alt key configuration
+config.send_composed_key_when_left_alt_is_pressed = true  -- Send composed characters with left Alt
+config.send_composed_key_when_right_alt_is_pressed = true -- Send composed characters with right Alt (AltGr)
+
+-- Disable default key bindings to avoid conflicts
 config.disable_default_key_bindings = true
 
 config.keys = {
@@ -233,8 +282,12 @@ config.keys = {
   },
 }
 
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                             MOUSE BINDINGS                                 ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 config.mouse_bindings = {
-  -- Open URLs with CMD/CTRL+Click
+  -- Open URLs with CMD on macOS or CTRL on other platforms
   {
     event = { Up = { streak = 1, button = 'Left' } },
     mods = -- [[ if eq .chezmoi.os "darwin" ]] --'CMD'-- [[ else ]] --'CTRL'-- [[ end ]] --,
@@ -242,54 +295,74 @@ config.mouse_bindings = {
   },
 }
 
--- Set coloring for inactive panes to be less bright than your active pane
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                           APPEARANCE & THEME                               ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+-- Set color scheme
+config.color_scheme = 'Catppuccin Mocha'
+
+-- Make inactive panes slightly dimmer for better visual distinction
 config.inactive_pane_hsb = {
-  hue = 1,
-  saturation = 0.8,
-  brightness = 0.8,
+  hue = 1.0,
+  saturation = 0.7,
+  brightness = 0.6,
 }
 
--- Essential configuration
-config.audible_bell = 'Disabled'
-config.color_scheme = 'Catppuccin Mocha'
-config.enable_kitty_keyboard = false
-config.enable_scroll_bar = true
-config.font = wezterm.font_with_fallback { 'FiraCode Nerd Font', 'Fira Code', 'monospace' }
-config.font_size = 14.0
-config.force_reverse_video_cursor = true
-config.hide_tab_bar_if_only_one_tab = true
-config.hyperlink_rules = wezterm.default_hyperlink_rules()
-config.pane_focus_follows_mouse = false
-config.scrollback_lines = 5000
-config.switch_to_last_active_tab_when_closing_tab = true
-config.tab_bar_at_bottom = true
-config.scroll_to_bottom_on_input = true
-config.show_new_tab_button_in_tab_bar = false
-config.term = 'xterm-256color'  -- Changed from 'wezterm' to 'xterm-256color' for better compatibility
-config.use_dead_keys = true
-config.use_fancy_tab_bar = false
+-- Window padding
 config.window_padding = { left = 0, right = 0, top = 0, bottom = '.5cell' }
 
--- Platform-specific configuration
--- [[ if eq .chezmoi.os "darwin" ]] --
-config.native_macos_fullscreen_mode = true
+-- Window appearance settings
+config.window_decorations = "TITLE | RESIZE"        -- Show window title bar and resize controls
+config.enable_scroll_bar = true
+config.hide_mouse_cursor_when_typing = true
 
--- Handle startup (maximize window on macOS)
-wezterm.on("gui-startup", function()
-  local tab, pane, window = mux.spawn_window({})
-  window:gui_window():maximize()
-end)
--- [[ else ]] --
+-- macOS-specific appearance settings
+-- [[ if eq .chezmoi.os "darwin" ]] --
+config.native_macos_fullscreen_mode = true          -- Use native macOS fullscreen
+-- [[ end ]] --
+
+-- Font configuration with fallback options
+config.font = wezterm.font_with_fallback { 'FiraCode Nerd Font', 'Fira Code', 'JetBrains Mono' }
+config.font_size = 13.0
+config.line_height = 1.1
+
+-- Tab bar configuration
+config.tab_bar_at_bottom = true                     -- Place tab bar at bottom of window
+config.hide_tab_bar_if_only_one_tab = false         -- Always show tab bar for notifications
+config.show_new_tab_button_in_tab_bar = false
+config.use_fancy_tab_bar = false                    -- Use simple tab bar style
+
+-- Cursor appearance
+config.force_reverse_video_cursor = true            -- Use reverse video style cursor
+
+-- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+-- ┃                           TERMINAL BEHAVIOR                                ┃
+-- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+-- Terminal settings
+config.scrollback_lines = 10000                     -- Number of lines to keep in scrollback buffer
+config.term = 'xterm-256color'                      -- Terminal compatibility mode
+config.audible_bell = 'Disabled'                    -- Disable audible bell
+config.scroll_to_bottom_on_input = true             -- Auto-scroll to bottom when typing
+config.alternate_buffer_wheel_scroll_speed = 5      -- Allow scrolling in alternate screen
+config.enable_scroll_bar = true                     -- Show scroll bar
+config.debug_key_events = false                     -- Log key events for troubleshooting
+config.prefer_to_spawn_tabs = true                  -- Prefer creating tabs instead of windows
+config.pane_focus_follows_mouse = false
+config.switch_to_last_active_tab_when_closing_tab = true
+
+-- Use default hyperlink detection rules
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+
+-- Disable graphics systems that may cause conflicts
+config.enable_wayland = false
+config.enable_kitty_graphics = false
+
+-- Platform-specific overrides
+-- [[ if eq .chezmoi.os "linux" ]] --
 -- Linux specific settings
 config.use_ime = false
 -- [[ end ]] --
-
-config.mux_env_remove = {
-  'SSH_AUTH_SOCK',
-  'SSH_CLIENT',
-}
-
-config.prefer_to_spawn_tabs = true
-config.hide_mouse_cursor_when_typing = true
 
 return config
