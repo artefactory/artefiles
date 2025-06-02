@@ -95,6 +95,8 @@ All notable changes to this project will be documented in this file.
 
 - Only execute fish shell in interactive sessions ([ee7696b](ee7696b5d89fb3e51c599ea7185776eed5e57c00))
 
+- Prevent ssh agent forwarding issue but unsetting SSH_AUTH_SOCK ([0269ae0](0269ae08b37f1188f20fc88fdc9411caae331372))
+
 
 ### Chores
 
@@ -124,7 +126,7 @@ All notable changes to this project will be documented in this file.
 
 - Changelog ([f886819](f886819fbbf85508042c2963d1f8b2d04a087dd6))
 
-- Update changelog ([e42f2ab](e42f2ab5cc9e8b8518f8bbcd1809c2b01d854066))
+- Update changelog ([0f974de](0f974de01f141da169c0b57acc477388d629ae1d))
 
 
 ### Features
@@ -247,6 +249,8 @@ All notable changes to this project will be documented in this file.
 
 - Add GitHub Copilot CLI extension installation script ([91492a5](91492a55bb046f79e9aa90ed43c4cddf5328f6eb))
 
+- Upgrade shared WezTerm configuration with enhanced settings ([e5e8ce0](e5e8ce03df012bc0e27c784a82e24869165c2ea9))
+
 
 ### Fix
 
@@ -296,7 +300,7 @@ All notable changes to this project will be documented in this file.
 
 - Add development workflow guidelines to CLAUDE.md ([c5ffcaa](c5ffcaa50e050e303ea2347ea1d5b253ebfedb70))
 
-- Add comprehensive changelog management guidelines to CLAUDE.md ([861481e](861481ede93087363d88cfb68232cdc5ae6d32c4))
+- Add comprehensive changelog management guidelines to CLAUDE.md ([3457355](345735547e19565421055154e9ed05a3ab7ad22e))
 
 
 ### Refactor

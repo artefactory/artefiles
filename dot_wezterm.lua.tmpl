@@ -60,11 +60,11 @@ config.leader = {
 
 -- International keyboard layout support settings
 config.use_ime = true                                  -- Enable Input Method Editor for international layouts
-config.treat_east_asian_ambiguous_width_as_wide = false-- Improve handling of East Asian characters
+config.treat_east_asian_ambiguous_width_as_wide = false -- Improve handling of East Asian characters
 config.allow_win32_input_mode = false                  -- Disable Windows-specific input handling
-config.enable_csi_u_key_encoding = false               -- Enable extended Unicode key support
+config.enable_csi_u_key_encoding = false               -- Disable extended Unicode key support (can cause compatibility issues)
 config.use_dead_keys = true                            -- Enable dead keys for accent/diacritic input
-config.enable_kitty_keyboard = false                   -- Enable Kitty keyboard protocol
+config.enable_kitty_keyboard = false                   -- Disable Kitty keyboard protocol (can cause compatibility issues)
 
 -- Alt key configuration
 config.send_composed_key_when_left_alt_is_pressed = true  -- Send composed characters with left Alt
@@ -141,7 +141,7 @@ config.keys = {
     action = act.CloseCurrentTab { confirm = true },
   },
 
-  -- Window navigation (0-9)
+  -- Tab navigation (0-9)
   { key = '0', mods = 'LEADER', action = act.ActivateTab(0) },
   { key = '1', mods = 'LEADER', action = act.ActivateTab(1) },
   { key = '2', mods = 'LEADER', action = act.ActivateTab(2) },
@@ -269,7 +269,7 @@ config.keys = {
 
   -- Select pane
   {
-    key = 'w',
+    key = 'q',
     mods = 'LEADER',
     action = act.PaneSelect,
   },
@@ -329,7 +329,7 @@ config.line_height = 1.1
 
 -- Tab bar configuration
 config.tab_bar_at_bottom = true                     -- Place tab bar at bottom of window
-config.hide_tab_bar_if_only_one_tab = false         -- Always show tab bar for notifications
+config.hide_tab_bar_if_only_one_tab = false         -- Always show tab bar even with one tab (useful for seeing reload notifications)
 config.show_new_tab_button_in_tab_bar = false
 config.use_fancy_tab_bar = false                    -- Use simple tab bar style
 
@@ -345,12 +345,11 @@ config.scrollback_lines = 10000                     -- Number of lines to keep i
 config.term = 'xterm-256color'                      -- Terminal compatibility mode
 config.audible_bell = 'Disabled'                    -- Disable audible bell
 config.scroll_to_bottom_on_input = true             -- Auto-scroll to bottom when typing
-config.alternate_buffer_wheel_scroll_speed = 5      -- Allow scrolling in alternate screen
-config.enable_scroll_bar = true                     -- Show scroll bar
+config.alternate_buffer_wheel_scroll_speed = 5      -- Mouse wheel scroll speed when in alternate screen applications (like vim, less)
 config.debug_key_events = false                     -- Log key events for troubleshooting
 config.prefer_to_spawn_tabs = true                  -- Prefer creating tabs instead of windows
-config.pane_focus_follows_mouse = false
-config.switch_to_last_active_tab_when_closing_tab = true
+config.pane_focus_follows_mouse = false             -- Don't automatically focus pane when mouse hovers over it
+config.switch_to_last_active_tab_when_closing_tab = true -- Switch to previously active tab when current tab is closed
 
 -- Use default hyperlink detection rules
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
@@ -359,7 +358,7 @@ config.hyperlink_rules = wezterm.default_hyperlink_rules()
 config.enable_wayland = false
 config.enable_kitty_graphics = false
 
--- Remove SSH_AUTH_SOCK from multiplexer environment
+-- Remove SSH_AUTH_SOCK from multiplexer environment to prevent conflicts in SSH sessions
 config.mux_env_remove = {
   'SSH_AUTH_SOCK',
 }
