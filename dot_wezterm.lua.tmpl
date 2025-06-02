@@ -359,6 +359,11 @@ config.hyperlink_rules = wezterm.default_hyperlink_rules()
 config.enable_wayland = false
 config.enable_kitty_graphics = false
 
+-- Remove SSH_AUTH_SOCK from multiplexer environment
+config.mux_env_remove = {
+  'SSH_AUTH_SOCK',
+}
+
 -- Platform-specific overrides
 -- [[ if eq .chezmoi.os "linux" ]] --
 -- Linux specific settings
