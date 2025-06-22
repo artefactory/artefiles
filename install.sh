@@ -80,13 +80,15 @@ ensure_github_auth() {
   if [ -n "${GH_TOKEN:-}" ] || [ -n "${GITHUB_TOKEN:-}" ]; then
     echo "Using token from environment variables" >&2
     # Verify token works
-    if ! gh auth status 2> /tmp/gh_auth_error > /dev/null; then
-      err_msg=$(cat /tmp/gh_auth_error)
+    temp_error_file=$(mktemp)
+    if ! gh auth status 2> "$temp_error_file" > /dev/null; then
+      err_msg=$(cat "$temp_error_file" 2> /dev/null || echo "Unknown authentication error")
       echo "ERROR: Invalid GitHub token provided in environment variables" >&2
       echo "ERROR: Details: $err_msg" >&2
-      rm -f /tmp/gh_auth_error
+      rm -f "$temp_error_file"
       exit 1
     fi
+    rm -f "$temp_error_file"
     return 0
   fi
 
