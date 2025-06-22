@@ -7,10 +7,12 @@ This is a dotfiles template repository managed with [chezmoi](https://chezmoi.io
 ## Environment Assumptions
 
 - macOS: Local machine with GUI applications support
-- Linux: Almost always a remote server without GUI environment
-  - Do not install GUI applications on Linux
+- Linux: Can be either local desktop or remote server
+- Remote SSH servers (detected via SSH_CONNECTION environment variable):
+  - Do not install GUI applications on remote servers
   - Focus on CLI tools and terminal utilities only
   - Avoid root/sudo requirements when possible
+  - Exclude desktop-specific configurations
 
 ## Commands
 

@@ -23,4 +23,13 @@ dot_config/fish/functions/install_nerd_font.fish
 {{ else if eq .chezmoi.os "linux" }}
 # Exclude macOS-specific files on Linux
 .chezmoiscripts/darwin/**
+dot_config/aerospace/**
+{{ end }}
+
+# Remote SSH server exclusions (when SSH_CONNECTION is present)
+{{ if env "SSH_CONNECTION" }}
+# Terminal emulator configs (use system defaults on remote servers)
+dot_wezterm.lua.tmpl
+# SSH client config (remote servers shouldn't override SSH client settings)
+dot_ssh/config.tmpl
 {{ end }}

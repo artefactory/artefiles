@@ -36,6 +36,19 @@ wezterm.on('window-config-reloaded', function(window, pane)
   window:toast_notification('WezTerm', 'Configuration reloaded!', nil, 4000)
 end)
 
+-- Display error notifications when key bindings fail
+wezterm.on('key-binding-error', function(window, pane, error_message)
+  window:toast_notification(
+    'Key Binding Error',
+    error_message,
+    {
+      appearance = 'warning',
+      dismiss_after_msec = 8000,
+    }
+  )
+  wezterm.log_error('Key binding error: ' .. error_message)
+end)
+
 -- OS-specific startup handlers
 -- [[ if eq .chezmoi.os "darwin" ]] --
 -- Maximize window on macOS startup
@@ -55,7 +68,7 @@ end)
 config.leader = {
   key = 'b',
   mods = 'CTRL',
-  timeout_milliseconds = 1000,
+  timeout_milliseconds = 2000,
 }
 
 -- International keyboard layout support settings
@@ -74,6 +87,9 @@ config.send_composed_key_when_right_alt_is_pressed = true -- Send composed chara
 config.disable_default_key_bindings = true
 
 config.keys = {
+  -- Show debug overlay to troubleshoot key binding and other issues
+  { key = 'D', mods = 'LEADER|SHIFT', action = act.ShowDebugOverlay },
+
   -- Tmux-compatible keybindings
   -- Leader key sends itself when pressed twice
   {
@@ -106,6 +122,9 @@ config.keys = {
     action = act.PasteFrom 'Clipboard',
   },
   -- [[ end ]] --
+
+  { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
+  { key = 'Insert', mods = 'SHIFT', action = act.PasteFrom 'PrimarySelection' },
 
   -- Copy mode
   {
@@ -345,7 +364,7 @@ config.scrollback_lines = 10000                     -- Number of lines to keep i
 config.term = 'xterm-256color'                      -- Terminal compatibility mode
 config.audible_bell = 'Disabled'                    -- Disable audible bell
 config.scroll_to_bottom_on_input = true             -- Auto-scroll to bottom when typing
-config.alternate_buffer_wheel_scroll_speed = 5      -- Mouse wheel scroll speed when in alternate screen applications (like vim, less)
+config.alternate_buffer_wheel_scroll_speed = 3      -- Mouse wheel scroll speed when in alternate screen applications
 config.debug_key_events = false                     -- Log key events for troubleshooting
 config.prefer_to_spawn_tabs = true                  -- Prefer creating tabs instead of windows
 config.pane_focus_follows_mouse = false             -- Don't automatically focus pane when mouse hovers over it
