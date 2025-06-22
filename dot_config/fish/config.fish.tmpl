@@ -43,12 +43,14 @@ end
 
 # Google Cloud SDK configuration
 # [[ if eq .chezmoi.os "darwin" -]] #
-set -l brew_prefix (brew --prefix)
-if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
-    fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
+if type -q brew
+    set -l brew_prefix (brew --prefix)
+    if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
+        fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
 
-    if test -f "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
-        source "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+        if test -f "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+            source "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+        end
     end
 end
 # [[ else -]] #
