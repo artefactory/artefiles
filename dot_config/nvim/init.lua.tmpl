@@ -631,7 +631,7 @@ require("lazy").setup({
   {
     "neovim/nvim-lspconfig",
     dependencies = {
-      "mason.nvim",
+      "mason-org/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
@@ -698,7 +698,7 @@ require("lazy").setup({
 
   -- LSP Server installer
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     build = ":MasonUpdate",
     config = function()
       require("mason").setup({
@@ -717,7 +717,7 @@ require("lazy").setup({
   -- Mason-lspconfig bridge
   {
     "williamboman/mason-lspconfig.nvim",
-    dependencies = { "williamboman/mason.nvim" },
+    dependencies = { "mason-org/mason.nvim" },
     config = function()
       require("mason-lspconfig").setup({
         ensure_installed = {
