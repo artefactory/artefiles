@@ -4,16 +4,14 @@ sourceDir = # [[ .chezmoi.sourceDir | quote ]] #
 [data]
 name = # [[ output "gh" "api" "user" "--jq" ".login" | trim | quote ]] #
 email = # [[ output "gh" "api" "user" "--jq" ".email" | trim | default (printf "%s@users.noreply.github.com" (output "gh" "api" "user" "--jq" ".login" | trim)) | quote ]] #
+# Set the desired credential helper.
+# Examples: "!gh auth git-credential", "osxkeychain", "cache --timeout=3600"
+credentialHelper = "!gh auth git-credential"
 
 [merge]
   command = 'nvim'
-  args = [
-    "-d",
-    "{{ `{{ .Destination }}` }}",
-    "{{ `{{ .Source }}` }}",
-    "{{ `{{ .Target }}` }}",
-  ]
+  args = ["-d", "{{ .Destination }}", "{{ .Source }}", "{{ .Target }}"]
 
 [diff]
   command = "difft"
-  args = ["--display", "inline"]
+  args = ["--display=inline", "{{ .Destination }}", "{{ .Target }}"]
