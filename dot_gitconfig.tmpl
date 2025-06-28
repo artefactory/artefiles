@@ -26,8 +26,8 @@
     symlinks = true
     # Ensure proper quoting of file names
     quotepath = false
-    # Use bat as pager for better syntax highlighting
-    pager = bat
+    # Use bat as pager
+    pager = "bat --style=plain"
     # Store global exclusions
     excludesfile = ~/.gitignore_global
     # Store global attributes
@@ -111,11 +111,7 @@
     prompt = false
 
 [pager]
-    # Use bat for most operations, but disable for diffs
-    diff = false
-    show = false
-    log = false
-    # Always use a pager for difftool
+    # Use bat with proper flags for difftastic output
     difftool = true
 
 # Check Git version and use the appropriate conflict style
@@ -174,11 +170,6 @@
     autocorrect = 10
 
 [alias]
-    # Use difftastic for diffs (recommended method)
-    dft = "!f() { GIT_EXTERNAL_DIFF=difft git diff $@; }; f"
-    dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p $@; }; f"
-    dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show $@; }; f"
-
     # Shorter status command
     st = status
     # Shorter checkout command
@@ -201,22 +192,21 @@
     stashes = stash list
     # Get the current branch name
     current = rev-parse --abbrev-ref HEAD
-    # Check out a pull request from GitHub
-    pr = "!f() { git fetch origin pull/$1/head:pr-$1 && git checkout pr-$1; }; f"
+    # Check out a pull request from GitHub using the gh cli
+    pr = "!f() { gh pr checkout $1; }; f"
     # List aliases
     aliases = config --get-regexp '^alias\\.'
+
     # Amend the previous commit without changing the commit message
     amend = commit --amend --no-edit
     # Interactively rebase the last n commits
     reb = "!f() { git rebase -i HEAD~$1; }; f"
     # Undo the last commit
     undo = reset --soft HEAD^
-    # Discard all local changes
+    # WARNING: Discard all local changes, including untracked files. This is destructive.
     discard = reset --hard
     # List contributors with number of commits
     contributors = shortlog --summary --numbered
-    # Difftastic log for showing changes with syntax highlighting
-    difflog = "ll -p --ext-diff"
     # Use VSCode for viewing changes
     vsdiff = difftool --tool=vscode
     # Use VSCode for resolving merge conflicts
@@ -227,17 +217,13 @@
     fugmerge = mergetool --tool=fugitive
 
 [credential]
+    # [[ if .credentialHelper -]] #
+    # Use specified credential helper
+    helper = # [[ .credentialHelper ]] #
+    # [[ else ]] #
     # Cache credentials for 1 hour (3600 seconds)
     helper = cache --timeout=3600
-    # [[ if eq .chezmoi.os "darwin" ]] #
-    # Use macOS keychain for credential storage
-    helper = osxkeychain
     # [[ end ]] #
-
-    # Use GitHub CLI as the credential helper
-    # This requires running 'gh auth login' manually first
-    # It will not auto-login without explicit authentication
-    helper = !gh auth git-credential
 
 # [[ if eq .chezmoi.os "darwin" ]] #
 [url "git@github.com:"]
