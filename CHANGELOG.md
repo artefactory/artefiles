@@ -95,7 +95,17 @@ All notable changes to this project will be documented in this file.
 
 - Only execute fish shell in interactive sessions ([ee7696b](ee7696b5d89fb3e51c599ea7185776eed5e57c00))
 
-- Prevent ssh agent forwarding issue but unsetting SSH_AUTH_SOCK ([0269ae0](0269ae08b37f1188f20fc88fdc9411caae331372))
+- Prevent ssh agent forwarding issue but unsetting SSH_AUTH_SOCK ([530a20b](530a20b33272a8fa5bdcfad3c77658fcd676c082))
+
+- Correct WezTerm configuration comments and resolve key binding conflict ([ed5cc91](ed5cc9164b350c308e654c5d93e7eba43779fd56))
+
+- Add brew existence check before calling brew --prefix ([900ccde](900ccde84d721dcd375f61d99f648ff18d1bfd66))
+
+- Use safe treesitter folding with fallback to indent ([58c4587](58c4587f3bf72afe3cb1a1fa745ab9b6b8d511ae))
+
+- Use mktemp for safer temporary file handling ([5de7355](5de7355dfd40df6dd2863acc125ebaa09f89cc14))
+
+- Update mason plugin name to correct GitHub organization ([3a5f9ed](3a5f9ed5d3b8d787b58465b29d32f3f175e25813))
 
 
 ### Chores
@@ -249,7 +259,9 @@ All notable changes to this project will be documented in this file.
 
 - Add GitHub Copilot CLI extension installation script ([91492a5](91492a55bb046f79e9aa90ed43c4cddf5328f6eb))
 
-- Upgrade shared WezTerm configuration with enhanced settings ([e5e8ce0](e5e8ce03df012bc0e27c784a82e24869165c2ea9))
+- Upgrade shared WezTerm configuration with enhanced settings ([4d3505b](4d3505b2f6e12436d30685f4f7832e9e95724afa))
+
+- Update shared WezTerm config with personal config improvements ([11c6bad](11c6bad704bcf363c780ede7f44a2b424582fc72))
 
 
 ### Fix
