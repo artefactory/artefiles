@@ -79,11 +79,11 @@ set -gx EDITOR nvim
 set -gx VISUAL nvim
 
 # Terminal capabilities
-set -gx TERM xterm-256color
-
-# WezTerm-specific settings for better color support
 if test "$TERM_PROGRAM" = WezTerm
+    set -gx TERM wezterm
     set -gx COLORTERM truecolor
+else
+    set -gx TERM xterm-256color
 end
 
 # Use difftastic for git diffs if available
@@ -140,7 +140,8 @@ if type -q atuin
 
     # Bind Ctrl+R to search shell history with atuin
     bind \cr _atuin_search
-    bind -M insert \cr _atuin_search
+    # Bind Up arrow key to Atuin's history navigation
+    bind up _atuin_bind_up
 end
 
 # Docker - https://www.docker.com
