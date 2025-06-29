@@ -26,10 +26,12 @@ dot_config/fish/functions/install_nerd_font.fish
 dot_config/aerospace/**
 {{ end }}
 
-# Remote SSH server exclusions (when SSH_CONNECTION is present)
-{{ if env "SSH_CONNECTION" }}
+# Remote SSH server exclusions (when SSH_CLIENT is present)
+{{ if env "SSH_CLIENT" }}
 # Terminal emulator configs (use system defaults on remote servers)
 dot_wezterm.lua.tmpl
+# macOS-specific GUI applications
+dot_config/aerospace/**
 # SSH client config (remote servers shouldn't override SSH client settings)
 dot_ssh/config.tmpl
 {{ end }}
