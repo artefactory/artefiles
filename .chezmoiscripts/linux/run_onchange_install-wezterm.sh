@@ -1,9 +1,13 @@
 #!/bin/sh
 
-# Install or update WezTerm CLI components for remote Linux servers (non-GUI)
+# Install or update WezTerm for Linux (CLI for SSH, GUI for local)
 # https://github.com/wez/wezterm
 
 set -eu
+
+# Check if we're in an SSH session
+IS_SSH=${SSH_CLIENT:+true}
+IS_SSH=${IS_SSH:-false}
 
 # Set directories
 INSTALL_DIR="${HOME}/.local"
@@ -136,10 +140,18 @@ if [ -d shell-integration ]; then
   cp -f shell-integration/* "${SHARE_DIR}/wezterm/" || echo "Warning: shell integration files not copied"
 fi
 
-# Copy terminfo for proper terminal behavior
+# Install terminfo for proper terminal behavior using tic
 if [ -d terminfo ]; then
-  mkdir -p "${SHARE_DIR}/terminfo"
-  cp -rf terminfo/* "${SHARE_DIR}/terminfo/" || echo "Warning: terminfo files not copied"
+  echo "Installing WezTerm terminfo using tic..."
+  # Find the wezterm terminfo file in the package
+  terminfo_file=$(find terminfo -name "*wezterm*" | head -1)
+  if [ -n "$terminfo_file" ]; then
+    tic -x -o ~/.terminfo "$terminfo_file" \
+      && echo "WezTerm terminfo installed successfully" \
+      || echo "Warning: Failed to install WezTerm terminfo"
+  else
+    echo "Warning: WezTerm terminfo file not found in package"
+  fi
 fi
 
 # Clean up
