@@ -8,6 +8,8 @@ header = """
 
 All notable changes to this project will be documented in this file.
 """
+# File to write the changelog to
+output = "CHANGELOG.md"
 # Template for the changelog body
 body = """
 {% if version %}

@@ -64,13 +64,35 @@ repos:
   # Custom local hooks
   - repo: local
     hooks:
-      - id: generate-changelog
-        name: Generate changelog
-        description: Automatically generates CHANGELOG.md using git-cliff
-        entry: bash -c 'if command -v git-cliff >/dev/null 2>&1; then git-cliff --output CHANGELOG.md && git add CHANGELOG.md || exit 1; else echo "git-cliff not installed, skipping changelog generation"; fi'
+      - id: validate-changelog
+        name: Validate that changelog is up-to-date
+        description: Validates that CHANGELOG.md is up-to-date before pushing.
         language: system
         pass_filenames: false
         stages: [pre-push]
+        entry: |
+          bash -c '
+          # --- Get the range of commits being pushed ---
+          read local_ref local_sha remote_ref remote_sha
+          # If branch is being deleted, exit successfully.
+          if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+            exit 0
+          fi
+          # Check if git-cliff is installed.
+          if ! command -v git-cliff >/dev/null 2>&1; then
+            echo "git-cliff not installed. Skipping changelog validation."
+            exit 0
+          fi
+          # --- Check if running git-cliff changes CHANGELOG.md ---
+          git-cliff
+          if ! git diff --quiet CHANGELOG.md; then
+            echo "CHANGELOG.md has been updated. Please add and commit the changes:" >&2
+            echo "  git add CHANGELOG.md" >&2
+            echo "  git commit -m \"chore(changelog): Update changelog\"" >&2
+            exit 1
+          fi
+          exit 0
+          '
 
 # pre-commit.ci configuration
 ci:
