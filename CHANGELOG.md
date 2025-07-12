@@ -138,7 +138,7 @@ All notable changes to this project will be documented in this file.
 
 - Update changelog ([0f974de](0f974de01f141da169c0b57acc477388d629ae1d))
 
-- Update changelog generation hook ([38b185b](38b185b0a81a0256a7c2919b43133f16ee672ebd))
+- Update changelog generation hook ([a010e03](a010e031b53c33d9f14a4557847bd3a0428209cc))
 
 
 ### Features
