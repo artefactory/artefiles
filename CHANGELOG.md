@@ -110,11 +110,7 @@ All notable changes to this project will be documented in this file.
 
 ### Chores
 
-- Add changelog generation with git-cliff ([06599d3](06599d32c438158bc0f62cb0b80d84a932d80c1b))
-
 - Update README with recent changes ([aedab3c](aedab3c5956f7785eccb1597945eff167b2a5750))
-
-- Update changelog configuration ([a02a7c4](a02a7c4121ddd3720b7d5091c77b1fec5221cfba))
 
 - Update chezmoiignore patterns ([b0d5c15](b0d5c151b283d146fe4c502f12f05aa449dc7316))
 
@@ -131,14 +127,6 @@ All notable changes to this project will be documented in this file.
 - Remove unused test-variables script ([02f240b](02f240b7620848fa46267e1b983f5ffd10ddd005))
 
 - Update fisher script and add rsync plugin ([5a63d80](5a63d803ae2d3f3da8891f26f9f7b9fe48e6edc1))
-
-- Changelog ([8bb3f11](8bb3f11c577770097fec715368388d3b96a30d41))
-
-- Changelog ([f886819](f886819fbbf85508042c2963d1f8b2d04a087dd6))
-
-- Update changelog ([0f974de](0f974de01f141da169c0b57acc477388d629ae1d))
-
-- Update changelog generation hook ([a010e03](a010e031b53c33d9f14a4557847bd3a0428209cc))
 
 
 ### Features
