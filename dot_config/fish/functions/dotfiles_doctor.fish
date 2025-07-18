@@ -97,7 +97,6 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     echo ""
     echo "## Cloud Tools"
     __check_tool_with_configs "gcloud" "" "$managed_files"
-    __check_tool_with_configs "op" "" "$managed_files"
     # [[ if eq .chezmoi.os "darwin" -]] #
     __check_tool_with_configs "aerospace" ".config/aerospace/aerospace.toml" "$managed_files"
     # [[ end ]] #

@@ -149,14 +149,6 @@ if type -q docker
     docker completion fish | source
 end
 
-# 1Password CLI - https://developer.1password.com/docs/cli
-if type -q op
-    # Enable shell completions
-    op completion fish | source
-
-    # Service account creation example:
-    # op service-account create "My Service Account" --can-create-vaults --expires-in 24h --vault Production:read_items,write_items
-end
 
 ###########################################
 # ALIASES AND USER PREFERENCES

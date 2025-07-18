@@ -16,12 +16,10 @@ packages:
       - 'fd'
       - 'uv'
       - 'fzf'
-      - 'mactop'
       - 'rust'
       - 'git-extras'
       - 'ripgrep'
       - 'pixi'
-      - '1password-cli'
     casks:
       - 'wezterm'
       - 'google-chrome'
