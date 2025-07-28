@@ -13,10 +13,34 @@ end
 
 # Set up aliases for eza if installed
 if type -q eza
-    alias ls="eza --group-directories-first"
-    alias ll="eza -lh --group-directories-first"
-    alias la="eza -lah --group-directories-first"
-    alias lt="eza -T --group-directories-first"
+    # Basic listing aliases
+    alias ls="eza --group-directories-first --icons"
+    alias ll="eza -lh --group-directories-first --icons --git"
+    alias la="eza -lah --group-directories-first --icons --git"
+
+    # Tree view aliases
+    alias lt="eza -T --group-directories-first --icons"
+    alias ltt="eza -T --group-directories-first --icons --git --level=2"
+    alias ltree="eza -T --group-directories-first --icons --git --level=3"
+
+    # Git-focused aliases for developers
+    alias lg="eza -lah --group-directories-first --icons --git --git-repos"
+    alias lgit="eza -lah --group-directories-first --icons --git --git-repos --sort=modified"
+
+    # Size and sorting aliases for data scientists
+    alias lsize="eza -lah --group-directories-first --icons --sort=size --reverse"
+    alias lmod="eza -lah --group-directories-first --icons --sort=modified --reverse"
+    alias lext="eza -lah --group-directories-first --icons --sort=extension"
+
+    # Research-friendly aliases
+    alias lrecent="eza -lah --group-directories-first --icons --sort=modified --reverse --time-style=relative"
+    alias ldetail="eza -lah --group-directories-first --icons --git --extended --time-style=long-iso"
+    alias lsearch="eza -lah --group-directories-first --icons --git"
+
+    # Recursive and filtering aliases
+    alias lrec="eza -R --group-directories-first --icons --level=2"
+    alias lcode="eza -lah --group-directories-first --icons --git -I='*.pyc|*.pyo|__pycache__|.DS_Store|node_modules|.git'"
+    alias ldata="eza -lah --group-directories-first --icons --sort=size --reverse -I='*.log|*.tmp|.cache'"
 end
 
 # Use bat instead of cat if installed
@@ -31,6 +55,93 @@ end
 # Use fd instead of find if installed
 if type -q fd
     alias find="fd"
+
+    # Basic file search aliases
+    alias ff="fd --type f"                                    # Find files only
+    alias fdir="fd --type d"                                  # Find directories only
+    alias fexe="fd --type x"                                  # Find executables
+    alias fempty="fd --type e"                                # Find empty files/dirs
+
+    # Developer-focused search aliases
+    alias fcode="fd --type f -e py -e js -e ts -e rs -e go -e java -e cpp -e c -e h" # Code files
+    alias fconfig="fd --type f -e json -e yaml -e yml -e toml -e ini -e conf"        # Config files
+    alias fdocs="fd --type f -e md -e txt -e rst -e tex"                             # Documentation
+    alias fdata="fd --type f -e csv -e json -e parquet -e xlsx -e h5 -e hdf5"       # Data files
+
+    # Git and version control
+    alias fgit="fd --type f --hidden --max-depth 3 -e git"   # Git-related files
+
+    # Size and time-based search functions (configurable with defaults)
+    function fbig
+        set -l size_threshold (test (count $argv) -gt 0; and echo $argv[1]; or echo "+10m")
+        fd --type f --size $size_threshold
+    end
+
+    function fsmall
+        set -l size_threshold (test (count $argv) -gt 0; and echo $argv[1]; or echo "-1k")
+        fd --type f --size $size_threshold
+    end
+
+    function frecent
+        set -l time_period (test (count $argv) -gt 0; and echo $argv[1]; or echo "1d")
+        fd --type f --changed-within $time_period
+    end
+
+    function fold
+        set -l time_period (test (count $argv) -gt 0; and echo $argv[1]; or echo "30d")
+        fd --type f --changed-before $time_period
+    end
+
+    # Advanced search patterns
+    alias fhidden="fd --hidden --type f"                     # Include hidden files
+    alias flink="fd --type l"                                # Find symlinks
+    alias fdeep="fd --type f --max-depth 1"                  # Shallow search
+    alias fpath="fd --full-path"                             # Search full paths
+end
+
+# Enhanced ripgrep aliases if installed
+if type -q rg
+    # Basic search aliases
+    alias rg="rg --smart-case --hidden"                      # Smart case + hidden files
+    alias rgl="rg --smart-case --hidden -n"                 # With line numbers
+    alias rgv="rg --smart-case --hidden -v"                 # Invert match
+
+    # Context search aliases
+    alias rgc="rg --smart-case --hidden -C 3"               # 3 lines context
+    alias rgb="rg --smart-case --hidden -B 5"               # 5 lines before
+    alias rga="rg --smart-case --hidden -A 5"               # 5 lines after
+
+    # File type specific searches
+    alias rgpy="rg --smart-case --hidden -tpy"              # Python files
+    alias rgjs="rg --smart-case --hidden -tjs -tts"         # JavaScript/TypeScript
+    alias rgrs="rg --smart-case --hidden -trust"            # Rust files
+    alias rggo="rg --smart-case --hidden -tgo"              # Go files
+    alias rgmd="rg --smart-case --hidden -tmd"              # Markdown files
+    alias rgjson="rg --smart-case --hidden -tjson"          # JSON files
+    alias rgyaml="rg --smart-case --hidden -tyaml"          # YAML files
+
+    # Developer-focused searches
+    alias rgcode="rg --smart-case --hidden -tpy -tjs -tts -trust -tgo -tjava -tcpp -tc" # Code files
+    alias rgconfig="rg --smart-case --hidden -tjson -tyaml -ttoml"                      # Config files
+    alias rglog="rg --smart-case --hidden -tlog"                                       # Log files
+
+    # Pattern-based searches
+    alias rgword="rg --smart-case --hidden -w"              # Whole word match
+    alias rgtodo="rg --smart-case --hidden -i 'todo|fixme|hack|xxx'"                   # Code todos
+
+    # Advanced search functions (configurable with defaults)
+    function rgctx
+        set -l context_lines (test (count $argv) -gt 1; and echo $argv[2]; or echo "3")
+        rg --smart-case --hidden -C $context_lines $argv[1]
+    end
+
+    # Replace functionality
+    alias rgreplace="rg --smart-case --hidden --replace"    # Use with -r flag
+
+    # Statistics and summary
+    alias rgstats="rg --smart-case --hidden --stats"        # Show search statistics
+    alias rgcount="rg --smart-case --hidden -c"             # Count matches per file
+    alias rgfiles="rg --smart-case --hidden -l"             # List files with matches
 end
 
 ###########################################
