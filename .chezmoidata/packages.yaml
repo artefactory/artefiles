@@ -20,6 +20,7 @@ packages:
       - 'git-extras'
       - 'ripgrep'
       - 'pixi'
+      - 'colima'
     casks:
       - 'wezterm'
       - 'google-chrome'
