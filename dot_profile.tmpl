@@ -1,5 +1,0 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# Only start fish in interactive shells
-if [ -x "$(command -v fish)" ] && [ -t 0 ]; then
-  exec fish
-fi
