@@ -2,6 +2,11 @@
 # Fish shell aliases
 # This file contains all aliases used in the fish shell configuration
 
+# Only load aliases in interactive shells
+if not status is-interactive
+    return
+end
+
 ###########################################
 # FILE SYSTEM ALIASES
 ###########################################
@@ -81,9 +86,5 @@ function miniconda
 end
 
 function anaconda
-    conda
-end
-
-function mamba
     conda
 end
