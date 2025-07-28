@@ -1,0 +1,49 @@
+# External dependencies managed by chezmoi for Linux systems
+# Reference: https://www.chezmoi.io/reference/special-files-and-directories/chezmoiexternal-format/
+
+# Neovim AppImage
+[".local/bin/nvim"]
+  type = "file"
+  url = "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage"
+  refreshPeriod = "672h"
+  executable = true
+
+# eza - A modern replacement for 'ls'
+[".local/bin/eza"]
+  type = "archive-file"
+  url = {{ gitHubLatestReleaseAssetURL "eza-community/eza" (printf "eza_%s-unknown-linux-gnu.zip" (output "uname" "-m" | trim)) | quote }}
+  executable = true
+  path = "./eza"
+
+# bat - A cat clone with syntax highlighting
+[".local/bin/bat"]
+  type = "archive-file"
+  url = {{ gitHubLatestReleaseAssetURL "sharkdp/bat" (printf "bat-*-%s-unknown-linux-gnu.tar.gz" (output "uname" "-m" | trim)) | quote }}
+  executable = true
+  path = "./bat"
+
+# fd - A simple, fast and user-friendly alternative to 'find'
+[".local/bin/fd"]
+  type = "archive-file"
+  url = {{ gitHubLatestReleaseAssetURL "sharkdp/fd" (printf "fd-*-%s-unknown-linux-gnu.tar.gz" (output "uname" "-m" | trim)) | quote }}
+  executable = true
+  path = "./fd"
+
+# difftastic - A structural diff tool
+[".local/bin/difft"]
+  type = "archive-file"
+  url = {{ gitHubLatestReleaseAssetURL "Wilfred/difftastic" (printf "difft-%s-unknown-linux-gnu.tar.gz" (output "uname" "-m" | trim)) | quote }}
+  executable = true
+  path = "./difft"
+
+# direnv - Unclutter your .profile
+[".local/bin/direnv"]
+  type = "file"
+  url = {{ gitHubLatestReleaseAssetURL "direnv/direnv" (printf "direnv.linux-%s" (output "uname" "-m" | trim)) | quote }}
+  executable = true
+
+# WezTerm AppImage
+[".local/bin/wezterm"]
+  type = "file"
+  url = {{ gitHubLatestReleaseAssetURL "wez/wezterm" "WezTerm-*-Ubuntu20.04.AppImage" | quote }}
+  executable = true
