@@ -2,6 +2,10 @@
 install.sh
 LICENSE
 README.md
+
+{{- if ne .chezmoi.os "linux" }}
+.chezmoiexternal.toml
+{{- end }}
 CHANGELOG.md
 CLAUDE.md
 TODO.md
