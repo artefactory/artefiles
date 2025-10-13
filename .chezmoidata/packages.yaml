@@ -26,3 +26,4 @@ packages:
       - 'google-chrome'
       - 'google-cloud-sdk'
       - 'nikitabobko/tap/aerospace'
+      - 'atuin-desktop'
