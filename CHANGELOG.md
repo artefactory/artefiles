@@ -113,6 +113,8 @@ All notable changes to this project will be documented in this file.
 
 - Update template configuration for dynamic GitHub data ([6cec36d](6cec36d3c411d0de3c95e2bfebc51c00791754e0))
 
+- Update WezTerm installation for Linux systems ([ae93773](ae93773d0ad0940bc27708777c7f23310441f683))
+
 
 ### Chores
 
@@ -277,6 +279,8 @@ All notable changes to this project will be documented in this file.
 
 - Exclude macOS GUI configurations on SSH sessions ([0283933](02839334bf7ea6aa1b15f813f82c00c3bcd086df))
 
+- Atuin desktop on macos ([49bfebd](49bfebde479eb60a1db8f69986e5261ddb81d20f))
+
 
 ### Fix
 
@@ -331,6 +335,8 @@ All notable changes to this project will be documented in this file.
 - Update CHANGELOG with recent features and fixes ([c62a57a](c62a57a03a295a0c06de8d104bf2fbdbc3b6b299))
 
 - Improve documentation with enhanced readability ([795bac9](795bac92f2ca45c51319f583c8c6e152e54668f0))
+
+- Update changelog ([f143c56](f143c56a477665ed9719b6c5e4faf70ded38b81f))
 
 
 ### Refactor
