@@ -95,3 +95,4 @@ zsdoc/data
 !/tests/_output/.gitkeep
 
 # End of https://www.toptal.com/developers/gitignore/api/fish,direnv,zsh,diff,dotenv,macos,nohup,ssh
+.context
