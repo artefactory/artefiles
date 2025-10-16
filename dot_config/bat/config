@@ -10,6 +10,7 @@
 
 # Keep default paging behavior - this will be overridden by smart_bat function in VS Code
 --style=numbers,changes,header
+--decorations=auto
 
 # Syntax mappings
 --map-syntax ".ignore:Git Ignore"

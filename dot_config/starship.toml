@@ -19,6 +19,9 @@ style = "blue"
 [docker_context]
 style = "blue"
 
+[gcloud]
+disabled = true
+
 [git_branch]
 style = "mauve"
 
@@ -185,5 +188,3 @@ style = "green"
 
 [rust]
 style = "peach"
-
-# All other modules use their default settings and formats
