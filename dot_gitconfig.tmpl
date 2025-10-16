@@ -114,28 +114,19 @@
     # Use bat with proper flags for difftastic output
     difftool = true
 
-# Check Git version and use the appropriate conflict style
-# zdiff3 was introduced in Git 2.35.0
-# [[ $gitVersionOutput := output "git" "--version" -]] #
-# [[ $gitVersion := index (splitList " " $gitVersionOutput) 2 -]] #
-# [[ $versionParts := splitList "." $gitVersion -]] #
-# [[ $majorVersion := index $versionParts 0 | atoi -]] #
-# [[ $minorVersion := index $versionParts 1 | atoi -]] #
-# [[ $useZdiff3 := or (gt $majorVersion 2) (and (eq $majorVersion 2) (ge $minorVersion 35)) -]] #
+[merge "mergiraf"]
+    name = mergiraf
+    driver = mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L
 
 [merge]
     # Include summaries of merged commits in new merge commits
     log = true
-    # Use appropriate conflict style based on Git version
-    # [[ if $useZdiff3 -]] #
-    conflictstyle = zdiff3
-    # [[ else -]] #
+    # Use diff3 conflict style for better compatibility with mergiraf
     conflictstyle = diff3
-    # [[ end -]] #
     # Always use rebase for merging
     ff = only
-    # Use fugitive as the default merge tool
-    tool = fugitive
+    # Use mergiraf as the default merge tool
+    tool = mergiraf
 
 [mergetool "vscode"]
     cmd = code --wait "$MERGED"

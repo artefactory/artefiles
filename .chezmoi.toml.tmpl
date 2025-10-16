@@ -10,8 +10,8 @@ email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter
 credentialHelper = "!gh auth git-credential"
 
 [merge]
-  command = 'nvim'
-  args = ["-d", "{{ .Destination }}", "{{ .Source }}", "{{ .Target }}"]
+  command = "mergiraf"
+  args = ["merge", "--output", "{{ .Source }}", "{{ .Target }}", "{{ .Source }}", "{{ .Destination }}"]
 
 [diff]
   command = "difft"
