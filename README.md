@@ -5,7 +5,7 @@ A cross-platform dotfiles template that provides a **default and sane configurat
 ## Philosophy
 
 This repository is designed to give you a **batteries-included development environment** that:
-- Uses **WezTerm** as the terminal emulator for its GPU acceleration and modern features
+- Uses **Ghostty** as the terminal emulator for its modern rendering and native feel
 - Uses **Fish Shell** for intelligent autosuggestions and superior user experience
 - Leverages **modern Rust-based Unix tools** (eza, bat, fd, rg) for better performance and UX
 - Provides consistent configuration across macOS and Linux platforms
@@ -71,6 +71,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
   - `eza` - Better `ls` with colors, git status, and tree view
   - `fd` - Faster, easier-to-use alternative to `find` for searching files
   - `fzf` - Fuzzy finder for quickly searching through files and command history
+  - `rip` - Safe `rm` replacement with a recoverable graveyard
   - `ripgrep` - Lightning-fast text search across files
 - 🌟 **[Catppuccin](https://github.com/catppuccin/catppuccin)** - A beautiful, consistent color theme applied across all tools for a cohesive look
 
@@ -82,6 +83,8 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 - 🔄 **Git Configuration** - Pre-configured version control settings with modern defaults and helpful aliases
   - 🤖 **[GitHub Copilot CLI extension](https://docs.github.com/en/copilot/github-copilot-in-the-cli/using-github-copilot-in-the-cli)** - AI-powered command suggestions and explanations. The extension is automatically installed if you have the GitHub CLI installed.
   - 🗣️ **[GitHub Copilot CLI tool](https://github.com/github/copilot-cli)** - An AI-powered coding assistant that brings the power of GitHub Copilot directly to your terminal.
+  - 🧬 **[Jujutsu (jj)](https://jj-vcs.github.io/jj/)** - A Git-compatible DVCS with a simpler workflow.
+  - 🧩 **[Mergiraf](https://mergiraf.org/)** - Structured merge driver for cleaner conflict resolution.
 - 📊 **Jupyter Notebook Support** - Enhanced tools for working with data science notebooks
 - 🐋 **Container Development** - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
@@ -95,7 +98,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 - `~/.gitconfig` - Git configuration with modern defaults ([Git Documentation](https://git-scm.com/docs/git-config))
 
 ### Terminal Configuration
-- `~/.wezterm.lua` - WezTerm terminal configuration ([WezTerm Documentation](https://wezfurlong.org/wezterm/))
+- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/))
 
 ### Fish Shell Configuration ([Fish Shell Documentation](https://fishshell.com/docs/current/))
 - `~/.config/fish/config.fish` - Main Fish shell configuration
@@ -113,6 +116,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 - `~/.config/direnv/direnvrc` - Environment management ([Direnv Documentation](https://direnv.net/))
 - `~/.config/atuin/config.toml` - Shell history sync ([Atuin Documentation](https://atuin.sh/))
 - `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/))
+- `~/.config/jj/config.toml` - Jujutsu configuration ([Jujutsu Documentation](https://jj-vcs.github.io/jj/))
 
 ### macOS Window Manager
 - `~/.config/aerospace/aerospace.toml` - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (macOS only)
@@ -153,7 +157,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
   └── starship.toml    # Prompt configuration
 
 ~/.ssh/config          # SSH configuration
-~/.wezterm.lua        # Terminal configuration
+~/.config/ghostty/config # Terminal configuration
 ~/.gitconfig          # Git configuration
 ```
 
