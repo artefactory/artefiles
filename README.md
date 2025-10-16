@@ -13,7 +13,7 @@ This repository is designed to give you a **batteries-included development envir
 ![Terminal Screenshot](docs/images/terminal-demo.png)
 *Modern terminal setup with Fish shell, Starship prompt, and Rust-based tools*
 
-## Quick Start 🚀
+## [Quick Start](#quick-start) 🚀
 
 ### macOS Prerequisites
 
@@ -59,7 +59,7 @@ These dotfiles can automatically bootstrap your GitHub Codespace environment. To
 
 Learn more about Codespaces dotfiles in the [official documentation](https://docs.github.com/en/codespaces/customizing-your-codespace/personalizing-github-codespaces-for-your-account#dotfiles).
 
-## What's Included 📦
+## [What's Included](#whats-included) 📦
 
 ### Core Features
 
@@ -80,13 +80,14 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
   - **[uv](https://github.com/astral-sh/uv)** - Ultra-fast Python package installer and resolver
   - **[direnv](https://direnv.net/)** - Automatically loads project-specific environment variables when you enter a directory
 - 🔄 **Git Configuration** - Pre-configured version control settings with modern defaults and helpful aliases
-  - 🤖 **GitHub Copilot CLI** - AI-powered command suggestions and explanations
+  - 🤖 **[GitHub Copilot CLI extension](https://docs.github.com/en/copilot/github-copilot-in-the-cli/using-github-copilot-in-the-cli)** - AI-powered command suggestions and explanations. The extension is automatically installed if you have the GitHub CLI installed.
+  - 🗣️ **[GitHub Copilot CLI tool](https://github.com/github/copilot-cli)** - An AI-powered coding assistant that brings the power of GitHub Copilot directly to your terminal.
 - 📊 **Jupyter Notebook Support** - Enhanced tools for working with data science notebooks
 - 🐋 **Container Development** - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
 
-## What Files Will Be Created/Modified 📋
+## [What Files Will Be Created/Modified](#what-files-will-be-createdmodified) 📋
 
 ⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, you must manually change your default shell (see [Post-Installation Steps](#post-installation-steps-📝)).
 
@@ -102,8 +103,6 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 - `~/.config/fish/fish_plugins` - Fish plugin list
 - `~/.config/fish/functions/fish_title.fish` - Terminal title function
 - `~/.config/fish/functions/smart_bat.fish` - Enhanced bat function (VSCode-aware)
-- `~/.config/fish/functions/launch.fish` - Application launcher
-- `~/.config/fish/functions/watch-file.fish` - File watching function
 - `~/.config/fish/functions/dotfiles_doctor.fish` - Health check function
 
 ### Shell Prompt
@@ -118,7 +117,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 ### macOS Window Manager
 - `~/.config/aerospace/aerospace.toml` - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (macOS only)
 
-## Prerequisites ✅
+## [Prerequisites](#prerequisites) ✅
 
 ### For All Platforms
 - A GitHub account (for git and GitHub-related features)
@@ -131,7 +130,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 - GitHub CLI installed via Homebrew
 - Note: Many tools in these dotfiles depend on Homebrew-installed packages on macOS
 
-## Common Tasks 🛠️
+## [Common Tasks](#common-tasks) 🛠️
 
 | Task | Command |
 |------|---------|
@@ -140,7 +139,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 | Health check | `dotfiles_doctor` |
 | New Python project | `mkdir project && cd project && echo 'layout uv' > .envrc && direnv allow` |
 
-## Configuration Structure 📁
+## [Configuration Structure](#configuration-structure) 📁
 
 ```
 ~/.config/
@@ -158,7 +157,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 ~/.gitconfig          # Git configuration
 ```
 
-## Post-Installation Steps 📝
+## [Post-Installation Steps](#post-installation-steps) 📝
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
@@ -187,18 +186,18 @@ atuin login     # Existing account
 gcloud init  # Set up Google Cloud SDK
 ```
 
-## Need Help? 🤔
+## [Need Help?](#need-help) 🤔
 
 - Run `dotfiles_doctor` to check your installation
 - See `chezmoi help` for dotfiles management
 - Check the [CHEATSHEET.md](CHEATSHEET.md) for more commands
 - Reset a file: `chezmoi apply --force ~/.path/to/file`
 
-## Detailed Documentation 📚
+## [Detailed Documentation](#detailed-documentation) 📚
 
 - [CHEATSHEET.md](CHEATSHEET.md) - Common commands and shortcuts
 - [CHANGELOG.md](CHANGELOG.md) - Version history and updates
 
-## License 📄
+## [License](#license) 📄
 
 MIT

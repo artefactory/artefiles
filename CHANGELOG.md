@@ -336,8 +336,6 @@ All notable changes to this project will be documented in this file.
 
 - Improve documentation with enhanced readability ([795bac9](795bac92f2ca45c51319f583c8c6e152e54668f0))
 
-- Update changelog ([f143c56](f143c56a477665ed9719b6c5e4faf70ded38b81f))
-
 
 ### Refactor
 

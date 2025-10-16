@@ -77,33 +77,6 @@ This cheatsheet provides quick reference for common commands and workflows. For 
 | Change directory with history | `cd` (uses `zoxide` for smart navigation) |
 | Find files by name | `fd pattern` |
 | Fuzzy find files | `fzf` |
-| Watch file contents | `watch-file logfile.txt` |
-| Run commands in background | `command args | run-and-watch output.log` |
-| Search command history | `Ctrl+R` (uses `atuin`) |
-| Activate Python environment | `direnv allow` (in directory with `.envrc`) |
-
-### Basic Navigation & File Operations
-
-| Task | Command | Description |
-|------|---------|-------------|
-| List files | `ls` | Group directories first |
-| List details | `ll` | Long format with human sizes |
-| List hidden | `la` | Include hidden files |
-| Tree view | `lt` | Show directory tree |
-| View file | `cat file` | Syntax highlighting (uses bat) |
-| Find files | `find pattern` | Smart find (uses fd) |
-| Change directory | `cd` | Smart navigation (uses zoxide) |
-
-### Utility Functions
-
-| Function | Usage | Description |
-|----------|-------|-------------|
-| `watch-file` | `watch-file <file> [language] [--bat-args "..."]` | Watch file with live syntax highlighting |
-| | `watch-file log.txt json` | Force JSON highlighting |
-| | `watch-file data.txt --bat-args "--plain"` | Custom bat display options |
-| `launch` | `launch <command> [args...] [logfile]` | Run command in background |
-| | `launch rsync -avz src/ dest/ sync.log` | Background file sync |
-| | `launch jupyter lab notebook.log` | Start Jupyter in background |
 
 ## Git & Version Control
 
