@@ -23,7 +23,9 @@ end
 
 # Set all Homebrew environment variables (PATH, MANPATH, INFOPATH)
 if type -q brew
-    eval "$(brew shellenv)"
+    if not set -q HOMEBREW_PREFIX
+        eval "$(brew shellenv)"
+    end
 end
 # [[ end ]] #
 
@@ -43,13 +45,25 @@ end
 
 # Google Cloud SDK configuration
 # [[ if eq .chezmoi.os "darwin" -]] #
-if type -q brew
-    set -l brew_prefix (brew --prefix)
-    if test -d "$brew_prefix/Caskroom/google-cloud-sdk"
-        fish_add_path "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin"
+if type -q brew; and set -q HOMEBREW_PREFIX
+    set gcloud_cask_root ""
 
-        if test -f "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
-            source "$brew_prefix/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.fish.inc"
+    if test -d "$HOMEBREW_PREFIX/Caskroom/gcloud-cli"
+        set gcloud_cask_root "$HOMEBREW_PREFIX/Caskroom/gcloud-cli/latest/google-cloud-sdk"
+    else if test -d "$HOMEBREW_PREFIX/Caskroom/google-cloud-sdk"
+        set gcloud_cask_root "$HOMEBREW_PREFIX/Caskroom/google-cloud-sdk/latest/google-cloud-sdk"
+    end
+
+    if test -n "$gcloud_cask_root"
+        fish_add_path "$gcloud_cask_root/bin"
+
+        function __init_gcloud --on-event fish_preexec
+            if string match -q "gcloud*" (commandline)
+                if test -f "$gcloud_cask_root/path.fish.inc"
+                    source "$gcloud_cask_root/path.fish.inc"
+                end
+                functions --erase __init_gcloud
+            end
         end
     end
 end
@@ -87,7 +101,9 @@ set -gx EDITOR nvim
 set -gx VISUAL nvim
 
 # Terminal capabilities
-if test "$TERM_PROGRAM" = WezTerm
+if test "$TERM_PROGRAM" = ghostty
+    set -gx TERM xterm-256color
+else if test "$TERM_PROGRAM" = WezTerm
     set -gx TERM wezterm
     set -gx COLORTERM truecolor
 else
@@ -108,22 +124,36 @@ set -gx FZF_DEFAULT_OPTS "--layout=reverse --border"
 
 # Starship prompt - https://starship.rs
 if type -q starship
-    starship init fish | source
+    function __init_starship --on-event fish_prompt
+        starship init fish | source
+        functions --erase __init_starship
+    end
 end
 
 # Zoxide smarter cd - https://github.com/ajeetdsouza/zoxide
 if type -q zoxide
-    zoxide init fish --cmd cd | source
+    function __init_zoxide --on-event fish_prompt
+        zoxide init fish --cmd cd | source
+        functions --erase __init_zoxide
+    end
 end
 
 # Direnv for directory-specific environments - https://direnv.net
 if type -q direnv
-    direnv hook fish | source
+    function __init_direnv --on-event fish_prompt
+        direnv hook fish | source
+        functions --erase __init_direnv
+    end
 end
 
 # Chezmoi dotfile manager - https://chezmoi.io
 if type -q chezmoi
-    chezmoi completion fish | source
+    function __init_chezmoi_completions --on-event fish_preexec
+        if string match -q "chezmoi*" (commandline)
+            chezmoi completion fish | source
+            functions --erase __init_chezmoi_completions
+        end
+    end
 end
 
 # FZF configuration with custom key bindings
@@ -154,7 +184,23 @@ end
 
 # Docker - https://www.docker.com
 if type -q docker
-    docker completion fish | source
+    function __init_docker_completions --on-event fish_preexec
+        if string match -q "docker*" (commandline)
+            docker completion fish | source
+            functions --erase __init_docker_completions
+        end
+    end
+end
+
+# Rip (alternative rm) completions
+# Lazy load completions on first use
+if type -q rip
+    function __init_rip_completions --on-event fish_preexec
+        if string match -q "rip*" (commandline)
+            rip completions fish | source
+            functions --erase __init_rip_completions
+        end
+    end
 end
 
 
