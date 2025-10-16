@@ -70,6 +70,14 @@ if test -d $HOME/.atuin/bin
     fish_add_path $HOME/.atuin/bin
 end
 
+# nvm Node Version Manager
+# [[ if eq .chezmoi.os "linux" -]] #
+if test -d "$HOME/.nvm"
+    set -gx NVM_DIR (test -z "$XDG_CONFIG_HOME"; and printf %s "$HOME/.nvm"; or printf %s "$XDG_CONFIG_HOME/nvm")
+    test -s "$NVM_DIR/nvm.sh"; and source "$NVM_DIR/nvm.sh" # This loads nvm
+end
+# [[ end ]] #
+
 ###########################################
 # ENVIRONMENT VARIABLES
 ###########################################
