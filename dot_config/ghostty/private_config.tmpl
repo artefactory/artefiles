@@ -1,0 +1,83 @@
+# chezmoi:template:left-delimiter="[[ " right-delimiter=" ]] #"
+# ============================================================================
+# Ghostty Configuration
+# Migrated from WezTerm
+# ============================================================================
+
+# ============================================================================
+# APPEARANCE & THEME
+# ============================================================================
+
+# Color scheme
+theme = Catppuccin Mocha
+
+# Font configuration
+font-family = FiraCode Nerd Font
+font-family = Fira Code
+font-size = 14
+
+# Line height (cell height adjustment for 1.1 line height equivalent)
+adjust-cell-height = 10%
+
+# Cursor appearance (reverse video like WezTerm's force_reverse_video_cursor)
+cursor-color = cell-foreground
+cursor-text = cell-background
+
+# Inactive pane dimming (equivalent to WezTerm's inactive_pane_hsb)
+unfocused-split-opacity = 0.7
+
+# Split divider color (optional - defaults to theme appropriate color)
+# split-divider-color = #585b70
+
+# Window padding (minimal like WezTerm)
+window-padding-x = 0
+window-padding-y = 0,4
+
+# Window decorations (TITLE | RESIZE equivalent)
+window-decoration = true
+
+# [[ if eq .chezmoi.os "darwin" ]] #
+# Tabs are managed by your multiplexer (tmux optional), use transparent for clean titlebar with buttons
+macos-titlebar-style = transparent
+
+# macOS specific
+macos-option-as-alt = left
+# [[ end ]] #
+
+# Note: Ghostty doesn't have a scrollbar configuration option
+# Scrolling is handled via scrollback buffer
+
+# ============================================================================
+# TERMINAL BEHAVIOR
+# ============================================================================
+
+# Scrollback (10000 lines, roughly 10MB at ~1000 chars/line)
+scrollback-limit = 10000000
+
+# Disable audible/system bell (keep visual indicators)
+bell-features = no-audio,no-system
+
+# Auto-scroll on keystroke (default behavior, explicit for clarity)
+scroll-to-bottom = keystroke
+
+# ============================================================================
+# KEY BINDINGS
+# Minimal keybindings - tab/pane management handled by your multiplexer (tmux optional)
+# ============================================================================
+
+# ----- Copy and Paste -----
+keybind = super+c=copy_to_clipboard
+keybind = super+v=paste_from_clipboard
+
+# ----- Terminal Controls -----
+keybind = super+k=clear_screen
+
+# ----- Shift+Enter fix (sends ESC + Enter) -----
+keybind = shift+enter=text:\x1b\r
+
+# ============================================================================
+# MOUSE BINDINGS
+# ============================================================================
+
+# Open links with Cmd+Click (macOS)
+# This is the default behavior in Ghostty, no configuration needed
