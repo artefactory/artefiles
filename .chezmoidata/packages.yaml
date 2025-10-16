@@ -19,8 +19,8 @@ packages:
       - 'rust'
       - 'git-extras'
       - 'ripgrep'
-      - 'pixi'
       - 'colima'
+      - 'copilot'
     casks:
       - 'wezterm'
       - 'google-chrome'
