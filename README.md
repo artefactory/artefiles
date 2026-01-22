@@ -96,6 +96,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 
 ### Git Configuration
 - `~/.gitconfig` - Git configuration with modern defaults ([Git Documentation](https://git-scm.com/docs/git-config))
+- `~/.gitattributes_global` - Global attributes for merge drivers and file handling
 
 ### Terminal Configuration
 - `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/))
@@ -128,6 +129,20 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
   - GitHub CLI authentication will be handled automatically during installation
   - For non-interactive environments, set `GH_TOKEN` environment variable before installation
 - SSH keys added to your GitHub account ([instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
+- Set Fish as your default login shell (required to use the Fish config). No zsh script switches shells for you.
+
+  **macOS:**
+  ```bash
+  command -v fish | sudo tee -a /etc/shells
+  chsh -s $(brew --prefix)/bin/fish
+  ```
+
+  **Linux:**
+  ```bash
+  chsh -s $(which fish)
+  ```
+
+  *Note: You may need to log out and back in for the shell change to take effect.*
 
 ### macOS Specific
 - [Homebrew](https://brew.sh/) package manager (see [macOS Prerequisites](#macos-prerequisites) above)
@@ -142,6 +157,31 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 | Edit config | `chezmoi edit ~/.config/file` |
 | Health check | `dotfiles_doctor` |
 | New Python project | `mkdir project && cd project && echo 'layout uv' > .envrc && direnv allow` |
+
+## [Chezmoi Basics](#chezmoi-basics) 🧰
+
+Chezmoi is the manager for these dotfiles. Main docs: https://www.chezmoi.io/user-guide/
+
+| Task | Command |
+|------|---------|
+| See pending changes | `chezmoi status` |
+| Inspect diffs | `chezmoi diff` |
+| Edit a file | `chezmoi edit ~/.config/fish/config.fish` |
+| Apply changes | `chezmoi apply` |
+| Update from repo | `chezmoi update` |
+
+### Remove All Chezmoi-Managed Files (Danger)
+
+Review first:
+```bash
+chezmoi managed -p absolute
+```
+
+Remove all managed files, then remove chezmoi state/source:
+```bash
+chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
+chezmoi purge --force
+```
 
 ## [Configuration Structure](#configuration-structure) 📁
 
@@ -165,19 +205,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-⚠️ **Important**: To benefit from the Fish shell configuration, you must manually change your default shell:
-
-**macOS:**
-```bash
-chsh -s $(brew --prefix)/bin/fish
-```
-
-**Linux:**
-```bash
-chsh -s $(which fish)
-```
-
-*Note: You may need to log out and back in for the shell change to take effect.*
+If you skipped the prerequisite step, set Fish as your default shell now (see [Prerequisites](#prerequisites-)).
 
 ### 2. Set up shell history sync:
 ```bash

@@ -67,9 +67,6 @@ if type -q fd
     alias fdocs="fd --type f -e md -e txt -e rst -e tex"                             # Documentation
     alias fdata="fd --type f -e csv -e json -e parquet -e xlsx -e h5 -e hdf5"       # Data files
 
-    # Git and version control
-    alias fgit="fd --type f --hidden --max-depth 3 -e git"   # Git-related files
-
     # Size and time-based search functions (configurable with defaults)
     function fbig
         set -l size_threshold (test (count $argv) -gt 0; and echo $argv[1]; or echo "+10m")
@@ -94,7 +91,6 @@ if type -q fd
     # Advanced search patterns
     alias fhidden="fd --hidden --type f"                     # Include hidden files
     alias flink="fd --type l"                                # Find symlinks
-    alias fdeep="fd --type f --max-depth 1"                  # Shallow search
     alias fpath="fd --full-path"                             # Search full paths
 end
 
