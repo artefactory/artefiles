@@ -205,7 +205,9 @@ chezmoi purge --force
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-If you skipped the prerequisite step, set Fish as your default shell now (see [Prerequisites](#prerequisites-)).
+If you skipped the prerequisite step, set Fish as your default shell now (see [Prerequisites](#prerequisites-)).  
+If you're using VS Code or another IDE, fully quit and reopen it so the Fish profile shows up in the terminal list.
+
 
 ### 2. Set up shell history sync:
 ```bash
