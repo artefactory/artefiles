@@ -31,7 +31,7 @@ fish -c "fisher update"
 FISH_CONF_D_DIR="$HOME/.config/fish/conf.d"
 mkdir -p "$FISH_CONF_D_DIR"
 
-fish <<'EOF'
+cat > "${FISH_CONF_D_DIR}/artefiles_abbrs.fish" <<'EOF'
 # Set useful abbreviations
 abbr -a -- gch 'git checkout'
 abbr -a -- gst 'git status'
@@ -42,8 +42,5 @@ abbr -a -- gpush 'git push'
 abbr -a -- gpull 'git pull'
 abbr -a -- vba 'source .venv/bin/activate.fish'
 abbr -a -- dea 'deactivate'
-abbr -a --position anywhere --set-cursor='%' -- G '| grep "%'
-
-# Store them in custom fish config file
-abbr > ~/.config/fish/conf.d/artefiles_abbrs.fish
+abbr -a --position anywhere --set-cursor='%' -- G '| grep "%"'
 EOF
