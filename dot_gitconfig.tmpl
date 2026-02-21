@@ -125,8 +125,9 @@
     conflictstyle = diff3
     # Always use rebase for merging
     ff = only
-    # Use mergiraf as the default merge tool
-    tool = mergiraf
+    # Use vscode for manual conflict resolution when mergiraf can't auto-resolve
+    # (mergiraf is a merge driver, not a mergetool)
+    tool = vscode
 
 [mergetool "vscode"]
     cmd = code --wait "$MERGED"
@@ -134,10 +135,6 @@
 
 [mergetool "nvim"]
     cmd = nvim -d "$LOCAL" "$REMOTE" "$MERGED" -c 'wincmd J | wincmd ='
-    trustExitCode = true
-
-[mergetool "fugitive"]
-    cmd = nvim -f -c \"Gvdiffsplit!\" \"$MERGED\"
     trustExitCode = true
 
 [mergetool]
@@ -204,8 +201,6 @@
     vsmerge = mergetool --tool=vscode
     # Use neovim for resolving merge conflicts
     nvimmerge = mergetool --tool=nvim
-    # Use fugitive for resolving merge conflicts
-    fugmerge = mergetool --tool=fugitive
 
 [credential]
     # [[ if .credentialHelper -]] #
