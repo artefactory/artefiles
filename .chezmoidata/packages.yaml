@@ -27,6 +27,7 @@ packages:
       - 'zellij'
     casks:
       - 'font-fira-code-nerd-font'
+      - 'visual-studio-code'
       - 'ghostty'
       - 'google-chrome'
       - 'gcloud-cli'
