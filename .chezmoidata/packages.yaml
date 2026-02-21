@@ -26,6 +26,7 @@ packages:
       - 'colima'
       - 'zellij'
     casks:
+      - 'font-fira-code-nerd-font'
       - 'ghostty'
       - 'google-chrome'
       - 'gcloud-cli'
