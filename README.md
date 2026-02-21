@@ -220,6 +220,10 @@ atuin login     # Existing account
 gcloud init  # Set up Google Cloud SDK
 ```
 
+### 4. Restart your terminal or IDE
+
+Restart your terminal (or fully quit and reopen your IDE if using VS Code, Cursor, etc.) for all changes to take effect.
+
 ## [Need Help?](#need-help) 🤔
 
 - Run `dotfiles_doctor` to check your installation
