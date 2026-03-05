@@ -43,6 +43,7 @@ if test -d $HOME/.cargo/bin
     fish_add_path $HOME/.cargo/bin
 end
 
+# [[ if has "cloud" .modules -]] #
 # Google Cloud SDK configuration
 # [[ if eq .chezmoi.os "darwin" -]] #
 if type -q brew; and set -q HOMEBREW_PREFIX
@@ -78,11 +79,14 @@ if test -d $HOME/.local/google-cloud-sdk
     end
 end
 # [[ end -]] #
+# [[ end -]] #
 
+# [[ if has "atuin" .modules -]] #
 # Atuin shell history tool
 if test -d $HOME/.atuin/bin
     fish_add_path $HOME/.atuin/bin
 end
+# [[ end -]] #
 
 # nvm Node Version Manager
 # [[ if eq .chezmoi.os "linux" -]] #
@@ -97,8 +101,13 @@ end
 ###########################################
 
 # Text editors
+# [[ if has "editor" .modules -]] #
 set -gx EDITOR nvim
 set -gx VISUAL nvim
+# [[ else -]] #
+set -gx EDITOR vi
+set -gx VISUAL vi
+# [[ end -]] #
 
 # Terminal capabilities
 if test "$TERM_PROGRAM" = ghostty
@@ -110,10 +119,12 @@ else
     set -gx TERM xterm-256color
 end
 
+# [[ if has "git_advanced" .modules -]] #
 # Use difftastic for git diffs if available
 if type -q difft
     set -gx GIT_EXTERNAL_DIFF difft
 end
+# [[ end -]] #
 
 ###########################################
 # TOOL CONFIGURATION
@@ -168,6 +179,7 @@ if type -q fzf
     bind \eC '__fzf_cd --hidden'           # Alt+Shift+C: cd with hidden files
 end
 
+# [[ if has "atuin" .modules -]] #
 # Atuin shell history with search - https://atuin.sh
 if type -q atuin
     # Enable shell completions
@@ -181,6 +193,7 @@ if type -q atuin
     # Bind Up arrow key to Atuin's history navigation
     bind up _atuin_bind_up
 end
+# [[ end -]] #
 
 # Docker - https://www.docker.com
 if type -q docker
