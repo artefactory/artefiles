@@ -18,8 +18,11 @@
 # [[ end ]] #
 
 [core]
-    # Use Neovim as default editor
+# [[ if has "editor" .modules ]] #
     editor = nvim
+# [[ else ]] #
+    editor = vi
+# [[ end ]] #
     # Avoid issues with line endings between platforms
     autocrlf = input
     # Enable symlinks on all platforms
@@ -91,9 +94,11 @@
     ui = auto
 
 [diff]
+# [[ if has "git_advanced" .modules ]] #
     # Use difftastic for all diffs by default if available
     external = difft
     tool = difftastic
+# [[ end ]] #
     # Add VSCode as an alternative diff tool
     guitool = vscode
     # Use inline diff format
@@ -101,8 +106,10 @@
     # Use histogram algorithm for better diffs
     algorithm = histogram
 
+# [[ if has "git_advanced" .modules ]] #
 [difftool "difftastic"]
     cmd = difft --display=inline --syntax-highlight=on "$LOCAL" "$REMOTE"
+# [[ end ]] #
 
 [difftool "vscode"]
     cmd = code --wait --diff "$LOCAL" "$REMOTE"
@@ -114,28 +121,33 @@
     # Use bat with proper flags for difftastic output
     difftool = true
 
+# [[ if has "git_advanced" .modules ]] #
 [merge "mergiraf"]
     name = mergiraf
     driver = mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L
+# [[ end ]] #
 
 [merge]
     # Include summaries of merged commits in new merge commits
     log = true
+# [[ if has "git_advanced" .modules ]] #
     # Use diff3 conflict style for better compatibility with mergiraf
     conflictstyle = diff3
+# [[ end ]] #
     # Always use rebase for merging
     ff = only
-    # Use vscode for manual conflict resolution when mergiraf can't auto-resolve
-    # (mergiraf is a merge driver, not a mergetool)
+    # Use vscode for manual conflict resolution
     tool = vscode
 
 [mergetool "vscode"]
     cmd = code --wait "$MERGED"
     trustExitCode = true
 
+# [[ if has "editor" .modules ]] #
 [mergetool "nvim"]
     cmd = nvim -d "$LOCAL" "$REMOTE" "$MERGED" -c 'wincmd J | wincmd ='
     trustExitCode = true
+# [[ end ]] #
 
 [mergetool]
     prompt = false
@@ -199,8 +211,10 @@
     vsdiff = difftool --tool=vscode
     # Use VSCode for resolving merge conflicts
     vsmerge = mergetool --tool=vscode
+# [[ if has "editor" .modules ]] #
     # Use neovim for resolving merge conflicts
     nvimmerge = mergetool --tool=nvim
+# [[ end ]] #
 
 [credential]
     # [[ if .credentialHelper -]] #
@@ -243,6 +257,7 @@
     insteadOf = gl:
 # [[ end ]] #
 
+# [[ if has "git_advanced" .modules ]] #
 [lfs]
     # Enable Git LFS
     enable = true
@@ -259,10 +274,10 @@
     smudge = git-lfs smudge -- %f
     process = git-lfs filter-process
     required = true
+# [[ end ]] #
 
+# [[ if has "python_dev" .modules ]] #
 # Jupyter notebook diff and merge tools configuration
-# These sections will be active only if nbdime is installed
-# You can run: nbdime config-git --global --enable to properly configure these
 [diff "jupyternotebook"]
     command = git-nbdiffdriver diff
 
@@ -275,3 +290,4 @@
 
 [mergetool "nbdime"]
     cmd = git-nbmergetool merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
+# [[ end ]] #

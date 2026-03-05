@@ -8,7 +8,10 @@ email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter
 # Set the desired credential helper.
 # Examples: "!gh auth git-credential", "osxkeychain", "cache --timeout=3600"
 credentialHelper = "!gh auth git-credential"
+# [[ $modules := promptMultichoiceOnce . "modules" "Select optional modules" (list "editor" "terminal" "git_advanced" "atuin" "python_dev" "cloud" "multiplexer" "macos_desktop") ]] #
+modules = # [[ $modules | toJson ]] #
 
+# [[ if has "git_advanced" $modules ]] #
 [merge]
   command = "mergiraf"
   args = ["merge", "--output", "{{ .Source }}", "{{ .Target }}", "{{ .Source }}", "{{ .Destination }}"]
@@ -16,3 +19,4 @@ credentialHelper = "!gh auth git-credential"
 [diff]
   command = "difft"
   args = ["--display=inline", "{{ .Destination }}", "{{ .Target }}"]
+# [[ end ]] #

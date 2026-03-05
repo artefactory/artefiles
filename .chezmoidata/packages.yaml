@@ -1,36 +1,61 @@
 packages:
   darwin:
-    brews:
-      - 'fish'
-      - 'starship'
-      - 'neovim'
-      - 'git'
-      - 'git-lfs'
-      - 'bat'
-      - 'eza'
-      - 'zoxide'
-      - 'atuin'
-      - 'direnv'
-      - 'difftastic'
-      - 'mergiraf'
-      - 'git-cliff'
-      - 'jj'
-      - 'fd'
-      - 'uv'
-      - 'fzf'
-      - 'rust'
-      - 'ripgrep'
-      - 'rip2'
-      - 'dust'
-      - 'bottom'
-      - 'colima'
-      - 'zellij'
-    casks:
-      - 'font-fira-code-nerd-font'
-      - 'visual-studio-code'
-      - 'ghostty'
-      - 'google-chrome'
-      - 'gcloud-cli'
-      - 'nikitabobko/tap/aerospace'
-      - '1password'
-      - '1password-cli'
+    core:
+      brews:
+        - 'fish'
+        - 'starship'
+        - 'git'
+        - 'bat'
+        - 'eza'
+        - 'fd'
+        - 'fzf'
+        - 'ripgrep'
+        - 'zoxide'
+        - 'rip2'
+        - 'dust'
+        - 'bottom'
+        - 'direnv'
+        - 'uv'
+        - 'rust'
+      casks:
+        - 'font-fira-code-nerd-font'
+        - 'visual-studio-code'
+    modules:
+      editor:
+        brews:
+          - 'neovim'
+        casks: []
+      terminal:
+        brews: []
+        casks:
+          - 'ghostty'
+      git_advanced:
+        brews:
+          - 'jj'
+          - 'mergiraf'
+          - 'difftastic'
+          - 'git-cliff'
+          - 'git-lfs'
+        casks: []
+      atuin:
+        brews:
+          - 'atuin'
+        casks: []
+      python_dev:
+        brews: []
+        casks: []
+      cloud:
+        brews:
+          - 'colima'
+        casks:
+          - 'gcloud-cli'
+      multiplexer:
+        brews:
+          - 'zellij'
+        casks: []
+      macos_desktop:
+        brews: []
+        casks:
+          - 'nikitabobko/tap/aerospace'
+          - '1password'
+          - '1password-cli'

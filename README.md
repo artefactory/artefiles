@@ -5,10 +5,10 @@ A cross-platform dotfiles template that provides a **default and sane configurat
 ## Philosophy
 
 This repository is designed to give you a **batteries-included development environment** that:
-- Uses **Ghostty** as the terminal emulator for its modern rendering and native feel
 - Uses **Fish Shell** for intelligent autosuggestions and superior user experience
 - Leverages **modern Rust-based Unix tools** (eza, bat, fd, rg) for better performance and UX
 - Provides consistent configuration across macOS and Linux platforms
+- Offers a **modular architecture**: a core layer is always installed, and additional modules are opt-in
 
 ![Terminal Screenshot](docs/images/terminal-demo.png)
 *Modern terminal setup with Fish shell, Starship prompt, and Rust-based tools*
@@ -59,13 +59,37 @@ These dotfiles can automatically bootstrap your GitHub Codespace environment. To
 
 Learn more about Codespaces dotfiles in the [official documentation](https://docs.github.com/en/codespaces/customizing-your-codespace/personalizing-github-codespaces-for-your-account#dotfiles).
 
+## [Modular Architecture](#modular-architecture) 🧩
+
+Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you select which modules to enable via an interactive prompt.
+
+### Core (always installed)
+
+Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font, VS Code.
+
+### Optional Modules
+
+| Module | Contents | Description |
+|--------|----------|-------------|
+| `editor` | Neovim | Terminal editor with nvim aliases |
+| `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
+| `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs | Advanced version control tooling |
+| `atuin` | Atuin | Shell history sync across machines |
+| `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
+| `cloud` | gcloud, Colima | Cloud SDK and container runtime |
+| `multiplexer` | Zellij | Terminal multiplexer |
+| `macos_desktop` | AeroSpace, 1Password, 1Password CLI | macOS window manager and password manager (darwin only) |
+
+### Changing Modules
+
+Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
+
 ## [What's Included](#whats-included) 📦
 
 ### Core Features
 
 - 🐟 **[Fish Shell](https://fishshell.com/)** - A smart command-line shell that suggests commands as you type and has better tab completion than traditional shells
 - ⚡ **[Starship](https://starship.rs/)** - A customizable terminal prompt that shows useful information like git status, programming language versions, and execution time
-- 📝 **[Neovim](https://neovim.io/)** - A powerful text editor for coding with syntax highlighting, plugins, and modern features
 - 🔍 **Modern CLI Tools** - Faster, more user-friendly replacements for traditional Unix commands:
   - `bat` - Enhanced version of `cat` with syntax highlighting and line numbers
   - `eza` - Better `ls` with colors, git status, and tree view
@@ -75,19 +99,13 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
   - `ripgrep` - Lightning-fast text search across files
 - 🌟 **[Catppuccin](https://github.com/catppuccin/catppuccin)** - A beautiful, consistent color theme applied across all tools for a cohesive look
 
-### Development Tools
+### Optional Module Highlights
 
-- 🐍 **Python Environment Management** - Tools to manage Python projects and dependencies:
-  - **[uv](https://github.com/astral-sh/uv)** - Ultra-fast Python package installer and resolver
-  - **[direnv](https://direnv.net/)** - Automatically loads project-specific environment variables when you enter a directory
-- 🔄 **Git Configuration** - Pre-configured version control settings with modern defaults and helpful aliases
-  - 🤖 **[GitHub Copilot CLI extension](https://docs.github.com/en/copilot/github-copilot-in-the-cli/using-github-copilot-in-the-cli)** - AI-powered command suggestions and explanations. The extension is automatically installed if you have the GitHub CLI installed.
-  - 🗣️ **[GitHub Copilot CLI tool](https://github.com/github/copilot-cli)** - An AI-powered coding assistant that brings the power of GitHub Copilot directly to your terminal.
-  - 🧬 **[Jujutsu (jj)](https://jj-vcs.github.io/jj/)** - A Git-compatible DVCS with a simpler workflow.
-  - 🧩 **[Mergiraf](https://mergiraf.org/)** - Structured merge driver for cleaner conflict resolution.
-- 📊 **Jupyter Notebook Support** - Enhanced tools for working with data science notebooks
-- 🐋 **Container Development** - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
-- ⏰ **Shell History** - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
+- 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
+- 🔄 **Advanced Git** (`git_advanced`) - Jujutsu, mergiraf, difftastic, git-cliff, and Git LFS
+- 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
+- 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
+- ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
 
 ## [What Files Will Be Created/Modified](#what-files-will-be-createdmodified) 📋

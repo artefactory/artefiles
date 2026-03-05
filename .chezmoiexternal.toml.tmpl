@@ -10,12 +10,14 @@
 #   [[ $libc = "musl" ]] #
 # [[ end ]] #
 
+# [[ if has "editor" .modules ]] #
 # Neovim AppImage
 [".local/bin/nvim"]
   type = "file"
   url = # [[ printf "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-%s.appimage" (eq .chezmoi.arch "amd64" | ternary "x86_64" "arm64") | quote ]] #
   refreshPeriod = "672h"
   executable = true
+# [[ end ]] #
 
 # eza - A modern replacement for 'ls'
 [".local/bin/eza"]
@@ -38,6 +40,7 @@
   executable = true
   path = "*/fd"
 
+# [[ if has "git_advanced" .modules ]] #
 # difftastic - A structural diff tool
 [".local/bin/difft"]
   type = "archive-file"
@@ -52,12 +55,29 @@
   executable = true
   path = "./mergiraf"
 
+# jj - Jujutsu version control
+[".local/bin/jj"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
+  executable = true
+  path = "*/jj"
+
+# Git LFS - Git extension for versioning large files
+[".local/bin/git-lfs"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "git-lfs/git-lfs" (printf "git-lfs-linux-%s-*.tar.gz" .chezmoi.arch) | quote ]] #
+  executable = true
+  path = "*/git-lfs"
+# [[ end ]] #
+
+# [[ if has "multiplexer" .modules ]] #
 # zellij - A terminal workspace with batteries included
 [".local/bin/zellij"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "zellij-org/zellij" (printf "zellij-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "zellij"
+# [[ end ]] #
 
 # starship - The minimal, blazing-fast, and infinitely customizable prompt for any shell
 [".local/bin/starship"]
@@ -66,11 +86,13 @@
   executable = true
   path = "starship"
 
+# [[ if has "terminal" .modules ]] #
 # ghostty - A fast, feature-rich, and cross-platform terminal emulator
 [".local/bin/ghostty"]
   type = "file"
   url = # [[ gitHubLatestReleaseAssetURL "pkgforge-dev/ghostty-appimage" (printf "Ghostty-*-%s.AppImage" $rustArch) | quote ]] #
   executable = true
+# [[ end ]] #
 
 # fzf - A command-line fuzzy finder
 [".local/bin/fzf"]
@@ -79,12 +101,14 @@
   executable = true
   path = "fzf"
 
+# [[ if has "atuin" .modules ]] #
 # atuin - Magical shell history
 [".local/bin/atuin"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "atuinsh/atuin" (printf "atuin-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "*/atuin"
+# [[ end ]] #
 
 # zoxide - A smarter cd command
 [".local/bin/zoxide"]
@@ -105,13 +129,6 @@
   url = # [[ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "*/uvx"
-
-# jj - Jujutsu version control
-[".local/bin/jj"]
-  type = "archive-file"
-  url = # [[ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
-  executable = true
-  path = "*/jj"
 
 # dust - More intuitive version of du in Rust
 [".local/bin/dust"]
@@ -139,12 +156,5 @@
   type = "file"
   url = # [[ gitHubLatestReleaseAssetURL "direnv/direnv" (printf "direnv.linux-%s" .chezmoi.arch) | quote ]] #
   executable = true
-
-# Git LFS - Git extension for versioning large files
-[".local/bin/git-lfs"]
-  type = "archive-file"
-  url = # [[ gitHubLatestReleaseAssetURL "git-lfs/git-lfs" (printf "git-lfs-linux-%s-*.tar.gz" .chezmoi.arch) | quote ]] #
-  executable = true
-  path = "*/git-lfs"
 
 # [[ end ]] #
