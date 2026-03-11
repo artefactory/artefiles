@@ -104,7 +104,7 @@ Learn more about Codespaces dotfiles in the [official documentation](https://doc
 ### Fish Shell Configuration ([Fish Shell Documentation](https://fishshell.com/docs/current/))
 - `~/.config/fish/config.fish` - Main Fish shell configuration
 - `~/.config/fish/aliases.fish` - Shell aliases and functions
-- `~/.config/fish/conf.d/artefiles_abbrs.fish` - Fish abbreviations generated during install
+- `~/.config/fish/conf.d/artefiles_abbrs.fish` - Fish abbreviations managed by chezmoi
 - `~/.config/fish/fish_plugins` - Fish plugin list
 - `~/.config/fish/functions/fish_title.fish` - Terminal title function
 - `~/.config/fish/functions/smart_bat.fish` - Enhanced bat function (VSCode-aware)

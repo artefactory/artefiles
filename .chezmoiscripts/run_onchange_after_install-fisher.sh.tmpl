@@ -26,14 +26,3 @@ if ! fish -c "functions -q fisher" > /dev/null 2>&1; then
 fi
 
 fish -c "fisher update"
-
-# Create a dedicated file for useful Fish abbreviations.
-FISH_CONF_D_DIR="$HOME/.config/fish/conf.d"
-mkdir -p "$FISH_CONF_D_DIR"
-
-cat > "${FISH_CONF_D_DIR}/artefiles_abbrs.fish" <<'EOF'
-# Set useful abbreviations
-abbr -a -- vba 'source .venv/bin/activate.fish'
-abbr -a -- dea 'deactivate'
-abbr -a --position anywhere --set-cursor='%' -- G '| grep "%"'
-EOF
