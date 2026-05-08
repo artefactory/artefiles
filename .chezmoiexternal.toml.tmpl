@@ -31,14 +31,16 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "sharkdp/bat" (printf "bat-*-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/bat"
+  stripComponents = 1
+  path = "bat"
 
 # fd - A simple, fast and user-friendly alternative to 'find'
 [".local/bin/fd"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "sharkdp/fd" (printf "fd-*-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/fd"
+  stripComponents = 1
+  path = "fd"
 
 # [[ if has "git_advanced" .modules ]] #
 # difftastic - A structural diff tool
@@ -60,14 +62,16 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/jj"
+  stripComponents = 1
+  path = "jj"
 
 # Git LFS - Git extension for versioning large files
 [".local/bin/git-lfs"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "git-lfs/git-lfs" (printf "git-lfs-linux-%s-*.tar.gz" .chezmoi.arch) | quote ]] #
   executable = true
-  path = "*/git-lfs"
+  stripComponents = 1
+  path = "git-lfs"
 # [[ end ]] #
 
 # [[ if has "multiplexer" .modules ]] #
@@ -107,7 +111,8 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "atuinsh/atuin" (printf "atuin-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/atuin"
+  stripComponents = 1
+  path = "atuin"
 # [[ end ]] #
 
 # zoxide - A smarter cd command
@@ -122,34 +127,37 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/uv"
+  stripComponents = 1
+  path = "uv"
 
 [".local/bin/uvx"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/uvx"
+  stripComponents = 1
+  path = "uvx"
 
 # dust - More intuitive version of du in Rust
 [".local/bin/dust"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "bootandy/dust" (printf "dust*-%s-unknown-linux-*.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/dust"
+  stripComponents = 1
+  path = "dust"
 
 # bottom - A customizable cross-platform graphical process/system monitor
 [".local/bin/btm"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "ClementTsang/bottom" (printf "bottom_%s-unknown-linux-*.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/btm"
+  path = "btm"
 
 # rip2 - A safe and ergonomic rm replacement (binary name: rip)
 [".local/bin/rip"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "MilesCranmer/rip2" (printf "rip-Linux-%s-*.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "*/rip"
+  path = "rip"
 
 # direnv - Unclutter your .profile
 [".local/bin/direnv"]
