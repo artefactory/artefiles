@@ -24,7 +24,7 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "eza-community/eza" (printf "eza_%s-unknown-linux-gnu.zip" $rustArch) | quote ]] #
   executable = true
-  path = "./eza"
+  path = "eza"
 
 # bat - A cat clone with syntax highlighting
 [".local/bin/bat"]
@@ -48,14 +48,14 @@
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "Wilfred/difftastic" (printf "difft-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
-  path = "./difft"
+  path = "difft"
 
 # mergiraf - A syntax-aware merge tool
 [".local/bin/mergiraf"]
   type = "archive-file"
   url = # [[ printf "https://codeberg.org/mergiraf/mergiraf/releases/download/v0.16.1/mergiraf_%s-unknown-linux-gnu.tar.gz" $rustArch | quote ]] #
   executable = true
-  path = "./mergiraf"
+  path = "mergiraf"
 
 # jj - Jujutsu version control
 [".local/bin/jj"]
