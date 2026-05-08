@@ -1,0 +1,95 @@
+# [[ /* chezmoi:template:left-delimiter="# [[" right-delimiter="]] #" */ ]]
+#!/bin/sh
+
+# Removes Docker Desktop installations (forbidden by company policy).
+# Recommends Colima as a replacement on macOS, native Docker Engine on Linux.
+# [[ if ne .chezmoi.os "windows" ]] #
+
+set -eu
+
+echo "Checking for Docker Desktop installation..."
+
+FOUND_DOCKER_DESKTOP=false
+
+# [[ if eq .chezmoi.os "darwin" ]] #
+# Quit Docker Desktop if running, then remove app and supporting data.
+if [ -d "/Applications/Docker.app" ]; then
+  FOUND_DOCKER_DESKTOP=true
+  echo "Found Docker Desktop at /Applications/Docker.app"
+
+  if pgrep -x "Docker Desktop" > /dev/null 2>&1 || pgrep -x "Docker" > /dev/null 2>&1; then
+    echo "Quitting Docker Desktop..."
+    osascript -e 'quit app "Docker"' > /dev/null 2>&1 || true
+    sleep 2
+  fi
+
+  echo "Removing /Applications/Docker.app (sudo required)..."
+  sudo rm -rf "/Applications/Docker.app"
+fi
+
+for path in \
+  "$HOME/Library/Group Containers/group.com.docker" \
+  "$HOME/Library/Containers/com.docker.docker" \
+  "$HOME/Library/Containers/com.docker.helper" \
+  "$HOME/Library/Application Support/Docker Desktop" \
+  "$HOME/Library/Preferences/com.docker.docker.plist" \
+  "$HOME/Library/Preferences/com.electron.docker-frontend.plist" \
+  "$HOME/Library/Saved Application State/com.electron.docker-frontend.savedState" \
+  "$HOME/Library/Logs/Docker Desktop" \
+  "$HOME/Library/Caches/com.docker.docker" \
+  "$HOME/.docker/desktop"; do
+  if [ -e "$path" ]; then
+    FOUND_DOCKER_DESKTOP=true
+    echo "Removing $path..."
+    rm -rf "$path"
+  fi
+done
+# [[ end ]] #
+
+# [[ if eq .chezmoi.os "linux" ]] #
+# Linux Docker Desktop ships as the docker-desktop package.
+if command -v docker-desktop > /dev/null 2>&1; then
+  FOUND_DOCKER_DESKTOP=true
+  echo "Found docker-desktop in PATH"
+  if command -v apt-get > /dev/null 2>&1 && dpkg -s docker-desktop > /dev/null 2>&1; then
+    echo "Removing docker-desktop via apt (sudo required)..."
+    sudo apt-get remove -y docker-desktop || true
+  elif command -v dnf > /dev/null 2>&1 && rpm -q docker-desktop > /dev/null 2>&1; then
+    echo "Removing docker-desktop via dnf (sudo required)..."
+    sudo dnf remove -y docker-desktop || true
+  fi
+fi
+
+for path in \
+  "$HOME/.docker/desktop" \
+  "$HOME/.config/docker-desktop"; do
+  if [ -e "$path" ]; then
+    FOUND_DOCKER_DESKTOP=true
+    echo "Removing $path..."
+    rm -rf "$path"
+  fi
+done
+# [[ end ]] #
+
+if [ "$FOUND_DOCKER_DESKTOP" = true ]; then
+  echo "Docker Desktop removal complete."
+else
+  echo "No Docker Desktop installation found."
+fi
+
+# Warning file documenting the policy and replacements.
+mkdir -p "$HOME/.local/share"
+cat > "$HOME/.local/share/docker_desktop_warning.txt" << EOF
+This environment prohibits the use of Docker Desktop as part of the dotfiles policy.
+Please use one of the following alternatives:
+- Colima (recommended on macOS): https://github.com/abiosoft/colima
+- Native Docker Engine (Linux): https://docs.docker.com/engine/install/
+
+The 'docker' CLI itself is fine — only Docker Desktop (the GUI/VM bundle) is forbidden.
+
+If you have questions, please consult your team's documentation.
+EOF
+
+echo "Created warning file at $HOME/.local/share/docker_desktop_warning.txt"
+
+# [[ end ]] #
