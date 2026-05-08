@@ -8,16 +8,10 @@ README.md
 {{- end }}
 CHANGELOG.md
 CLAUDE.md
-TODO.md
 CHEATSHEET.md
-TEST.md
 cliff.toml
 Dockerfile.linux
 docker-test.sh
-test-dotfiles.sh
-test-dotfiles.fish
-.install-1password-cli.sh
-scripts/install-wezterm-remote.sh
 
 # OS-specific exclusions
 {{ if eq .chezmoi.os "darwin" }}
