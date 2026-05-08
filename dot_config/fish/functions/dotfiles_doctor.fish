@@ -80,9 +80,6 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     __check_tool_with_configs "git-lfs" "" "$managed_files"
     __check_tool_with_configs "difft" "" "$managed_files"
     __check_tool_with_configs "gh" "" "$managed_files"
-    # [[ if gt (len (glob ".config/glab-cli")) 0 -]] #
-    __check_tool_with_configs "glab" ".config/glab-cli/config.yml:.config/glab-cli/aliases.yml" "$managed_files"
-    # [[ end ]] #
 
     echo ""
     echo "## Development Tools"
