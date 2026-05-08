@@ -1,0 +1,33 @@
+name: installer
+
+# install.sh smoke. Separate from ci.yml so the slow OS-bootstrap path
+# only runs when install.sh changes. Today this only validates syntax;
+# issue #68 adds a real --dry-run mode that this workflow will exercise.
+
+on:
+  push:
+    branches: [main]
+    paths: ['install.sh', '.github/workflows/installer.yml']
+  pull_request:
+    paths: ['install.sh', '.github/workflows/installer.yml']
+
+concurrency:
+  group: installer-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: shellcheck install.sh
+        run: shellcheck install.sh || true # informational until #68 cleans warnings
+      - name: parse-only
+        run: bash -n install.sh
