@@ -23,7 +23,7 @@ scripts/install-wezterm-remote.sh
 {{ if eq .chezmoi.os "darwin" }}
 # Exclude Linux-specific files on macOS
 .chezmoiscripts/linux/**
-dot_config/fish/functions/install_nerd_font.fish
+.config/fish/functions/install_nerd_font.fish
 {{ else if eq .chezmoi.os "linux" }}
 # Exclude macOS-specific files on Linux
 .chezmoiscripts/darwin/**
@@ -32,25 +32,27 @@ dot_config/fish/functions/install_nerd_font.fish
 # Remote SSH server exclusions (when SSH_CLIENT is present)
 {{ if env "SSH_CLIENT" }}
 # Terminal emulator configs (use system defaults on remote servers)
-dot_wezterm.lua.tmpl
+.wezterm.lua
 # macOS-specific GUI applications
-dot_config/aerospace/**
+.config/aerospace/**
 # SSH client config (remote servers shouldn't override SSH client settings)
-dot_ssh/config.tmpl
+.ssh/config
 {{ end }}
 
-# Module-based exclusions
+# Module-based exclusions.
+# Patterns match TARGET paths (chezmoi strips dot_/private_/.tmpl before
+# matching), so use ".config/..." not "dot_config/...".
 {{ if not (has "editor" .modules) }}
-dot_config/nvim/**
+.config/nvim/**
 {{ end }}
 {{ if not (has "terminal" .modules) }}
-dot_config/ghostty/**
+.config/ghostty/**
 {{ end }}
 {{ if not (has "atuin" .modules) }}
-dot_config/atuin/**
+.config/atuin/**
 {{ end }}
 {{ if or (eq .chezmoi.os "linux") (not (has "macos_desktop" .modules)) }}
-dot_config/aerospace/**
+.config/aerospace/**
 {{ end }}
 {{ if not (has "python_dev" .modules) }}
 .chezmoiscripts/run_zzzzz_install-python-tools.sh
