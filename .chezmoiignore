@@ -18,9 +18,11 @@ docker-test.sh
 # Exclude Linux-specific files on macOS
 .chezmoiscripts/linux/**
 .config/fish/functions/install_nerd_font.fish
+.config/Code/User/settings.json
 {{ else if eq .chezmoi.os "linux" }}
 # Exclude macOS-specific files on Linux
 .chezmoiscripts/darwin/**
+Library/Application Support/Code/User/settings.json
 {{ end }}
 
 # Remote SSH server exclusions (when SSH_CLIENT is present)
