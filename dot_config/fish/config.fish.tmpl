@@ -112,9 +112,6 @@ set -gx VISUAL vi
 # Terminal capabilities
 if test "$TERM_PROGRAM" = ghostty
     set -gx TERM xterm-256color
-else if test "$TERM_PROGRAM" = WezTerm
-    set -gx TERM wezterm
-    set -gx COLORTERM truecolor
 else
     set -gx TERM xterm-256color
 end
