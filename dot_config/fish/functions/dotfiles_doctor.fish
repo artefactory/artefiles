@@ -40,6 +40,55 @@ function __check_tool_with_configs --description "Check tool installation and it
     end
 end
 
+function __check_forbidden_conda --description "Flag conda installations (forbidden by policy)"
+    set -l warning_icon "!"
+    set -l success_icon "✓"
+    set -l found 0
+    for path in "$HOME/anaconda3" "$HOME/miniconda3" "$HOME/anaconda" "$HOME/miniconda" \
+                "$HOME/opt/anaconda3" "$HOME/opt/miniconda3" \
+                "$HOME/.local/anaconda3" "$HOME/.local/miniconda3" "/opt/conda"
+        if test -d $path
+            echo "  $warning_icon conda: forbidden installation at $path"
+            set found 1
+        end
+    end
+    if command -v conda >/dev/null 2>&1
+        echo "  $warning_icon conda: forbidden, found in PATH at "(command -v conda)
+        set found 1
+    end
+    if test $found -eq 0
+        echo "  $success_icon conda: not installed (correct)"
+    end
+end
+
+function __check_forbidden_docker_desktop --description "Flag Docker Desktop (forbidden by policy)"
+    set -l warning_icon "!"
+    set -l success_icon "✓"
+    set -l found 0
+    # [[ if eq .chezmoi.os "darwin" -]] #
+    if test -d "/Applications/Docker.app"
+        echo "  $warning_icon docker-desktop: forbidden, found at /Applications/Docker.app"
+        set found 1
+    end
+    for path in "$HOME/Library/Group Containers/group.com.docker" \
+                "$HOME/Library/Containers/com.docker.docker"
+        if test -d $path
+            echo "  $warning_icon docker-desktop: forbidden support data at $path"
+            set found 1
+        end
+    end
+    # [[ end ]] #
+    # [[ if eq .chezmoi.os "linux" -]] #
+    if command -v docker-desktop >/dev/null 2>&1
+        echo "  $warning_icon docker-desktop: forbidden, found in PATH"
+        set found 1
+    end
+    # [[ end ]] #
+    if test $found -eq 0
+        echo "  $success_icon docker-desktop: not installed (correct — use Colima or Docker Engine)"
+    end
+end
+
 function dotfiles_doctor --description "Check dotfiles health and tool installations"
     set -l success_icon "✓"
     set -l warning_icon "!"
@@ -96,6 +145,11 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     # [[ if eq .chezmoi.os "darwin" -]] #
     __check_tool_with_configs "aerospace" ".config/aerospace/aerospace.toml" "$managed_files"
     # [[ end ]] #
+
+    echo ""
+    echo "## Forbidden Tools"
+    __check_forbidden_conda
+    __check_forbidden_docker_desktop
 
     echo ""
     echo "Environment Variables:"
