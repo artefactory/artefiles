@@ -17,6 +17,7 @@ packages:
         - 'direnv'
         - 'uv'
         - 'rust'
+        - 'gh'
       casks:
         - 'font-fira-code-nerd-font'
         - 'visual-studio-code'
