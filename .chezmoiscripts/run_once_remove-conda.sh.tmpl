@@ -34,7 +34,7 @@ remove_conda() {
     if [ -f "$rc_file" ]; then
       echo "Cleaning up $rc_file..."
       tmp_file=$(mktemp)
-      grep -v "conda initialize\|conda.sh\|__conda\|Conda\|miniforge\|mambaforge\|anaconda\|miniconda" "$rc_file" > "$tmp_file" || true
+      grep -v "conda initialize\|conda.sh\|__conda\|Conda\|anaconda\|miniconda" "$rc_file" > "$tmp_file" || true
       mv "$tmp_file" "$rc_file"
     fi
   done
@@ -126,7 +126,6 @@ conda() {
 }
 miniconda() { conda; }
 anaconda() { conda; }
-mamba() { conda; }
 EOF
     fi
   fi
