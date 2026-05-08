@@ -127,6 +127,9 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Terminal Configuration
 - `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
 
+### VS Code Configuration
+- `~/.config/Code/User/settings.json` *(Linux)* / `~/Library/Application Support/Code/User/settings.json` *(macOS)* — Default VS Code settings (Catppuccin theme, FiraCode font, fish terminal, Ruff formatter). Created on first apply only; your edits are never overwritten on `chezmoi update`.
+
 ### Fish Shell Configuration ([Fish Shell Documentation](https://fishshell.com/docs/current/))
 - `~/.config/fish/config.fish` - Main Fish shell configuration
 - `~/.config/fish/aliases.fish` - Shell aliases and functions
