@@ -65,7 +65,6 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     echo "## Shell Tools"
     __check_tool_with_configs "fish" ".config/fish/config.fish:.config/fish/aliases.fish" "$managed_files"
     __check_tool_with_configs "starship" ".config/starship.toml" "$managed_files"
-    __check_tool_with_configs "wezterm" ".wezterm.lua" "$managed_files"
 
     echo ""
     echo "## File Utilities"
