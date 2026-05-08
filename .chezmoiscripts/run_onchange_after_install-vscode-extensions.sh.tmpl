@@ -29,11 +29,16 @@ install_extension() {
   fi
 }
 
-# Theme
-install_extension "Catppuccin.catppuccin-vsc"
-install_extension "Catppuccin.catppuccin-vsc-icons"
-
-# Python
-install_extension "ms-python.python"
-install_extension "ms-python.vscode-pylance"
-install_extension "charliermarsh.ruff"
+{{- /* Collect core + per-active-module extensions, then dedupe so each
+       install_extension call (which shells out to `code --list-extensions`)
+       runs at most once per ID. */ -}}
+{{- $exts := .vscode.extensions | default list -}}
+{{- $modules := .modules | default list -}}
+{{- range $name, $mod := .vscode.modules -}}
+{{-   if has $name $modules -}}
+{{-     $exts = concat $exts (default list $mod.extensions) -}}
+{{-   end -}}
+{{- end }}
+{{- range ($exts | uniq) }}
+install_extension {{ . | quote }}
+{{- end }}
