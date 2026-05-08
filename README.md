@@ -13,53 +13,61 @@ This repository is designed to give you a **batteries-included development envir
 ![Terminal Screenshot](docs/images/terminal-demo.png)
 *Modern terminal setup with Fish shell, Starship prompt, and Rust-based tools*
 
-## [Quick Start](#quick-start) 🚀
+## Quick Start
 
-### macOS Prerequisites
+```bash
+sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+```
 
-⚠️ **Important for macOS users:** Before installing these dotfiles, you must first:
+This is the recommended path. The script:
+1. Installs [GitHub CLI](https://cli.github.com/) if not already present
+2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
+3. Installs [chezmoi](https://chezmoi.io/) and runs `chezmoi init --apply`
 
-1. Install [Homebrew](https://brew.sh/) by running:
+> **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
+> `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email.
+> GitHub CLI must be installed and authenticated *before* `chezmoi init` runs.
+> `install.sh` enforces that order; the chezmoi-direct path does not.
+
+### Non-interactive Environments (Codespaces / CI)
+
+For headless environments where a browser login is not possible, set a GitHub token before running the script:
+
+```bash
+export GH_TOKEN=ghp_your_token_here
+sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+```
+
+`GITHUB_TOKEN` is also accepted and is set automatically in GitHub Actions. In Codespaces the token is already in the environment, so no extra configuration is needed beyond adding this repository as your dotfiles source.
+
+### GitHub Codespaces
+
+These dotfiles can automatically bootstrap your GitHub Codespace environment:
+
+1. Add this repository as your dotfiles in your [GitHub Codespaces settings](https://github.com/settings/codespaces)
+2. Create a new codespace — it will automatically apply these dotfiles using `install.sh`
+
+Learn more about Codespaces dotfiles in the [official documentation](https://docs.github.com/en/codespaces/customizing-your-codespace/personalizing-github-codespaces-for-your-account#dotfiles).
+
+### Manual / Advanced Installation
+
+If you prefer to manage prerequisites yourself before running chezmoi directly:
+
+1. Install [Homebrew](https://brew.sh/) (macOS):
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
 
-2. Install GitHub CLI using Homebrew:
+2. Install [GitHub CLI](https://cli.github.com/manual/installation) using your preferred method for your platform.
+
+3. Authenticate with GitHub CLI following the [official instructions](https://cli.github.com/manual/gh_auth_login), or set `GH_TOKEN` in your environment.
+
+4. Install these dotfiles directly with chezmoi:
    ```bash
-   brew install gh
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefactory/artefiles
    ```
 
-3. Authenticate with GitHub:
-   ```bash
-   gh auth login
-   ```
-
-These steps are essential as the dotfiles rely heavily on Homebrew for package management on macOS.
-
-### Installation
-
-#### Using Bash/Zsh/Sh
-
-```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefactory/artefiles
-```
-
-#### Using Fish Shell
-
-```fish
-curl -fsLS get.chezmoi.io | sh -s -- -b ~/.local/bin init --apply artefactory/artefiles # Fish shell requires this pipe syntax
-```
-
-### GitHub Codespaces Support
-
-These dotfiles can automatically bootstrap your GitHub Codespace environment. To use them:
-
-1. Add this repository as your dotfiles in your [GitHub Codespaces settings](https://github.com/settings/codespaces)
-2. Create a new codespace - it will automatically apply these dotfiles
-
-Learn more about Codespaces dotfiles in the [official documentation](https://docs.github.com/en/codespaces/customizing-your-codespace/personalizing-github-codespaces-for-your-account#dotfiles).
-
-## [Modular Architecture](#modular-architecture) 🧩
+## Modular Architecture
 
 Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you select which modules to enable via an interactive prompt.
 
@@ -84,7 +92,7 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 
 Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 
-## [What's Included](#whats-included) 📦
+## What's Included
 
 ### Core Features
 
@@ -108,16 +116,16 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
 
-## [What Files Will Be Created/Modified](#what-files-will-be-createdmodified) 📋
+## What Files Will Be Created/Modified
 
-⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, you must manually change your default shell (see [Post-Installation Steps](#post-installation-steps-📝)).
+⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, you must manually change your default shell (see [Post-Installation Steps](#post-installation-steps)).
 
 ### Git Configuration
 - `~/.gitconfig` - Git configuration with modern defaults ([Git Documentation](https://git-scm.com/docs/git-config))
 - `~/.gitattributes_global` - Global attributes for merge drivers and file handling
 
 ### Terminal Configuration
-- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/))
+- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
 
 ### Fish Shell Configuration ([Fish Shell Documentation](https://fishshell.com/docs/current/))
 - `~/.config/fish/config.fish` - Main Fish shell configuration
@@ -134,50 +142,31 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Development Tools
 - `~/.config/bat/config` - Syntax highlighter configuration ([Bat Documentation](https://github.com/sharkdp/bat))
 - `~/.config/direnv/direnvrc` - Environment management ([Direnv Documentation](https://direnv.net/))
-- `~/.config/atuin/config.toml` - Shell history sync ([Atuin Documentation](https://atuin.sh/))
-- `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/))
-- `~/.config/jj/config.toml` - Jujutsu configuration ([Jujutsu Documentation](https://jj-vcs.github.io/jj/))
+- `~/.config/uv/uv.toml` - Python package manager configuration ([uv Documentation](https://docs.astral.sh/uv/))
+- `~/.config/atuin/config.toml` - Shell history sync ([Atuin Documentation](https://atuin.sh/)) (requires `atuin` module)
+- `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/)) (requires `editor` module)
 
 ### macOS Window Manager
-- `~/.config/aerospace/aerospace.toml` - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (macOS only)
+- `~/.config/aerospace/aerospace.toml` - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (requires `macos_desktop` module, macOS only)
 
-## [Prerequisites](#prerequisites) ✅
+## Prerequisites
 
-### For All Platforms
 - A GitHub account (for git and GitHub-related features)
-  - GitHub CLI authentication will be handled automatically during installation
-  - For non-interactive environments, set `GH_TOKEN` environment variable before installation
+  - For non-interactive environments, set `GH_TOKEN` or `GITHUB_TOKEN` before installation
 - SSH keys added to your GitHub account ([instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
-- Set Fish as your default login shell (required to use the Fish config). No zsh script switches shells for you.
 
-  **macOS:**
-  ```bash
-  command -v fish | sudo tee -a /etc/shells
-  chsh -s $(brew --prefix)/bin/fish
-  ```
+After installation, you will need to change your default shell to Fish to get the full experience — see [Post-Installation Steps](#post-installation-steps).
 
-  **Linux:**
-  ```bash
-  chsh -s $(which fish)
-  ```
-
-  *Note: You may need to log out and back in for the shell change to take effect.*
-
-### macOS Specific
-- [Homebrew](https://brew.sh/) package manager (see [macOS Prerequisites](#macos-prerequisites) above)
-- GitHub CLI installed via Homebrew
-- Note: Many tools in these dotfiles depend on Homebrew-installed packages on macOS
-
-## [Common Tasks](#common-tasks) 🛠️
+## Common Tasks
 
 | Task | Command |
 |------|---------|
 | Update dotfiles | `chezmoi update` |
-| Edit config | `chezmoi edit ~/.config/file` |
+| Edit config | `chezmoi edit <path>` |
 | Health check | `dotfiles_doctor` |
 | New Python project | `mkdir project && cd project && echo 'layout uv' > .envrc && direnv allow` |
 
-## [Chezmoi Basics](#chezmoi-basics) 🧰
+## Chezmoi Basics
 
 Chezmoi is the manager for these dotfiles. Main docs: https://www.chezmoi.io/user-guide/
 
@@ -202,39 +191,57 @@ chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
 chezmoi purge --force
 ```
 
-## [Configuration Structure](#configuration-structure) 📁
+## Configuration Structure
 
 ```
 ~/.config/
+  ├── aerospace/       # macOS window manager (macos_desktop module)
+  ├── atuin/           # Shell history sync (atuin module)
+  ├── bat/             # Syntax highlighting
+  ├── direnv/          # Environment management
   ├── fish/            # Shell configuration
   │   ├── config.fish  # Main shell configuration
   │   ├── aliases.fish # Shell aliases and functions
   │   └── functions/   # Custom fish functions
-  ├── nvim/            # Editor configuration
-  ├── direnv/          # Environment management
-  ├── bat/             # Syntax highlighting
+  ├── ghostty/         # Terminal emulator (terminal module)
+  ├── nvim/            # Editor configuration (editor module)
+  ├── uv/              # Python package manager
   └── starship.toml    # Prompt configuration
 
 ~/.ssh/config          # SSH configuration
-~/.config/ghostty/config # Terminal configuration
-~/.gitconfig          # Git configuration
+~/.gitconfig           # Git configuration
 ```
 
-## [Post-Installation Steps](#post-installation-steps) 📝
+## Post-Installation Steps
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-If you skipped the prerequisite step, set Fish as your default shell now (see [Prerequisites](#prerequisites-)).  
-If you're using VS Code or another IDE, fully quit and reopen it so the Fish profile shows up in the terminal list.
+`install.sh` does **not** change your default shell — this requires `sudo` and is a deliberate user choice.
 
+Set Fish as your default login shell after installation:
 
-### 2. Set up shell history sync:
+**macOS:**
+```bash
+command -v fish | sudo tee -a /etc/shells
+chsh -s $(brew --prefix)/bin/fish
+```
+
+**Linux:**
+```bash
+chsh -s $(which fish)
+```
+
+You may need to log out and back in for the shell change to take effect. If you're using VS Code or another IDE, fully quit and reopen it so the Fish profile shows up in the terminal list.
+
+### 2. Set up shell history sync
+
 ```bash
 atuin register  # New account
 atuin login     # Existing account
 ```
 
-### 3. Initialize cloud tools (if needed):
+### 3. Initialize cloud tools (if needed)
+
 ```bash
 gcloud init  # Set up Google Cloud SDK
 ```
@@ -243,18 +250,18 @@ gcloud init  # Set up Google Cloud SDK
 
 Restart your terminal (or fully quit and reopen your IDE if using VS Code, Cursor, etc.) for all changes to take effect.
 
-## [Need Help?](#need-help) 🤔
+## Need Help?
 
 - Run `dotfiles_doctor` to check your installation
 - See `chezmoi help` for dotfiles management
 - Check the [CHEATSHEET.md](CHEATSHEET.md) for more commands
-- Reset a file: `chezmoi apply --force ~/.path/to/file`
+- Reset a file: `chezmoi apply --force <path>`
 
-## [Detailed Documentation](#detailed-documentation) 📚
+## Detailed Documentation
 
 - [CHEATSHEET.md](CHEATSHEET.md) - Common commands and shortcuts
 - [CHANGELOG.md](CHANGELOG.md) - Version history and updates
 
-## [License](#license) 📄
+## License
 
 MIT
