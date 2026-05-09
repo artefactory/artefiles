@@ -47,7 +47,7 @@ Library/Application Support/Code/User/settings.json
 {{ if not (has "atuin" .modules) }}
 .config/atuin/**
 {{ end }}
-{{ if or (eq .chezmoi.os "linux") (not (has "macos_desktop" .modules)) }}
+{{ if or (eq .chezmoi.os "linux") (not (has "aerospace" .modules)) }}
 .config/aerospace/**
 {{ end }}
 {{ if not (has "python_dev" .modules) }}

@@ -84,9 +84,11 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
 | `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
-| `cloud` | gcloud, Colima | Cloud SDK and container runtime |
+| `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
+| `colima` | Colima | Container runtime (darwin only) |
 | `multiplexer` | Zellij | Terminal multiplexer |
-| `macos_desktop` | AeroSpace, 1Password, 1Password CLI | macOS window manager and password manager (darwin only) |
+| `aerospace` | AeroSpace | Tiling window manager (darwin only) |
+| `onepassword` | 1Password, 1Password CLI | Password manager (darwin only) |
 
 ### Changing Modules
 
