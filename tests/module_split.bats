@@ -31,6 +31,11 @@ setup() {
 @test "aerospace module: aerospace dir is materialized" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["aerospace"]}'
+  # Let chezmoi's own .chezmoiignore gate (eq .chezmoi.os "darwin") decide
+  # whether this OS even ships aerospace, instead of bashing on uname.
+  if ! chezmoi_managed "$H" | grep -qxF '.config/aerospace'; then
+    skip "aerospace dir not managed on this OS (chezmoi gate)"
+  fi
   chezmoi_apply "$H"
   assert_file_exists "$H/.config/aerospace"
 }

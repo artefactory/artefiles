@@ -53,7 +53,10 @@
 # mergiraf - A syntax-aware merge tool
 # Codeberg has no chezmoi helper analogous to gitHubLatestReleaseAssetURL,
 # so we resolve the latest tag via the Gitea API at template render time.
-# [[ $mergirafTag := output "sh" "-c" "curl -fsSL --max-time 10 https://codeberg.org/api/v1/repos/mergiraf/mergiraf/releases/latest | sed -nE 's/.*\"tag_name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\\1/p' | head -n1" | trim ]] #
+# Use chezmoi's built-in httpGet/fromJson rather than shelling out to
+# curl+sed: same network dependency, but no external process per render
+# and the JSON parse is robust against whitespace/key-order changes.
+# [[ $mergirafTag := (output "curl" "-fsSL" "--max-time" "10" "https://codeberg.org/api/v1/repos/mergiraf/mergiraf/releases/latest" | fromJson).tag_name ]] #
 [".local/bin/mergiraf"]
   type = "archive-file"
   url = # [[ printf "https://codeberg.org/mergiraf/mergiraf/releases/download/%s/mergiraf_%s-unknown-linux-gnu.tar.gz" $mergirafTag $rustArch | quote ]] #
