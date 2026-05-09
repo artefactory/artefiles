@@ -19,14 +19,19 @@ version_gt() {
   awk "BEGIN {exit !($ver1_major_minor > $ver2_major_minor)}"
 }
 
+# Fallback used only if the GitHub API is unreachable or rate-limited.
+# Bumped from 3.6.1 because fish 4.x was rewritten in Rust and we want
+# the fallback to land us on a roughly-current major.
+FISH_FALLBACK_VERSION="4.7.1"
+
 # Get latest release version from GitHub
 get_latest_fish_version() {
   API_RESPONSE=$(curl -s https://api.github.com/repos/fish-shell/fish-shell/releases/latest)
 
   # Check if we hit rate limit
   if echo "$API_RESPONSE" | grep -q "API rate limit exceeded"; then
-    echo "GitHub API rate limit exceeded. Using fallback version."
-    echo "3.6.1" # Fallback to a known version
+    echo "GitHub API rate limit exceeded. Using fallback version $FISH_FALLBACK_VERSION." >&2
+    echo "$FISH_FALLBACK_VERSION"
   else
     FISH_VERSION=$(echo "$API_RESPONSE" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
     # Remove 'fish-' prefix if present
@@ -34,8 +39,8 @@ get_latest_fish_version() {
 
     # Check if version was found
     if [ -z "$FISH_VERSION" ]; then
-      echo "Failed to get latest version from GitHub API, using 3.6.1 as fallback."
-      echo "3.6.1"
+      echo "Failed to get latest version from GitHub API, using fallback $FISH_FALLBACK_VERSION." >&2
+      echo "$FISH_FALLBACK_VERSION"
     else
       echo "$FISH_VERSION"
     fi
@@ -84,10 +89,20 @@ install_fish() {
   echo "fish shell installed to $FISH_INSTALL_DIR/bin/fish"
 }
 
-# Check if fish is already installed
-if command -v fish > /dev/null 2>&1; then
-  CURRENT_VERSION=$(fish --version | sed -E 's/.*version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-  echo "Fish shell is already installed (version $CURRENT_VERSION)."
+# We always target $HOME/.local/bin/fish so a system-installed fish
+# (e.g. /usr/bin/fish from apt) cannot shadow or be confused with our
+# user-local install. command -v fish would otherwise pick whichever
+# fish is first on PATH, leading to spurious "already installed" skips
+# or rebuilds keyed off the wrong binary.
+LOCAL_FISH="$HOME/.local/bin/fish"
+
+if command -v fish > /dev/null 2>&1 && [ "$(command -v fish)" != "$LOCAL_FISH" ]; then
+  echo "Note: a system fish was found at $(command -v fish); installing our own copy to $LOCAL_FISH anyway."
+fi
+
+if [ -x "$LOCAL_FISH" ]; then
+  CURRENT_VERSION=$("$LOCAL_FISH" --version | sed -E 's/.*version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+  echo "Fish shell already installed at $LOCAL_FISH (version $CURRENT_VERSION)."
 
   # Get latest version
   LATEST_VERSION=$(get_latest_fish_version)
@@ -98,16 +113,17 @@ if command -v fish > /dev/null 2>&1; then
     echo "Newer version available. Updating fish from $CURRENT_VERSION to $LATEST_VERSION..."
     install_fish "$LATEST_VERSION"
   else
-    echo "Current fish version is up to date (major.minor). Skipping update."
+    echo "Local fish version is up to date (major.minor). Skipping rebuild."
   fi
 else
-  echo "Fish shell is not installed. Installing now..."
+  echo "Fish shell is not installed at $LOCAL_FISH. Installing now..."
   LATEST_VERSION=$(get_latest_fish_version)
   install_fish "$LATEST_VERSION"
 fi
 
-# Get the path to fish shell
-FISH_PATH="$(command -v fish || echo "$HOME/.local/bin/fish")"
+# Always wrap our local install — never the system fish, even if it is
+# the first fish on PATH.
+FISH_PATH="$LOCAL_FISH"
 
 # Create a wrapper script in ~/.local/bin to launch fish
 WRAPPER_SCRIPT="${HOME}/.local/bin/start-fish"
