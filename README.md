@@ -128,7 +128,8 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
 
 ### VS Code Configuration
-- `~/.config/Code/User/settings.json` *(Linux)* / `~/Library/Application Support/Code/User/settings.json` *(macOS)* — Default VS Code settings (Catppuccin theme, FiraCode font, fish terminal, Ruff formatter). Created on first apply only; your edits are never overwritten on `chezmoi update`.
+- `~/.config/Code/User/settings.json` *(Linux)* — Default VS Code settings (Catppuccin theme, FiraCode font, fish terminal, Ruff formatter). Created on first apply only; your edits are never overwritten on `chezmoi update`.
+- `~/Library/Application Support/Code/User/settings.json` *(macOS)* — Same default VS Code settings as the Linux path above. Created on first apply only; never overwritten on `chezmoi update`.
 
 ### Fish Shell Configuration ([Fish Shell Documentation](https://fishshell.com/docs/current/))
 - `~/.config/fish/config.fish` - Main Fish shell configuration
@@ -150,7 +151,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/)) (requires `editor` module)
 
 ### macOS Window Manager
-- `~/.config/aerospace/aerospace.toml` - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (requires `macos_desktop` module, macOS only)
+- `~/.config/aerospace/aerospace.toml` *(macOS)* - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (requires `macos_desktop` module)
 
 ## Prerequisites
 
