@@ -1,8 +1,8 @@
 name: installer
 
 # install.sh smoke. Separate from ci.yml so the slow OS-bootstrap path
-# only runs when install.sh changes. Today this only validates syntax;
-# issue #68 adds a real --dry-run mode that this workflow will exercise.
+# only runs when install.sh changes. The actual --dry-run behavior is
+# covered by tests/install_sh.bats in the bats-{linux,macos} jobs.
 
 on:
   push:
@@ -27,7 +27,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: install shellcheck (macOS)
+        if: runner.os == 'macOS'
+        run: brew install shellcheck
       - name: shellcheck install.sh
-        run: shellcheck install.sh || true # informational until #68 cleans warnings
+        run: shellcheck install.sh
       - name: parse-only
         run: bash -n install.sh
