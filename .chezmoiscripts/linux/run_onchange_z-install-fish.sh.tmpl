@@ -1,7 +1,14 @@
 #!/bin/sh
-
+# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
 # Install fish shell for Linux without requiring root/sudo
 # https://fishshell.com/
+#
+# The line below embeds the latest fish tag resolved at chezmoi-render
+# time. When a new fish version ships, the rendered script content
+# changes, and chezmoi re-runs this run_onchange script on next apply.
+# That gives us the same auto-update behavior as gitHubLatestReleaseAssetURL
+# does for binary externals.
+# Latest fish tag: # [[ gitHubLatestRelease "fish-shell/fish-shell" | get "tag_name" ]] #
 
 set -eu
 
