@@ -10,6 +10,7 @@ on:
     paths: ['install.sh', '.github/workflows/installer.yml']
   pull_request:
     paths: ['install.sh', '.github/workflows/installer.yml']
+  workflow_dispatch:
 
 concurrency:
   group: installer-${{ github.ref }}
