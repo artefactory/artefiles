@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ⚠ BREAKING CHANGES
+
+- **Modules `cloud` and `macos_desktop` have been split into atomic modules.**
+  - `cloud` → `gcloud` (Google Cloud SDK) + `colima` (container runtime)
+  - `macos_desktop` → `aerospace` (window manager) + `onepassword` (password manager)
+
+  **Migration:** existing users must re-run `chezmoi init` and reselect modules.
+  Old names (`cloud`, `macos_desktop`) are no longer recognized.
 
 ### Bug Fixes
 

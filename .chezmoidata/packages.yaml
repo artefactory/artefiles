@@ -54,18 +54,24 @@ packages:
       python_dev:
         brews: []
         casks: []
-      cloud:
-        brews:
-          - 'colima'
+      gcloud:
+        brews: []
         casks:
           - 'gcloud-cli'
+      colima:
+        brews:
+          - 'colima'
+        casks: []
       multiplexer:
         brews:
           - 'zellij'
         casks: []
-      macos_desktop:
+      aerospace:
         brews: []
         casks:
           - 'nikitabobko/tap/aerospace'
+      onepassword:
+        brews: []
+        casks:
           - '1password'
           - '1password-cli'
