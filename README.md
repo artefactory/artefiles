@@ -58,7 +58,7 @@ If you prefer to manage prerequisites yourself before running chezmoi directly:
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
 
-2. Install [GitHub CLI](https://cli.github.com/manual/installation) using your preferred method for your platform.
+2. Install [GitHub CLI](https://github.com/cli/cli#installation) using your preferred method for your platform.
 
 3. Authenticate with GitHub CLI following the [official instructions](https://cli.github.com/manual/gh_auth_login), or set `GH_TOKEN` in your environment.
 
@@ -168,7 +168,7 @@ After installation, you will need to change your default shell to Fish to get th
 
 ## Chezmoi Basics
 
-Chezmoi is the manager for these dotfiles. Main docs: https://www.chezmoi.io/user-guide/
+Chezmoi is the manager for these dotfiles. Main docs: https://www.chezmoi.io/user-guide/command-overview/
 
 | Task | Command |
 |------|---------|

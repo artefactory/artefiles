@@ -25,7 +25,7 @@ setup() {
       printf 'README lists path not found in source: %s\n' "$p" >&2
       return 1
     fi
-  done < <(grep -oE '~/\.config/[a-zA-Z0-9_./-]+|~/\.[a-z_]+' "$REPO_ROOT/README.md" | sort -u)
+  done < <(grep -oE '~/[.][a-zA-Z0-9_./-]+' "$REPO_ROOT/README.md" | sort -u)
 }
 
 @test "old prereq language is gone" {
