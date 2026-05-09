@@ -1,0 +1,60 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# Install GitHub CLI (gh) via tarball — cross-distro, no root required.
+#
+# The line below embeds the latest gh tag resolved at chezmoi-render
+# time. When a new gh release ships, the rendered script content
+# changes, and chezmoi re-runs this run_onchange script on next apply.
+# Latest gh tag: # [[ (gitHubLatestRelease "cli/cli").TagName ]] #
+
+set -eu
+
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+
+# We always target $HOME/.local/bin/gh so a system-installed gh cannot
+# shadow or be confused with our user-local install.
+LOCAL_GH="$HOME/.local/bin/gh"
+
+if command -v gh > /dev/null 2>&1 && [ "$(command -v gh)" != "$LOCAL_GH" ]; then
+  echo "Note: a system gh was found at $(command -v gh); installing our own copy to $LOCAL_GH anyway."
+fi
+
+echo "Installing GitHub CLI..."
+
+latest_version=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+  | grep '"tag_name":' | head -n 1 \
+  | sed -E 's/.*"v([^"]+)".*/\1/')
+
+if [ -z "$latest_version" ]; then
+  echo "Error: failed to fetch the latest gh version." >&2
+  exit 1
+fi
+
+# Skip rebuild when our local gh already matches the latest version.
+if [ -x "$LOCAL_GH" ]; then
+  current_version=$("$LOCAL_GH" --version 2> /dev/null | head -n 1 | awk '{print $3}')
+  if [ "$current_version" = "$latest_version" ]; then
+    echo "gh $current_version already installed at $LOCAL_GH — up to date."
+    exit 0
+  fi
+  echo "Updating gh from ${current_version:-unknown} to $latest_version..."
+fi
+
+arch=$(uname -m)
+case "${arch}" in
+  x86_64)         arch_name="amd64" ;;
+  aarch64|arm64)  arch_name="arm64" ;;
+  *)
+    printf 'Unsupported architecture: %s\n' "${arch}" >&2
+    exit 1
+    ;;
+esac
+
+download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_linux_${arch_name}.tar.gz"
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
+curl -fsSL "${download_url}" | tar xz -C "${tmp_dir}"
+cp "${tmp_dir}"/gh_*/bin/gh "$LOCAL_GH"
+
+echo "GitHub CLI $latest_version installed to $LOCAL_GH"

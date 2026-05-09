@@ -1,28 +1,64 @@
 #!/usr/bin/env bats
-# Tests for .chezmoiscripts/linux/run_onchange_install-gh.sh
+# Tests for .chezmoiscripts/linux/run_onchange_install-gh.sh.tmpl
 
 setup() {
   load 'helpers/setup'
 }
 
-@test "gh install script exists and shellchecks" {
-  test -f "$REPO_ROOT/.chezmoiscripts/linux/run_onchange_install-gh.sh"
-  shellcheck "$REPO_ROOT/.chezmoiscripts/linux/run_onchange_install-gh.sh"
+@test "gh install script renders and shellchecks" {
+  if ! command -v shellcheck > /dev/null 2>&1; then
+    skip "shellcheck not available"
+  fi
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(chezmoi_render "$H" .chezmoiscripts/linux/run_onchange_install-gh.sh.tmpl)
+  printf '%s\n' "$rendered" | shellcheck -
 }
 
-@test "gh install script is a no-op if gh is already present" {
+@test "gh install script is a no-op if local gh is already the latest version" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(chezmoi_render "$H" .chezmoiscripts/linux/run_onchange_install-gh.sh.tmpl)
+
   fake_bin="$BATS_TEST_TMPDIR/fake-bin"
-  mkdir -p "$fake_bin"
+  mkdir -p "$fake_bin" "$BATS_TEST_TMPDIR/.local/bin"
 
-  # Fake gh binary — simulates gh already being installed
-  printf '#!/bin/sh\nexit 0\n' > "$fake_bin/gh"
-  chmod +x "$fake_bin/gh"
+  # Read the embedded latest tag from the rendered script — the script's
+  # exit-early branch compares it against $LOCAL_GH --version, so we fake
+  # gh to print that exact version.
+  latest=$(printf '%s\n' "$rendered" \
+    | grep -E "^# Latest gh tag:" \
+    | sed -E 's/.*: v?([^ ]+).*/\1/')
+  [ -n "$latest" ]
 
-  # Fake curl that fails — if the script calls it, the test will catch the failure
-  printf '#!/bin/sh\necho "curl should not be called" >&2; exit 1\n' > "$fake_bin/curl"
+  printf '#!/bin/sh\nprintf "gh version %s (date)\\n" "$0_version"\n' \
+    > "$BATS_TEST_TMPDIR/.local/bin/gh"
+  # Use awk-friendly third field
+  cat > "$BATS_TEST_TMPDIR/.local/bin/gh" <<EOF
+#!/bin/sh
+echo "gh version $latest (2026-01-01)"
+EOF
+  chmod +x "$BATS_TEST_TMPDIR/.local/bin/gh"
+
+  # Fake curl that returns the latest tag JSON; if anything fetches the
+  # download_url instead, the assertion below will catch it.
+  cat > "$fake_bin/curl" <<EOF
+#!/bin/sh
+case "\$*" in
+  *api.github.com/repos/cli/cli/releases/latest*)
+    printf '"tag_name": "v%s"\n' "$latest"
+    ;;
+  *)
+    echo "unexpected curl call: \$*" >&2
+    exit 1
+    ;;
+esac
+EOF
   chmod +x "$fake_bin/curl"
 
-  run env PATH="$fake_bin:$PATH" HOME="$BATS_TEST_TMPDIR" \
-    bash "$REPO_ROOT/.chezmoiscripts/linux/run_onchange_install-gh.sh"
+  run env PATH="$fake_bin:$BATS_TEST_TMPDIR/.local/bin:$PATH" \
+        HOME="$BATS_TEST_TMPDIR" \
+        sh -c "$rendered"
   [ "$status" -eq 0 ]
+  echo "$output" | grep -q "up to date"
 }
