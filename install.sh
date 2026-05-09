@@ -4,6 +4,30 @@
 # -u: exit on unset variables
 set -eu
 
+dry_run=false
+destination=""
+
+# Parse --dry-run / --destination before any other work
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      dry_run=true
+      shift
+      ;;
+    --destination)
+      destination="${2:?--destination requires a value}"
+      shift 2
+      ;;
+    --destination=*)
+      destination="${1#*=}"
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
 # Set bin directory based on OS
 set_bin_dir() {
   if [ "$(uname)" = "Darwin" ]; then
@@ -19,7 +43,19 @@ set_bin_dir() {
     bin_dir="${HOME}/.local/bin"
   fi
   mkdir -p "${bin_dir}"
-  echo "${bin_dir}"
+  printf '%s\n' "${bin_dir}"
+}
+
+# Install Homebrew on macOS if not already present; idempotent
+install_homebrew() {
+  [ "$(uname)" = "Darwin" ] || return 0
+  if command -v brew > /dev/null 2>&1; then
+    echo "Homebrew already installed" >&2
+    return 0
+  fi
+  echo "Installing Homebrew..." >&2
+  [ "$dry_run" = "true" ] && return 0
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 }
 
 # Install GitHub CLI first if not already installed
@@ -122,32 +158,61 @@ ensure_github_auth() {
   exit 1
 }
 
-# Install and authenticate GitHub CLI before anything else
-install_github_cli
-ensure_github_auth
-
-# Install chezmoi if not already installed
-if ! chezmoi="$(command -v chezmoi)"; then
-  bin_dir="$(set_bin_dir)"
-  chezmoi="${bin_dir}/chezmoi"
-  echo "Installing chezmoi to '${chezmoi}'" >&2
-  if command -v curl > /dev/null; then
-    chezmoi_install_script="$(curl -fsSL https://chezmoi.io/get)"
-  elif command -v wget > /dev/null; then
-    chezmoi_install_script="$(wget -qO- https://chezmoi.io/get)"
-  else
-    echo "To install chezmoi, you must have curl or wget installed." >&2
-    exit 1
+# Install Homebrew first on macOS so chezmoi scripts inherit brew on PATH
+install_homebrew
+if [ "$(uname)" = "Darwin" ]; then
+  # A fresh `install_homebrew` writes brew to /opt/homebrew/bin (Apple
+  # Silicon) or /usr/local/bin (Intel) but doesn't update the current
+  # shell's PATH. Probe the canonical install paths so `brew shellenv`
+  # below succeeds even on a cold install — without this, the eval is
+  # silently skipped and chezmoi inherits a brew-less PATH.
+  if ! command -v brew > /dev/null 2>&1; then
+    if [ -x "/opt/homebrew/bin/brew" ]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [ -x "/usr/local/bin/brew" ]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
   fi
-  sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"
-  unset chezmoi_install_script bin_dir
+  if command -v brew > /dev/null 2>&1; then
+    eval "$(brew shellenv)"
+  fi
+fi
+
+# GitHub CLI setup (skipped in dry-run)
+if [ "$dry_run" = "false" ]; then
+  install_github_cli
+  ensure_github_auth
+fi
+
+# Install chezmoi if not already installed (skipped in dry-run)
+if [ "$dry_run" = "false" ]; then
+  if ! chezmoi="$(command -v chezmoi)"; then
+    bin_dir="$(set_bin_dir)"
+    chezmoi="${bin_dir}/chezmoi"
+    echo "Installing chezmoi to '${chezmoi}'" >&2
+    if command -v curl > /dev/null; then
+      chezmoi_install_script="$(curl -fsSL https://chezmoi.io/get)"
+    elif command -v wget > /dev/null; then
+      chezmoi_install_script="$(wget -qO- https://chezmoi.io/get)"
+    else
+      echo "To install chezmoi, you must have curl or wget installed." >&2
+      exit 1
+    fi
+    sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"
+    unset chezmoi_install_script bin_dir
+  fi
+else
+  chezmoi="chezmoi"
 fi
 
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
-set -- init --apply --source="${script_dir}"
+set -- init --apply "--source=${script_dir}"
+[ -n "${destination}" ] && set -- "$@" "--destination=${destination}"
+[ "$dry_run" = "true" ] && set -- "$@" "--dry-run"
 
 echo "Running 'chezmoi $*'" >&2
+[ "$dry_run" = "true" ] && exit 0
 # exec: replace current process with chezmoi
 exec "$chezmoi" "$@"
