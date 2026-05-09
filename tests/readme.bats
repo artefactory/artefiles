@@ -6,26 +6,35 @@ setup() {
   load 'helpers/setup'
 }
 
-@test "all listed config paths exist in source" {
-  # Extract ~/. paths mentioned in the README and verify each exists in source.
-  # Handles chezmoi source naming variants: direct, .tmpl suffix, private_ prefix.
+@test "all listed config paths materialize after chezmoi apply" {
+  # Verify every ~/. path mentioned in the README is actually managed
+  # by chezmoi on this OS. Source-name agnostic: doesn't matter whether
+  # the source uses dot_, private_dot_, create_, .tmpl, etc. — only
+  # that `chezmoi managed` exposes the target.
+  H=$(mk_fake_home)
+  modules=$(awk '/^    modules:$/,/^[^ ]/{ if ($0 ~ /^      [a-z_]+:$/) { sub(":",""); gsub(" ",""); print } }' \
+            "$REPO_ROOT/.chezmoidata/packages.yaml" | jq -R . | jq -sc .)
+  seed_chezmoi_config "$H" "{\"modules\":$modules}"
+  managed=$(chezmoi_managed "$H")
+
+  # README marks OS-specific paths inline as *(Linux)* or *(macOS)*.
+  # Skip paths tagged for the other OS so each runner only validates
+  # what its own chezmoi will materialize.
+  case "$(uname)" in Darwin) other='*(Linux)*' ;; Linux) other='*(macOS)*' ;; *) other='__none__' ;; esac
+
   while IFS= read -r p; do
     [ -n "$p" ] || continue
-    # Convert chezmoi target path to source path:
-    # ~/.<name> → dot_<name>, e.g. ~/.config/fish/config.fish → dot_config/fish/config.fish
-    src=$(printf '%s\n' "$p" | sed 's|~/\.||')
-    src="dot_${src}"
-    dir=$(dirname "$REPO_ROOT/$src")
-    name=$(basename "$src")
-    # Accept: direct, .tmpl suffix, private_ prefix, or private_+.tmpl variants.
-    if ! test -e "$REPO_ROOT/$src" && \
-       ! test -e "$REPO_ROOT/${src}.tmpl" && \
-       ! test -e "$dir/private_${name}" && \
-       ! test -e "$dir/private_${name}.tmpl"; then
-      printf 'README lists path not found in source: %s\n' "$p" >&2
+    # Skip a path if the README line containing it is tagged for the other OS.
+    if grep -F "$p" "$REPO_ROOT/README.md" | grep -qF "$other"; then
+      continue
+    fi
+    rel="${p#'~/'}"  # quoted so bash doesn't tilde-expand the pattern
+    if ! printf '%s\n' "$managed" | grep -qxF "$rel"; then
+      printf 'README lists path not managed by chezmoi: %s\n' "$p" >&2
       return 1
     fi
-  done < <(grep -oE '~/[.][a-zA-Z0-9_./-]+' "$REPO_ROOT/README.md" | sort -u)
+  done < <(grep -oE '~/[.][a-zA-Z0-9_./-]+' "$REPO_ROOT/README.md" \
+           | grep -v '/$' | sort -u)
 }
 
 @test "old prereq language is gone" {
