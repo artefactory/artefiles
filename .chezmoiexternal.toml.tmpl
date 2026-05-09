@@ -51,9 +51,12 @@
   path = "difft"
 
 # mergiraf - A syntax-aware merge tool
+# Codeberg has no chezmoi helper analogous to gitHubLatestReleaseAssetURL,
+# so we resolve the latest tag via the Gitea API at template render time.
+# [[ $mergirafTag := output "sh" "-c" "curl -fsSL --max-time 10 https://codeberg.org/api/v1/repos/mergiraf/mergiraf/releases/latest | sed -nE 's/.*\"tag_name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*/\\1/p' | head -n1" | trim ]] #
 [".local/bin/mergiraf"]
   type = "archive-file"
-  url = # [[ printf "https://codeberg.org/mergiraf/mergiraf/releases/download/v0.16.1/mergiraf_%s-unknown-linux-gnu.tar.gz" $rustArch | quote ]] #
+  url = # [[ printf "https://codeberg.org/mergiraf/mergiraf/releases/download/%s/mergiraf_%s-unknown-linux-gnu.tar.gz" $mergirafTag $rustArch | quote ]] #
   executable = true
   path = "mergiraf"
 
