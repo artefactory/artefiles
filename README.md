@@ -145,6 +145,11 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Shell Prompt
 - `~/.config/starship.toml` - Shell prompt configuration ([Starship Documentation](https://starship.rs/))
 
+#### Customizing Starship
+- [Configuration guide](https://starship.rs/config/) - module reference and syntax
+- [Presets gallery](https://starship.rs/presets/) - ready-made prompt styles
+- [Catppuccin theme](https://github.com/catppuccin/starship) - palette currently in use
+
 ### Development Tools
 - `~/.config/bat/config` - Syntax highlighter configuration ([Bat Documentation](https://github.com/sharkdp/bat))
 - `~/.config/direnv/direnvrc` - Environment management ([Direnv Documentation](https://direnv.net/))
