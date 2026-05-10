@@ -51,7 +51,7 @@ Library/Application Support/Code/User/settings.json
 .config/aerospace/**
 {{ end }}
 {{ if not (has "python_dev" .modules) }}
-.chezmoiscripts/run_zzzzz_install-python-tools.sh
+.chezmoiscripts/run_onchange_zzzzz_install-python-tools.sh
 {{ end }}
 
 **/*.old.*
