@@ -1,4 +1,3 @@
--- chezmoi:template:left-delimiter="-- [[" right-delimiter="]] --"
 -- Neovim Configuration
 -- Fast, focused configuration for efficient editing
 

@@ -1,4 +1,3 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
 # SSH configuration
 
 # Keep SSH connections alive
