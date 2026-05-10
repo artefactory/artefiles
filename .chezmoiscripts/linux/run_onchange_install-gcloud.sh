@@ -1,5 +1,3 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# [[ if has "gcloud" .modules ]] #
 #!/bin/sh
 
 # This script installs Google Cloud SDK on Linux
@@ -88,4 +86,3 @@ fi
 echo "Cloud SDK installed to $INSTALL_DIR"
 echo "Path will be configured in Fish shell configuration automatically."
 echo "Note: To use 'gcloud' in this session, run: export PATH=\"$INSTALL_DIR/bin:\$PATH\""
-# [[ end ]] #
