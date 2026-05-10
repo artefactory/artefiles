@@ -46,6 +46,7 @@ packages:
           - 'difftastic'
           - 'git-cliff'
           - 'git-lfs'
+          - 'git-extras'
         casks: []
       atuin:
         brews:

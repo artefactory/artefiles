@@ -81,7 +81,7 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 |--------|----------|-------------|
 | `editor` | Neovim | Terminal editor with nvim aliases |
 | `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
-| `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs | Advanced version control tooling |
+| `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
 | `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
@@ -112,7 +112,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Optional Module Highlights
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
-- 🔄 **Advanced Git** (`git_advanced`) - Jujutsu, mergiraf, difftastic, git-cliff, and Git LFS
+- 🔄 **Advanced Git** (`git_advanced`) - [Jujutsu](https://github.com/jj-vcs/jj), [mergiraf](https://mergiraf.org/), [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), and [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`)
 - 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
