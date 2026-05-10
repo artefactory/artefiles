@@ -1,0 +1,20 @@
+# Global gitignore — patterns excluded from all repositories.
+# Per-repo patterns belong in the repo's own .gitignore.
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Direnv local state
+.envrc.local
+.direnv/
+
+# Python venvs (some projects use .venv, leave that to per-repo .gitignore)
+__pycache__/
+*.py[cod]
