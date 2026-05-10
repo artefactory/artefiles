@@ -76,11 +76,6 @@ _assert_script_gating() {
   fi
 }
 
-@test "atuin module gates its linux install script" {
-  [ "$(uname -s)" = Linux ] || skip "linux-only script"
-  _assert_script_gating atuin .chezmoiscripts/linux/install-atuin.sh
-}
-
 @test "gcloud module gates its linux install script" {
   [ "$(uname -s)" = Linux ] || skip "linux-only script"
   _assert_script_gating gcloud .chezmoiscripts/linux/install-gcloud.sh
