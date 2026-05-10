@@ -46,22 +46,22 @@ Library/Application Support/Code/User/settings.json
 {{ end }}
 {{ if not (has "atuin" .modules) }}
 .config/atuin/**
-.chezmoiscripts/linux/run_onchange_install-atuin.sh
+.chezmoiscripts/linux/install-atuin.sh
 {{ end }}
 {{ if not (has "gcloud" .modules) }}
-.chezmoiscripts/linux/run_onchange_install-gcloud.sh
+.chezmoiscripts/linux/install-gcloud.sh
 {{ end }}
 {{ if not (has "git_advanced" .modules) }}
-.chezmoiscripts/linux/run_onchange_install-git-extras.sh
+.chezmoiscripts/linux/install-git-extras.sh
 {{ end }}
 {{ if not (has "onepassword" .modules) }}
-.chezmoiscripts/linux/run_onchange_install-1password-cli.sh
+.chezmoiscripts/linux/install-1password-cli.sh
 {{ end }}
 {{ if or (eq .chezmoi.os "linux") (not (has "aerospace" .modules)) }}
 .config/aerospace/**
 {{ end }}
 {{ if not (has "python_dev" .modules) }}
-.chezmoiscripts/run_onchange_zzzzz_install-python-tools.sh
+.chezmoiscripts/zzzzz_install-python-tools.sh
 {{ end }}
 
 **/*.old.*

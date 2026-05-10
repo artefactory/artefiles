@@ -35,3 +35,23 @@ setup() {
     return 1
   fi
 }
+
+@test ".chezmoiignore uses target paths (no run_<modifier>_ prefix on script patterns)" {
+  # Same reasoning: chezmoi strips run_once_/run_onchange_ prefixes from script
+  # target paths, so a pattern with the source-state name silently never
+  # matches and the script runs unconditionally. This bug shipped twice
+  # (PRs #89 and #91) before this lint existed.
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(SSH_CLIENT="dummy 1 2" chezmoi_render "$H" .chezmoiignore)
+
+  patterns=$(printf '%s\n' "$rendered" \
+    | sed 's/[[:space:]]*#.*$//' \
+    | grep -v '^[[:space:]]*$' || true)
+
+  bad=$(echo "$patterns" | grep -E '(^|/)run_(once|onchange)_' || true)
+  if [ -n "$bad" ]; then
+    printf 'source-state run_<modifier>_ prefix in .chezmoiignore pattern (must be target path):\n%s\n' "$bad" >&2
+    return 1
+  fi
+}

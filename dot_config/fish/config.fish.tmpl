@@ -110,11 +110,7 @@ set -gx VISUAL vi
 # [[ end -]] #
 
 # Terminal capabilities
-if test "$TERM_PROGRAM" = ghostty
-    set -gx TERM xterm-256color
-else
-    set -gx TERM xterm-256color
-end
+set -gx TERM xterm-256color
 
 # [[ if has "git_advanced" .modules -]] #
 # Use difftastic for git diffs if available

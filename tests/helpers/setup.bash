@@ -59,6 +59,16 @@ chezmoi_apply()   { _chezmoi "$1" apply   "${@:2}"; }
 chezmoi_diff()    { _chezmoi "$1" diff    "${@:2}"; }
 chezmoi_managed() { _chezmoi "$1" managed "${@:2}"; }
 
+# Like chezmoi_managed but includes scripts. Use when the test is checking
+# script-gating behavior; otherwise prefer chezmoi_managed.
+chezmoi_managed_with_scripts() {
+  local h="$1"; shift
+  XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi managed \
+    --config "$h/.config/chezmoi/chezmoi.toml" \
+    --destination "$h" --source "$REPO_ROOT" \
+    --exclude=externals "$@"
+}
+
 # Render a source file's template to stdout. The seeded config at H must
 # already exist (call seed_chezmoi_config first).
 chezmoi_render() {
