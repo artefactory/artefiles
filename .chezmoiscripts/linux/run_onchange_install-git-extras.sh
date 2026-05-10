@@ -1,5 +1,3 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# [[ if has "git_advanced" .modules ]] #
 #!/bin/sh
 # vim: set ft=bash:
 set -eu
@@ -44,4 +42,3 @@ cd - >/dev/null
 rm -rf "${TMP_DIR}"
 
 echo "git-extras has been installed to ${HOME}/.local/bin"
-# [[ end ]] #

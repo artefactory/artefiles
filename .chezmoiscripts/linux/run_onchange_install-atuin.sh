@@ -1,5 +1,3 @@
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# [[ if has "atuin" .modules ]] #
 #!/bin/sh
 
 # Install atuin (shell history manager)
@@ -15,4 +13,3 @@ else
   echo "Installing atuin using the official installation script..."
   curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
 fi
-# [[ end ]] #
