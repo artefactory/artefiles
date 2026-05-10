@@ -60,9 +60,6 @@ Library/Application Support/Code/User/settings.json
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
 # already excludes them, so only emit these gates on linux.
 {{ if eq .chezmoi.os "linux" }}
-{{   if not (has "atuin" .modules) }}
-.chezmoiscripts/linux/install-atuin.sh
-{{   end }}
 {{   if not (has "gcloud" .modules) }}
 .chezmoiscripts/linux/install-gcloud.sh
 {{   end }}
