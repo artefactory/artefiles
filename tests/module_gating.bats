@@ -111,3 +111,7 @@ _assert_script_gating() {
 @test "python_dev module gates its install script" {
   _assert_script_gating python_dev .chezmoiscripts/zzzzz_install-python-tools.sh
 }
+
+@test "agent_skills module gates its install script" {
+  _assert_script_gating agent_skills .chezmoiscripts/install-agent-skills.sh
+}

@@ -134,6 +134,18 @@ any unrecognized subcommand passes through to `tuicr` directly.
 | `review list` | Persisted review sessions |
 | `review comments` | Comments stored in a session |
 
+### Agent Skills (`gh skill`, `agent_skills` module)
+
+Every `chezmoi apply` reconciles the curated skill list against upstream
+(`--force` reinstall, so it doubles as an update). Requires an authenticated `gh`.
+
+| Task | Command |
+|------|---------|
+| Edit the curated list | `.chezmoidata/agent_skills.yaml` |
+| List installed skills | `gh skill list --agent claude-code` |
+| Install one more | `gh skill install <owner>/<repo> <skill> --agent claude-code --scope user` |
+| Force-refresh now | `chezmoi apply` (or re-run the script directly) |
+
 ### Git Shortcuts
 
 | Alias | Command | Description |

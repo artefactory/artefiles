@@ -62,6 +62,9 @@ Library/Application Support/Code/User/settings.json
 .config/fish/functions/review.fish
 .config/fish/completions/review.fish
 {{ end }}
+{{ if not (has "agent_skills" .modules) }}
+.chezmoiscripts/install-agent-skills.sh
+{{ end }}
 
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
 # already excludes them, so only emit these gates on linux.
