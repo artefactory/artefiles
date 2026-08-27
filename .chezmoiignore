@@ -57,6 +57,11 @@ Library/Application Support/Code/User/settings.json
 {{ if not (has "python_dev" .modules) }}
 .chezmoiscripts/zzzzz_install-python-tools.sh
 {{ end }}
+{{ if not (has "git_advanced" .modules) }}
+.config/tuicr/**
+.config/fish/functions/review.fish
+.config/fish/completions/review.fish
+{{ end }}
 
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
 # already excludes them, so only emit these gates on linux.
@@ -66,6 +71,7 @@ Library/Application Support/Code/User/settings.json
 {{   end }}
 {{   if not (has "git_advanced" .modules) }}
 .chezmoiscripts/linux/install-git-extras.sh
+.chezmoiscripts/linux/install-tuicr.sh
 {{   end }}
 {{   if not (has "onepassword" .modules) }}
 .chezmoiscripts/linux/install-1password-cli.sh
