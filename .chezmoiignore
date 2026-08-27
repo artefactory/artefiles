@@ -52,6 +52,7 @@ Library/Application Support/Code/User/settings.json
 {{ end }}
 {{ if not (has "atuin" .modules) }}
 .config/atuin/**
+.config/fish/scripts/atuin_fzf_list.sh
 {{ end }}
 {{ if not (has "python_dev" .modules) }}
 .chezmoiscripts/zzzzz_install-python-tools.sh
