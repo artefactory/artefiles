@@ -1,11 +1,19 @@
 #!/bin/sh
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# Keep the curated agent-skill list (.chezmoidata/agent_skills.yaml)
-# installed and up to date via `gh skill`. No run_onchange gating here:
-# this must reconcile against upstream on every apply, not only when the
-# curated list itself changes.
+# Keep agent skills installed and up to date via `gh skill`, reading the
+# actual skill list from the org's shared skills repo (never hardcoded
+# here — see .chezmoidata/agent_skills.yaml). No run_onchange gating:
+# this must reconcile against upstream on every apply, not only when
+# something in this repo changes.
+#
+# Never --force: a name collision with a skill the user authored or
+# installed themselves must be left alone, not silently overwritten.
+# `gh skill update --all` is what brings already-tracked skills up to
+# date; a plain `install` only adds what's missing.
 
 set -eu
+
+ORG_SKILLS_REPO="# [[ .orgSkillsRepo ]] #"
 
 if ! command -v gh > /dev/null 2>&1; then
   echo "gh not found — skipping agent skill sync" >&2
@@ -22,10 +30,34 @@ if ! gh auth status > /dev/null 2>&1; then
   exit 0
 fi
 
-# [[ range .agentSkills ]] #
-if ! gh skill install "# [[ .repo ]] #" "# [[ .skill ]] #" --agent claude-code --scope user --force; then
-  echo "warning: failed to install/update skill '# [[ .skill ]] #' from # [[ .repo ]] #" >&2
+if ! gh skill update --all; then
+  echo "warning: failed to update already-installed agent skills" >&2
+fi
+
+# 1. Custom skills authored directly in the org skills repo.
+# [[ range .agentSkillTargets ]] #
+if ! gh skill install "$ORG_SKILLS_REPO" --agent "# [[ . ]] #" --scope user --all; then
+  echo "warning: could not install custom skills from $ORG_SKILLS_REPO for agent # [[ . ]] # (no read access? none defined yet?)" >&2
 fi
 # [[ end ]] #
+
+# 2. Recommended external skills, listed as pointers in the org skills
+# repo's recommended-skills.txt (never vendored — installed straight
+# from their own source repos).
+manifest=$(gh api -H "Accept: application/vnd.github.raw" "repos/$ORG_SKILLS_REPO/contents/recommended-skills.txt" 2> /dev/null) || manifest=""
+if [ -z "$manifest" ]; then
+  echo "warning: could not fetch recommended-skills.txt from $ORG_SKILLS_REPO — skipping" >&2
+else
+  printf '%s\n' "$manifest" | while IFS=' ' read -r repo skill; do
+    case "$repo" in
+      ''|'#'*) continue ;;
+    esac
+    # [[ range .agentSkillTargets ]] #
+    if ! gh skill install "$repo" "$skill" --agent "# [[ . ]] #" --scope user; then
+      echo "warning: could not install skill '$skill' from $repo for agent # [[ . ]] # (already exists under that name? see above)" >&2
+    fi
+    # [[ end ]] #
+  done
+fi
 
 exit 0

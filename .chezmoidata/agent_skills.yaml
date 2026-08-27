@@ -1,30 +1,18 @@
-# Curated "must-have" agent skills for data scientists and software
-# engineers, installed via the GitHub CLI's `gh skill` command
-# (https://cli.github.com/manual/gh_skill). Verified against the real
-# directory listing of the source repo — do not add an entry without
-# confirming it exists under github/awesome-copilot's skills/ directory.
-agentSkills:
-  - repo: 'github/awesome-copilot'
-    skill: 'conventional-commit'
-  - repo: 'github/awesome-copilot'
-    skill: 'context-map'
-  - repo: 'github/awesome-copilot'
-    skill: 'codebase-memory-mcp'
-  - repo: 'github/awesome-copilot'
-    skill: 'create-readme'
-  - repo: 'github/awesome-copilot'
-    skill: 'create-implementation-plan'
-  - repo: 'github/awesome-copilot'
-    skill: 'security-review'
-  - repo: 'github/awesome-copilot'
-    skill: 'review-and-refactor'
-  - repo: 'github/awesome-copilot'
-    skill: 'pytest-coverage'
-  - repo: 'github/awesome-copilot'
-    skill: 'sql-code-review'
-  - repo: 'github/awesome-copilot'
-    skill: 'bigquery-pipeline-audit'
-  - repo: 'github/awesome-copilot'
-    skill: 'eval-driven-dev'
-  - repo: 'github/awesome-copilot'
-    skill: 'agentic-eval'
+# Agent-skill sync config. The actual skill list is NOT here — it lives
+# in the private companion repo https://github.com/artefactory/skills,
+# which is the single source of truth:
+#   - skills/<name>/SKILL.md   custom skills authored by the team
+#   - recommended-skills.txt   pointers to external skills worth installing
+# This keeps artefiles itself skill-list-agnostic: adding/removing a
+# skill never touches this repo, only artefactory/skills.
+
+# Agents the team actually uses. Values must match gh skill's supported
+# --agent identifiers (see `gh skill install --help`).
+agentSkillTargets:
+  - 'claude-code'
+  - 'github-copilot'
+  - 'codex'
+  - 'gemini-cli'
+
+# The org's shared skills repo (custom skills + recommended-skills.txt).
+orgSkillsRepo: 'artefactory/skills'
