@@ -46,3 +46,9 @@ _check_template() {
     fish -n "$f"
   done
 }
+
+@test "all fish completions parse" {
+  for f in "$REPO_ROOT"/dot_config/fish/completions/*.fish; do
+    fish -n "$f"
+  done
+}
