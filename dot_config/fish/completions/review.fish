@@ -19,7 +19,7 @@ complete -c review -F -n "__fish_seen_subcommand_from file"
 complete -c review -f -n "__fish_seen_subcommand_from pr" -a '(
     type -q gh
     and gh pr list --state open --json number,title \
-        --template "{{range .}}{{.number}}\t{{.title}}{{\"\n\"}}{{end}}" 2>/dev/null
+        --jq ".[] | \"\(.number)\t\(.title)\"" 2>/dev/null
 )'
 
 # `review branch <base>` completes candidate trunk bookmarks/branches.
