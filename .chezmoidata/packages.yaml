@@ -53,6 +53,7 @@ packages:
           - 'git-cliff'
           - 'git-lfs'
           - 'git-extras'
+          - 'tuicr'
         casks: []
       atuin:
         brews:

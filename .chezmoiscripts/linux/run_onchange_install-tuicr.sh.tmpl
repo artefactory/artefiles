@@ -1,0 +1,31 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# Install tuicr (code review TUI) for Linux without requiring root, via its
+# own vendor installer rather than unpacking a release asset by hand.
+# https://tuicr.dev/
+#
+# The line below embeds the latest tuicr tag resolved at chezmoi-render
+# time. When a new tuicr version ships, the rendered script content
+# changes, and chezmoi re-runs this run_onchange script on next apply.
+# That gives us the same auto-update behavior as gitHubLatestReleaseAssetURL
+# does for binary externals, while still installing through the vendor's
+# own script instead of reimplementing its release-asset resolution here.
+# Latest tuicr tag: # [[ (gitHubLatestRelease "agavra/tuicr").TagName ]] #
+
+set -eu
+
+TUICR_VERSION=# [[ (gitHubLatestRelease "agavra/tuicr").TagName | trimPrefix "v" | quote ]] #
+
+if command -v tuicr > /dev/null 2>&1 \
+  && [ "$(tuicr --version | awk '{print $2}')" = "$TUICR_VERSION" ]; then
+  echo "tuicr $TUICR_VERSION already installed."
+  exit 0
+fi
+
+echo "Installing tuicr $TUICR_VERSION..."
+export TUICR_VERSION
+export TUICR_INSTALL_YES=1
+
+curl -fsSL https://tuicr.dev/install.sh | sh
+
+echo "tuicr installed to ${TUICR_INSTALL_DIR:-$HOME/.local/bin}"

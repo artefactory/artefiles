@@ -48,6 +48,18 @@ setup() {
   assert_file_exists "$H/.config/atuin"
 }
 
+@test "git_advanced module gates the tuicr config dir" {
+  H_off=$(mk_fake_home "$BATS_TEST_TMPDIR/tuicr-off")
+  seed_chezmoi_config "$H_off" '{"modules":[]}'
+  chezmoi_apply "$H_off"
+  assert_file_absent "$H_off/.config/tuicr"
+
+  H_on=$(mk_fake_home "$BATS_TEST_TMPDIR/tuicr-on")
+  seed_chezmoi_config "$H_on" '{"modules":["git_advanced"]}'
+  chezmoi_apply "$H_on"
+  assert_file_exists "$H_on/.config/tuicr"
+}
+
 @test "applying twice is idempotent (editor module)" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["editor"]}'
@@ -84,6 +96,11 @@ _assert_script_gating() {
 @test "git_advanced module gates its linux install script" {
   [ "$(uname -s)" = Linux ] || skip "linux-only script"
   _assert_script_gating git_advanced .chezmoiscripts/linux/install-git-extras.sh
+}
+
+@test "git_advanced module gates the linux tuicr install script" {
+  [ "$(uname -s)" = Linux ] || skip "linux-only script"
+  _assert_script_gating git_advanced .chezmoiscripts/linux/install-tuicr.sh
 }
 
 @test "onepassword module gates its linux install script" {
