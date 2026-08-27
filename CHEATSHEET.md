@@ -101,6 +101,8 @@ chezmoi purge --force
 | Change directory with history | `cd` (uses `zoxide` for smart navigation) |
 | Find files by name | `fd pattern` |
 | Fuzzy find files | `fzf` |
+| Tab completion picker | `Tab` opens an fzf picker over every fish completion (commands, flags, flag values); `Tab`/`Shift-Tab` cycle, typing re-filters live, `Esc` cancels, `Enter` inserts |
+| Search shell history via fzf | `Ctrl-R` / `Alt-R` (this directory) / `Alt-F` (global) — requires `atuin` module |
 
 ## Git & Version Control
 
@@ -116,6 +118,21 @@ chezmoi purge --force
 | Create PR | `ghpr` (alias for `gh pr create`) |
 | View PR | `ghprv` (alias for `gh pr view`) |
 | List PRs | `ghprl` (alias for `gh pr list`) |
+
+### Code Review (tuicr, `git_advanced` module)
+
+`review <Tab>` opens the fzf picker over these subcommands with descriptions;
+any unrecognized subcommand passes through to `tuicr` directly.
+
+| Command | Reviews |
+|---------|---------|
+| `review` | Uncommitted working-tree changes |
+| `review file <path>` | One file or directory |
+| `review branch [base]` | This branch/chain against `main` (or `base`) |
+| `review commit [rev]` | The last commit (or `rev`) |
+| `review pr <n>` | A GitHub PR |
+| `review list` | Persisted review sessions |
+| `review comments` | Comments stored in a session |
 
 ### Git Shortcuts
 
