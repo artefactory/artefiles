@@ -8,7 +8,7 @@ email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter
 # Set the desired credential helper.
 # Examples: "!gh auth git-credential", "osxkeychain", "cache --timeout=3600"
 credentialHelper = "!gh auth git-credential"
-# [[ $modules := promptMultichoiceOnce . "modules" "Select optional modules" (list "editor" "terminal" "git_advanced" "atuin" "python_dev" "gcloud" "colima" "multiplexer" "aerospace" "onepassword") ]] #
+# [[ $modules := promptMultichoiceOnce . "modules" "Select optional modules" (list "editor" "terminal" "git_advanced" "atuin" "python_dev" "gcloud" "colima" "multiplexer" "aerospace" "onepassword" "agent_skills") ]] #
 modules = # [[ $modules | toJson ]] #
 
 # [[ if has "git_advanced" $modules ]] #

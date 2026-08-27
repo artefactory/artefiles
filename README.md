@@ -89,6 +89,7 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | `multiplexer` | Zellij | Terminal multiplexer |
 | `aerospace` | AeroSpace | Tiling window manager (darwin only) |
 | `onepassword` | 1Password, 1Password CLI | Password manager (darwin only) |
+| `agent_skills` | [`gh skill`](https://cli.github.com/manual/gh_skill) sync | Installs and keeps up to date a curated list of AI agent skills for data scientists and software engineers |
 
 ### Changing Modules
 
@@ -117,6 +118,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
+- 🧠 **Agent Skills** (`agent_skills`) - every `chezmoi apply` runs [`gh skill install --force`](https://cli.github.com/manual/gh_skill) for a curated list of [github/awesome-copilot](https://github.com/github/awesome-copilot) skills (`.chezmoidata/agent_skills.yaml`), covering code review, planning, testing, and data/ML workflows for data scientists and software engineers. Reuses the same authenticated `gh` chezmoi init already requires; silently skipped if `gh` isn't authenticated. See the list and add your own in `.chezmoidata/agent_skills.yaml`
 
 ## What Files Will Be Created/Modified
 

@@ -1,0 +1,31 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# Keep the curated agent-skill list (.chezmoidata/agent_skills.yaml)
+# installed and up to date via `gh skill`. No run_onchange gating here:
+# this must reconcile against upstream on every apply, not only when the
+# curated list itself changes.
+
+set -eu
+
+if ! command -v gh > /dev/null 2>&1; then
+  echo "gh not found — skipping agent skill sync" >&2
+  exit 0
+fi
+
+if ! gh skill --help > /dev/null 2>&1; then
+  echo "gh skill unavailable (gh CLI too old, needs >= 2.90) — skipping agent skill sync" >&2
+  exit 0
+fi
+
+if ! gh auth status > /dev/null 2>&1; then
+  echo "gh is not authenticated (run 'gh auth login') — skipping agent skill sync" >&2
+  exit 0
+fi
+
+# [[ range .agentSkills ]] #
+if ! gh skill install "# [[ .repo ]] #" "# [[ .skill ]] #" --agent claude-code --scope user --force; then
+  echo "warning: failed to install/update skill '# [[ .skill ]] #' from # [[ .repo ]] #" >&2
+fi
+# [[ end ]] #
+
+exit 0

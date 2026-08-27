@@ -12,7 +12,7 @@ setup() {
     skip "python3 not available"
   fi
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace"]}'
+  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace","agent_skills"]}'
 
   # Force linux template-eval path even on macOS runners.
   rendered=$(XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
@@ -33,7 +33,7 @@ tomllib.loads(sys.stdin.read())
 
 @test "externals.toml urls have no empty arch interpolations" {
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace"]}'
+  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace","agent_skills"]}'
 
   rendered=$(XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
     --config "$H/.config/chezmoi/chezmoi.toml" \
