@@ -93,8 +93,12 @@ end
 if test -d "$HOME/.nvm"
     set -gx NVM_DIR (test -z "$XDG_CONFIG_HOME"; and printf %s "$HOME/.nvm"; or printf %s "$XDG_CONFIG_HOME/nvm")
     # nvm.sh is a bash script; fish's own `source` parses it as fish
-    # syntax and fails, so route it through bass instead.
-    test -s "$NVM_DIR/nvm.sh"; and bass source "$NVM_DIR/nvm.sh"
+    # syntax and fails, so route it through bass instead — guarded on
+    # bass actually being installed yet, since fisher only fetches a
+    # newly added plugin on the next `fisher update`, not immediately.
+    if test -s "$NVM_DIR/nvm.sh"; and functions -q bass
+        bass source "$NVM_DIR/nvm.sh"
+    end
 end
 # [[ end ]] #
 
