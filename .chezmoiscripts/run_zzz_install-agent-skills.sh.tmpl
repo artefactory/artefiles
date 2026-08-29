@@ -13,6 +13,12 @@
 
 set -eu
 
+# A name collision (already-installed skill) makes `gh skill` prompt to
+# overwrite; this script runs from chezmoi apply, which is sometimes
+# invoked with a real TTY attached, so left unset that prompt can block
+# waiting for input instead of hitting the warning handling below.
+export GH_PROMPT_DISABLED=1
+
 ORG_SKILLS_REPO="# [[ .orgSkillsRepo ]] #"
 
 if ! command -v gh > /dev/null 2>&1; then
