@@ -113,5 +113,5 @@ _assert_script_gating() {
 }
 
 @test "agent_skills module gates its install script" {
-  _assert_script_gating agent_skills .chezmoiscripts/install-agent-skills.sh
+  _assert_script_gating agent_skills .chezmoiscripts/zzz_install-agent-skills.sh
 }
