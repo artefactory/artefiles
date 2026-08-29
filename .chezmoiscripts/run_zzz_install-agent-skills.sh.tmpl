@@ -43,21 +43,42 @@ fi
 
 # 2. Recommended external skills, listed as pointers in the org skills
 # repo's recommended-skills.txt (never vendored — installed straight
-# from their own source repos).
+# from their own source repos). `gh skill install` only takes one
+# skill name per invocation, so "bulk" here means running the
+# per-(repo, skill, agent) installs concurrently instead of one at a
+# time — a manifest of any real size is dominated by network latency,
+# not CPU, so this cuts wall-clock roughly by the concurrency factor.
 manifest=$(gh api -H "Accept: application/vnd.github.raw" "repos/$ORG_SKILLS_REPO/contents/recommended-skills.txt" 2> /dev/null) || manifest=""
 if [ -z "$manifest" ]; then
   echo "warning: could not fetch recommended-skills.txt from $ORG_SKILLS_REPO — skipping" >&2
 else
-  printf '%s\n' "$manifest" | while IFS=' ' read -r repo skill; do
+  manifest_file=$(mktemp)
+  trap 'rm -f "$manifest_file"' EXIT
+  printf '%s\n' "$manifest" > "$manifest_file"
+
+  max_parallel=8
+  running=0
+  # Read from a file, not a pipe: piping into `while` would run the
+  # loop in a subshell, and the background jobs it starts would then
+  # be that subshell's children — invisible to the `wait` calls below.
+  while IFS=' ' read -r repo skill; do
     case "$repo" in
       ''|'#'*) continue ;;
     esac
     # [[ range .agentSkillTargets ]] #
-    if ! gh skill install "$repo" "$skill" --agent "# [[ . ]] #" --scope user; then
-      echo "warning: could not install skill '$skill' from $repo for agent # [[ . ]] # (already exists under that name? see above)" >&2
+    (
+      if ! gh skill install "$repo" "$skill" --agent "# [[ . ]] #" --scope user; then
+        echo "warning: could not install skill '$skill' from $repo for agent # [[ . ]] # (already exists under that name? see above)" >&2
+      fi
+    ) &
+    running=$((running + 1))
+    if [ "$running" -ge "$max_parallel" ]; then
+      wait
+      running=0
     fi
     # [[ end ]] #
-  done
+  done < "$manifest_file"
+  wait
 fi
 
 exit 0
