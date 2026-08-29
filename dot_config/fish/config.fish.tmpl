@@ -118,6 +118,15 @@ set -gx VISUAL vi
 # Terminal capabilities
 set -gx TERM xterm-256color
 
+# Authenticate chezmoi's own GitHub template calls (gitHubLatestRelease,
+# gitHubLatestReleaseAssetURL, used across .chezmoiexternal.toml.tmpl)
+# with the token gh already holds — chezmoi reads GITHUB_TOKEN directly.
+# Unauthenticated calls share a 60/hr limit across the whole egress IP;
+# one rate-limited call aborts the entire external-refresh template.
+if type -q gh
+    set -gx GITHUB_TOKEN (gh auth token 2>/dev/null)
+end
+
 # [[ if has "git_advanced" .modules -]] #
 # Use difftastic for git diffs if available
 if type -q difft
