@@ -63,7 +63,7 @@ Library/Application Support/Code/User/settings.json
 .config/fish/completions/review.fish
 {{ end }}
 {{ if not (has "agent_skills" .modules) }}
-.chezmoiscripts/install-agent-skills.sh
+.chezmoiscripts/zzz_install-agent-skills.sh
 {{ end }}
 
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
