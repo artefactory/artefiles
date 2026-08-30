@@ -81,13 +81,6 @@ end
 # [[ end -]] #
 # [[ end -]] #
 
-# [[ if has "atuin" .modules -]] #
-# Atuin shell history tool
-if test -d $HOME/.atuin/bin
-    fish_add_path $HOME/.atuin/bin
-end
-# [[ end -]] #
-
 # nvm Node Version Manager
 # [[ if eq .chezmoi.os "linux" -]] #
 if test -d "$HOME/.nvm"
