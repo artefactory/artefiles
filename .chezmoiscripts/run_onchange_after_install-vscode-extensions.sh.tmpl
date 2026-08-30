@@ -7,8 +7,8 @@
 set -eu
 
 if ! command -v code > /dev/null 2>&1; then
-  echo "VSCode CLI (code) not found. Install VSCode and re-run 'chezmoi apply' to install extensions."
-  exit 1
+  echo "VSCode CLI (code) not found; skipping extension install (expected on headless/server machines)."
+  exit 0
 fi
 
 install_extension() {
