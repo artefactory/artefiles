@@ -208,7 +208,14 @@ fi
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
-set -- init --apply "--source=${script_dir}"
+# Run as `sh -c "$(curl ...)"` there is no script file: $0 is "sh" and script_dir
+# is the directory holding sh, not a checkout. Only a checkout may be the
+# chezmoi source; otherwise let chezmoi clone the repo.
+if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+  set -- init --apply "--source=${script_dir}"
+else
+  set -- init --apply artefactory/artefiles
+fi
 [ -n "${destination}" ] && set -- "$@" "--destination=${destination}"
 [ "$dry_run" = "true" ] && set -- "$@" "--dry-run"
 
