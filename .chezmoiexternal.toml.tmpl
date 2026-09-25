@@ -42,7 +42,7 @@
 # difftastic - A structural diff tool
 [".local/bin/difft"]
   type = "archive-file"
-  url = # [[ gitHubLatestReleaseAssetURL "Wilfred/difftastic" (printf "difft-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
+  url = # [[ gitHubLatestReleaseAssetURL "Wilfred/difftastic" (printf "difft-*-%s-unknown-linux-gnu.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "difft"
 
