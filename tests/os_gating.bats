@@ -14,7 +14,7 @@ setup() {
 
   case "$(uname -s)" in
     Darwin) other=linux ;;
-    Linux)  other=darwin ;;
+    Linux) other=darwin ;;
     *) skip "unsupported OS: $(uname -s)" ;;
   esac
 
@@ -32,7 +32,7 @@ setup() {
 
   case "$(uname -s)" in
     Darwin) own=darwin ;;
-    Linux)  own=linux ;;
+    Linux) own=linux ;;
     *) skip "unsupported OS: $(uname -s)" ;;
   esac
 

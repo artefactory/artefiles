@@ -38,7 +38,7 @@ cd "git-extras-${LATEST_VERSION#v}"
 make install PREFIX="${HOME}/.local"
 
 # Clean up
-cd - >/dev/null
+cd - > /dev/null
 rm -rf "${TMP_DIR}"
 
 echo "git-extras has been installed to ${HOME}/.local/bin"

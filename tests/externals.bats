@@ -43,12 +43,12 @@ tomllib.loads(sys.stdin.read())
 
   # Catch double-dashes or unresolved <...> placeholders that signal a
   # printf-with-empty-string bug.
-  if printf '%s\n' "$rendered" | grep -E 'url = "[^"]*--unknown-' >/dev/null; then
+  if printf '%s\n' "$rendered" | grep -E 'url = "[^"]*--unknown-' > /dev/null; then
     echo "Found dead arch interpolation in rendered URL:" >&2
     printf '%s\n' "$rendered" | grep -E 'url = "[^"]*--unknown-' >&2
     return 1
   fi
-  if printf '%s\n' "$rendered" | grep -E 'url = "[^"]*<no value>' >/dev/null; then
+  if printf '%s\n' "$rendered" | grep -E 'url = "[^"]*<no value>' > /dev/null; then
     echo "Found <no value> in rendered URL:" >&2
     printf '%s\n' "$rendered" | grep -E 'url = "[^"]*<no value>' >&2
     return 1

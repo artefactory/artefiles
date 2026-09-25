@@ -17,7 +17,7 @@ assert_file_absent() {
 }
 
 assert_valid_json() {
-  if ! jq -e . "$1" >/dev/null 2>&1; then
+  if ! jq -e . "$1" > /dev/null 2>&1; then
     printf 'invalid JSON: %s\n' "$1" >&2
     jq . "$1" >&2 || true
     return 1
@@ -26,7 +26,8 @@ assert_valid_json() {
 
 assert_jq_key() {
   local file="$1" key="$2" expected="$3"
-  local got; got=$(jq -r "$key" "$file")
+  local got
+  got=$(jq -r "$key" "$file")
   if [ "$got" != "$expected" ]; then
     printf 'jq %s in %s: expected %q, got %q\n' "$key" "$file" "$expected" "$got" >&2
     return 1
@@ -36,7 +37,8 @@ assert_jq_key() {
 # assert_idempotent H — re-applying changes nothing.
 assert_idempotent() {
   local h="$1"
-  local out; out=$(chezmoi_diff "$h")
+  local out
+  out=$(chezmoi_diff "$h")
   if [ -n "$out" ]; then
     printf 'chezmoi diff non-empty after apply (not idempotent):\n%s\n' "$out" >&2
     return 1
@@ -49,8 +51,8 @@ assert_idempotent() {
 #   overwrite anything else.
 assert_no_override() {
   local h="$1" rel="$2" marker="$3"
-  printf '\n// %s\n' "$marker" >>"$h/$rel"
-  chezmoi_apply "$h" >/dev/null
+  printf '\n// %s\n' "$marker" >> "$h/$rel"
+  chezmoi_apply "$h" > /dev/null
   if ! grep -qF "$marker" "$h/$rel"; then
     printf 'create_ override-protection broken: %s lost marker after re-apply\n' "$rel" >&2
     return 1

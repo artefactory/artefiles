@@ -26,7 +26,7 @@ _check_template() {
 @test "config.fish.tmpl parses with all modules" {
   H=$(mk_fake_home)
   all=$(yq -r '.packages.darwin.modules | keys | .[]' "$REPO_ROOT/.chezmoidata/packages.yaml" \
-        | jq -R . | jq -sc .)
+    | jq -R . | jq -sc .)
   seed_chezmoi_config "$H" "$(jq -nc --argjson m "$all" '{modules:$m}')"
   _check_template "$H" dot_config/fish/config.fish.tmpl
 }

@@ -21,8 +21,8 @@ setup() {
 @test "refactor preserves the 6 default extensions" {
   exts=$(yq -r '.vscode.extensions[]' "$REPO_ROOT/.chezmoidata/packages.yaml")
   for ext in "Catppuccin.catppuccin-vsc" "Catppuccin.catppuccin-vsc-icons" \
-             "ms-python.python" "ms-python.vscode-pylance" "charliermarsh.ruff" \
-             "mkhl.direnv"; do
+    "ms-python.python" "ms-python.vscode-pylance" "charliermarsh.ruff" \
+    "mkhl.direnv"; do
     if ! echo "$exts" | grep -qxF "$ext"; then
       echo "Expected extension '$ext' missing from packages.yaml" >&2
       return 1
@@ -41,5 +41,5 @@ setup() {
       return 1
     fi
   done < <(yq -r '.vscode.modules // {} | to_entries[] | .value.extensions // [] | .[]' \
-           "$REPO_ROOT/.chezmoidata/packages.yaml")
+    "$REPO_ROOT/.chezmoidata/packages.yaml")
 }

@@ -30,7 +30,7 @@ seed_chezmoi_config() {
   name=$(printf '%s' "$data" | jq -r '.name // "test-user"')
   email=$(printf '%s' "$data" | jq -r '.email // "test@example.com"')
   modules=$(printf '%s' "$data" | jq -c '.modules // []')
-  cat >"$cfg" <<EOF
+  cat > "$cfg" << EOF
 sourceDir = "$REPO_ROOT"
 
 [data]
@@ -48,21 +48,23 @@ EOF
 # external dependencies (chezmoiexternal). Tests target file rendering and
 # ignore-rule logic; script and external-deps behavior is out of scope here.
 _chezmoi() {
-  local h="$1" sub="$2"; shift 2
+  local h="$1" sub="$2"
+  shift 2
   XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi "$sub" \
     --config "$h/.config/chezmoi/chezmoi.toml" \
     --destination "$h" --source "$REPO_ROOT" \
     --exclude=scripts,externals "$@"
 }
 
-chezmoi_apply()   { _chezmoi "$1" apply   "${@:2}"; }
-chezmoi_diff()    { _chezmoi "$1" diff    "${@:2}"; }
+chezmoi_apply() { _chezmoi "$1" apply "${@:2}"; }
+chezmoi_diff() { _chezmoi "$1" diff "${@:2}"; }
 chezmoi_managed() { _chezmoi "$1" managed "${@:2}"; }
 
 # Like chezmoi_managed but includes scripts. Use when the test is checking
 # script-gating behavior; otherwise prefer chezmoi_managed.
 chezmoi_managed_with_scripts() {
-  local h="$1"; shift
+  local h="$1"
+  shift
   XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi managed \
     --config "$h/.config/chezmoi/chezmoi.toml" \
     --destination "$h" --source "$REPO_ROOT" \
@@ -76,5 +78,5 @@ chezmoi_render() {
   XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi execute-template \
     --config "$h/.config/chezmoi/chezmoi.toml" \
     --source "$REPO_ROOT" --destination "$h" \
-    <"$REPO_ROOT/$file"
+    < "$REPO_ROOT/$file"
 }

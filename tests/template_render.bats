@@ -21,7 +21,7 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
 @test "every .tmpl renders without leftover template directives" {
   H=$(mk_fake_home)
   all=$(yq -r '.packages.darwin.modules | keys | .[]' "$REPO_ROOT/.chezmoidata/packages.yaml" \
-        | jq -R . | jq -sc .)
+    | jq -R . | jq -sc .)
   seed_chezmoi_config "$H" "$(jq -nc --argjson m "$all" '{modules:$m}')"
 
   fail=0
@@ -29,15 +29,15 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
     [ -n "$tmpl" ] || continue
     rel=${tmpl#"$REPO_ROOT"/}
     # Render via chezmoi to honor the file's own template directives.
-    rendered=$(chezmoi_render "$H" "$rel" 2>/dev/null) || continue
+    rendered=$(chezmoi_render "$H" "$rel" 2> /dev/null) || continue
     if printf '%s\n' "$rendered" | grep -qE "$_TEMPLATE_KEYWORD_RE"; then
       echo "$rel: rendered output contains leftover template directive (file may have lost .tmpl handling)" >&2
       printf '%s\n' "$rendered" | grep -nE "$_TEMPLATE_KEYWORD_RE" | head -3 >&2
       fail=1
     fi
   done < <(find "$REPO_ROOT" -type f -name '*.tmpl' \
-            -not -path "$REPO_ROOT/.workspaces/*" \
-            -not -path "$REPO_ROOT/tests/*")
+    -not -path "$REPO_ROOT/.workspaces/*" \
+    -not -path "$REPO_ROOT/tests/*")
   [ $fail = 0 ]
 }
 
@@ -46,16 +46,16 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
     case "$rel" in
-      .git/*|.workspaces/*|tests/*) continue ;;
+      .git/* | .workspaces/* | tests/*) continue ;;
     esac
-    if grep -q 'chezmoi:template:' "$f" 2>/dev/null; then
+    if grep -q 'chezmoi:template:' "$f" 2> /dev/null; then
       echo "$rel: contains chezmoi:template directive but is not a .tmpl file" >&2
       fail=1
     fi
   done < <(find "$REPO_ROOT" -type f -not -name '*.tmpl' \
-            -not -path "$REPO_ROOT/.git/*" \
-            -not -path "$REPO_ROOT/.workspaces/*" \
-            -not -path "$REPO_ROOT/tests/*")
+    -not -path "$REPO_ROOT/.git/*" \
+    -not -path "$REPO_ROOT/.workspaces/*" \
+    -not -path "$REPO_ROOT/tests/*")
   [ $fail = 0 ]
 }
 
@@ -71,18 +71,18 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
     case "$rel" in
-      .git/*|.workspaces/*|tests/*|CHEATSHEET.md|README.md|CHANGELOG.md|CLAUDE.md|.chezmoiignore) continue ;;
+      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .chezmoiignore) continue ;;
     esac
     # Skip binary-encoded files
-    file --mime-encoding "$f" 2>/dev/null | grep -q binary && continue
-    if grep -qE "$_TEMPLATE_KEYWORD_RE" "$f" 2>/dev/null; then
+    file --mime-encoding "$f" 2> /dev/null | grep -q binary && continue
+    if grep -qE "$_TEMPLATE_KEYWORD_RE" "$f" 2> /dev/null; then
       echo "$rel: contains template directive but lacks .tmpl extension" >&2
       grep -nE "$_TEMPLATE_KEYWORD_RE" "$f" | head -2 >&2
       fail=1
     fi
   done < <(find "$REPO_ROOT" -type f -not -name '*.tmpl' \
-            -not -path "$REPO_ROOT/.git/*" \
-            -not -path "$REPO_ROOT/.workspaces/*" \
-            -not -path "$REPO_ROOT/tests/*")
+    -not -path "$REPO_ROOT/.git/*" \
+    -not -path "$REPO_ROOT/.workspaces/*" \
+    -not -path "$REPO_ROOT/tests/*")
   [ $fail = 0 ]
 }

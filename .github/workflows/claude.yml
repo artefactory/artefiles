@@ -45,4 +45,3 @@ jobs:
 
           # Allow Claude to open PRs after pushing the branch.
           claude_args: '--allowed-tools Bash(gh pr create:*),Bash(gh pr edit:*)'
-

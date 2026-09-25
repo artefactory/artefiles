@@ -11,7 +11,7 @@ setup() {
 @test ".chezmoi.toml.tmpl renders with stubbed gh" {
   fake_bin="$BATS_TEST_TMPDIR/fake-bin"
   mkdir -p "$fake_bin"
-  cat > "$fake_bin/gh" <<'EOF'
+  cat > "$fake_bin/gh" << 'EOF'
 #!/bin/sh
 case "$*" in
   *"--jq"*".login"*) echo "testuser" ;;
@@ -24,11 +24,11 @@ EOF
   H=$(mk_fake_home)
   rendered=$(env PATH="$fake_bin:$PATH" XDG_CONFIG_HOME="$H/.config" HOME="$H" \
     chezmoi execute-template \
-      --source "$REPO_ROOT" --destination "$H" \
-      --init \
-      --promptString "email=t@example.com" \
-      --promptMultichoice "modules=editor,terminal" \
-      < "$REPO_ROOT/.chezmoi.toml.tmpl")
+    --source "$REPO_ROOT" --destination "$H" \
+    --init \
+    --promptString "email=t@example.com" \
+    --promptMultichoice "modules=editor,terminal" \
+    < "$REPO_ROOT/.chezmoi.toml.tmpl")
 
   printf '%s\n' "$rendered" | grep -q '^name = "testuser"$'
   printf '%s\n' "$rendered" | grep -q '^email = '
@@ -43,7 +43,7 @@ EOF
 
   fake_bin="$BATS_TEST_TMPDIR/fake-bin"
   mkdir -p "$fake_bin"
-  cat > "$fake_bin/gh" <<'EOF'
+  cat > "$fake_bin/gh" << 'EOF'
 #!/bin/sh
 case "$*" in
   *".login"*) echo "u" ;;
@@ -56,11 +56,11 @@ EOF
   H=$(mk_fake_home)
   rendered=$(env PATH="$fake_bin:$PATH" XDG_CONFIG_HOME="$H/.config" HOME="$H" \
     chezmoi execute-template \
-      --source "$REPO_ROOT" --destination "$H" \
-      --init \
-      --promptString "email=u@example.com" \
-      --promptMultichoice "modules=git_advanced" \
-      < "$REPO_ROOT/.chezmoi.toml.tmpl")
+    --source "$REPO_ROOT" --destination "$H" \
+    --init \
+    --promptString "email=u@example.com" \
+    --promptMultichoice "modules=git_advanced" \
+    < "$REPO_ROOT/.chezmoi.toml.tmpl")
 
   printf '%s\n' "$rendered" | python3 -c '
 import sys
