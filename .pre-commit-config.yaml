@@ -41,12 +41,6 @@ repos:
       - id: yamllint
         args: ["-d", "relaxed"]
 
-  # Format and validate TOML files
-  - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.2
-    hooks:
-      - id: toml-sort-fix
-
   # Check for secrets
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
