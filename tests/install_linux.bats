@@ -34,7 +34,7 @@ setup() {
   printf '#!/bin/sh\nprintf "gh version %s (date)\\n" "$0_version"\n' \
     > "$BATS_TEST_TMPDIR/.local/bin/gh"
   # Use awk-friendly third field
-  cat > "$BATS_TEST_TMPDIR/.local/bin/gh" <<EOF
+  cat > "$BATS_TEST_TMPDIR/.local/bin/gh" << EOF
 #!/bin/sh
 echo "gh version $latest (2026-01-01)"
 EOF
@@ -42,7 +42,7 @@ EOF
 
   # Fake curl that returns the latest tag JSON; if anything fetches the
   # download_url instead, the assertion below will catch it.
-  cat > "$fake_bin/curl" <<EOF
+  cat > "$fake_bin/curl" << EOF
 #!/bin/sh
 case "\$*" in
   *api.github.com/repos/cli/cli/releases/latest*)
@@ -57,8 +57,8 @@ EOF
   chmod +x "$fake_bin/curl"
 
   run env PATH="$fake_bin:$BATS_TEST_TMPDIR/.local/bin:$PATH" \
-        HOME="$BATS_TEST_TMPDIR" \
-        sh -c "$rendered"
+    HOME="$BATS_TEST_TMPDIR" \
+    sh -c "$rendered"
   [ "$status" -eq 0 ]
   echo "$output" | grep -q "up to date"
 }

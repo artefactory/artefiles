@@ -11,7 +11,7 @@ setup() {
   ! grep -RIn --include='*.tmpl' --include='*.yaml' --include='*.toml' \
     --exclude-dir=.git --exclude-dir=tests \
     -E 'has "(cloud|macos_desktop)" \.modules|^      (cloud|macos_desktop):' \
-    "$REPO_ROOT" 2>/dev/null
+    "$REPO_ROOT" 2> /dev/null
 }
 
 @test "prompt module list matches packages.yaml module keys" {

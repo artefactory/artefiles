@@ -13,7 +13,7 @@ setup() {
   # that `chezmoi managed` exposes the target.
   H=$(mk_fake_home)
   modules=$(awk '/^    modules:$/,/^[^ ]/{ if ($0 ~ /^      [a-z_]+:$/) { sub(":",""); gsub(" ",""); print } }' \
-            "$REPO_ROOT/.chezmoidata/packages.yaml" | jq -R . | jq -sc .)
+    "$REPO_ROOT/.chezmoidata/packages.yaml" | jq -R . | jq -sc .)
   seed_chezmoi_config "$H" "{\"modules\":$modules}"
   managed=$(chezmoi_managed "$H")
 
@@ -28,13 +28,13 @@ setup() {
     if grep -F "$p" "$REPO_ROOT/README.md" | grep -qF "$other"; then
       continue
     fi
-    rel="${p#'~/'}"  # quoted so bash doesn't tilde-expand the pattern
+    rel="${p#'~/'}" # quoted so bash doesn't tilde-expand the pattern
     if ! printf '%s\n' "$managed" | grep -qxF "$rel"; then
       printf 'README lists path not managed by chezmoi: %s\n' "$p" >&2
       return 1
     fi
   done < <(grep -oE '~/[.][a-zA-Z0-9_./-]+' "$REPO_ROOT/README.md" \
-           | grep -v '/$' | sort -u)
+    | grep -v '/$' | sort -u)
 }
 
 @test "old prereq language is gone" {

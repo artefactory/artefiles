@@ -22,7 +22,7 @@ fmt="{exit}${US}{relativetime}${US}{duration}${US}{command}"
 # atuin search exits 1 on zero matches (e.g. no results yet in this
 # directory's history) - that's a valid "empty list" state for fzf's
 # reload, not a failure, so don't let it abort the script.
-atuin search --print0 --format "$fmt" --filter-mode "$filter_mode" -- "$query" 2>/dev/null \
+atuin search --print0 --format "$fmt" --filter-mode "$filter_mode" -- "$query" 2> /dev/null \
   | perl -CO -0777 -ne '
       my $US = "\x1f";
       for my $rec (split /\0/, $_) {

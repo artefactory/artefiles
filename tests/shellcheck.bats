@@ -15,7 +15,7 @@ _shellcheck_dir() {
   local dir="$1"
   H=$(mk_fake_home)
   all=$(yq -r '.packages.darwin.modules | keys | .[]' "$REPO_ROOT/.chezmoidata/packages.yaml" \
-        | jq -R . | jq -sc .)
+    | jq -R . | jq -sc .)
   seed_chezmoi_config "$H" "$(jq -nc --argjson m "$all" '{modules:$m}')"
 
   for f in "$REPO_ROOT"/$dir/*.sh "$REPO_ROOT"/$dir/*.sh.tmpl; do
@@ -27,7 +27,7 @@ _shellcheck_dir() {
     else
       cp "$f" "$out"
     fi
-    if ! shellcheck -S error "$out" 2>"$BATS_TEST_TMPDIR/err"; then
+    if ! shellcheck -S error "$out" 2> "$BATS_TEST_TMPDIR/err"; then
       echo "shellcheck failed on rendered $rel:" >&2
       cat "$BATS_TEST_TMPDIR/err" >&2
       return 1
