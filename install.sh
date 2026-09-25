@@ -208,11 +208,63 @@ fi
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
-set -- init --apply "--source=${script_dir}"
+# Module checklist: chezmoi's own prompt does not show what is selected, so ask
+# here and store the answer; chezmoi init then reuses it without prompting. Only
+# at a terminal, never in CI, and never over an existing chezmoi config.
+chezmoi_config="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi/chezmoi.toml"
+interactive=false
+if [ -n "${ARTEFILES_SELECT_TTY:-}" ]; then
+  interactive=true
+elif [ -z "${CI:-}" ] && [ -z "${CODESPACES:-}" ] && [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
+  interactive=true
+fi
+if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_config" ]; then
+  # The Quick Start has no checkout: clone with gh so the checklist is available.
+  if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+    clone_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
+    if [ -f "${clone_dir}/.chezmoi.toml.tmpl" ] || { [ ! -e "$clone_dir" ] && gh repo clone artefactory/artefiles "$clone_dir" >&2; }; then
+      script_dir="$clone_dir"
+    fi
+  fi
+  if [ -f "${script_dir}/select-modules.sh" ]; then
+    status=0
+    selection="$(sh "${script_dir}/select-modules.sh")" || status=$?
+    case "$status" in
+      0)
+        mkdir -p "$(dirname "$chezmoi_config")"
+        printf '[data]\n  modules = %s\n' "$selection" > "$chezmoi_config"
+        ;;
+      1)
+        echo "Installation cancelled." >&2
+        exit 1
+        ;;
+    esac
+  fi
+fi
+
+# Run as `sh -c "$(curl ...)"` there is no script file: $0 is "sh" and script_dir
+# is the directory holding sh, not a checkout. Only a checkout may be the
+# chezmoi source; otherwise let chezmoi clone the repo.
+if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+  set -- init --apply "--source=${script_dir}"
+else
+  set -- init --apply artefactory/artefiles
+fi
 [ -n "${destination}" ] && set -- "$@" "--destination=${destination}"
 [ "$dry_run" = "true" ] && set -- "$@" "--dry-run"
 
 echo "Running 'chezmoi $*'" >&2
 [ "$dry_run" = "true" ] && exit 0
-# exec: replace current process with chezmoi
-exec "$chezmoi" "$@"
+"$chezmoi" "$@"
+
+# Last step, only reached once chezmoi succeeded (set -e): the login shell
+# change needs sudo and an attentive user, so nothing may depend on it or run
+# alongside it.
+if source_dir="$("$chezmoi" source-path 2> /dev/null)" && [ -f "${source_dir}/offer-default-shell.sh" ]; then
+  sh "${source_dir}/offer-default-shell.sh" || true
+fi
+
+# Also last-step and optional: starring is only ever offered, never assumed.
+if [ -n "${source_dir:-}" ] && [ -f "${source_dir}/offer-star.sh" ]; then
+  sh "${source_dir}/offer-star.sh" || true
+fi

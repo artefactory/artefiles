@@ -32,7 +32,8 @@ sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main
 This is the recommended path. The script:
 1. Installs [GitHub CLI](https://cli.github.com/) if not already present
 2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
-3. Installs [chezmoi](https://chezmoi.io/) and runs `chezmoi init --apply`
+3. Installs [chezmoi](https://chezmoi.io/), asks which optional modules to install with a checklist (`[x]` will be installed, `[ ]` will not, then a confirmation), and runs `chezmoi init --apply`
+4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to No, and nothing is asked in CI or Codespaces)
 
 > **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
 > `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email.
@@ -133,6 +134,8 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 
 ### Optional Modules
 
+`install.sh` shows them as a checklist before anything is installed: `[x]` means the module will be installed, `[ ]` that it will not. Move with the up and down arrows (or `k` and `j`), press space to toggle the module under the pointer, `n` to clear the selection, `q` to cancel, and Enter on the Submit row to continue and confirm the summary. Choosing one module of an alternative pair deselects the other. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
+
 | Module | Description | Alternative to |
 |--------|-------------|----------------|
 | `editor` | Neovim: modal terminal editor with the team configuration (nvim) | — |
@@ -181,7 +184,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 
 ## What Files Will Be Created/Modified
 
-⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, you must manually change your default shell (see [Post-Installation Steps](#post-installation-steps)).
+⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, make Fish your default shell: `install.sh` offers to do it as its last step, or you can do it yourself (see [Post-Installation Steps](#post-installation-steps)).
 
 ### Git Configuration
 - `~/.gitconfig` - Git configuration with modern defaults ([Git Documentation](https://git-scm.com/docs/git-config))
@@ -258,9 +261,9 @@ VS Code is not installed by this setup; these files apply when you install it yo
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-`install.sh` does **not** change your default shell — this requires `sudo` and is a deliberate user choice.
+`install.sh` asks as its very last step whether to make Fish your default shell. Changing it runs `sudo` and `chsh`, so the default answer is No, and nothing is asked in CI, in Codespaces or without a terminal. `chezmoi apply` itself never changes your shell.
 
-Set Fish as your default login shell after installation:
+If you declined, or installed with `chezmoi init --apply` directly, set Fish as your default login shell yourself:
 
 **macOS:**
 ```bash
@@ -307,6 +310,8 @@ To simulate a new user's install without touching your own machine:
 By default it runs the real `install.sh` inside a temporary home: the gh check and login, chezmoi, its prompts and the files applied from your checkout. Every side effect on your machine is stubbed and listed at the end as `(sandbox) would run: ...`: brew, downloads, the gh login, `sudo`, `chsh`, and chezmoi's scripts and externals, so nothing is installed and your real configuration is never read or written. Without `--gh-token` (or `GH_TOKEN`), `gh` is logged out as for a brand-new user, and the login is only simulated. `--keep` leaves the sandbox on disk and `--clean` removes the leftovers of earlier runs, including after a crash; a normal exit or Ctrl-C removes it by itself.
 
 After the install it lists the scripts chezmoi would run, and on Linux the externals it would download (rendered from the real template), so module installs can be reviewed without running them. What it does not exercise: the Quick Start clone path (the sandbox always has the checkout) and a `gh` that is not installed yet. `curl`, `wget`, `sudo` and `chsh` are stubbed and no tool is installed in the sandbox, so its shell can print missing-command messages a real user would not see. For a full Linux install in a container, run `./docker-test.sh`.
+
+The install's own steps are shown too: the module checklist (arrows and space to pick modules, then Enter on the Submit row), and the star offer, which is answered without a token because the sandbox only logs the star it would send.
 
 ## Need Help?
 
