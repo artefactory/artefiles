@@ -7,6 +7,26 @@ setup() {
   load 'helpers/setup'
 }
 
+# Sets $rendered to .chezmoiexternal.toml.tmpl evaluated for home $1, forcing
+# the linux template-eval path even on macOS runners. The template fetches
+# release tags over the network at render time (codeberg has no token path
+# like GITHUB_TOKEN), so a curl transport failure skips the test instead of
+# failing it; any other render error still fails.
+render_externals() {
+  local h="$1" err="$BATS_TEST_TMPDIR/render.err"
+  if ! rendered=$(XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi execute-template \
+    --config "$h/.config/chezmoi/chezmoi.toml" \
+    --source "$REPO_ROOT" --destination "$h" \
+    --init \
+    < "$REPO_ROOT/.chezmoiexternal.toml.tmpl" 2> "$err"); then
+    if grep -qE 'curl: \((6|7|28|35|52|56)\)' "$err"; then
+      skip "network unavailable: $(grep -m1 -E 'curl: \(' "$err")"
+    fi
+    cat "$err" >&2
+    return 1
+  fi
+}
+
 @test "externals.toml renders to valid TOML on linux with all modules" {
   if ! command -v python3 > /dev/null 2>&1; then
     skip "python3 not available"
@@ -14,12 +34,7 @@ setup() {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace","agent_skills"]}'
 
-  # Force linux template-eval path even on macOS runners.
-  rendered=$(XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
-    --config "$H/.config/chezmoi/chezmoi.toml" \
-    --source "$REPO_ROOT" --destination "$H" \
-    --init \
-    < "$REPO_ROOT/.chezmoiexternal.toml.tmpl")
+  render_externals "$H"
 
   printf '%s\n' "$rendered" | python3 -c '
 import sys
@@ -35,11 +50,7 @@ tomllib.loads(sys.stdin.read())
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace","agent_skills"]}'
 
-  rendered=$(XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
-    --config "$H/.config/chezmoi/chezmoi.toml" \
-    --source "$REPO_ROOT" --destination "$H" \
-    --init \
-    < "$REPO_ROOT/.chezmoiexternal.toml.tmpl")
+  render_externals "$H"
 
   # Catch double-dashes or unresolved <...> placeholders that signal a
   # printf-with-empty-string bug.
