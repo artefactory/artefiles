@@ -95,3 +95,26 @@ chezmoi_render() {
     --source "$REPO_ROOT" --destination "$h" \
     < "$REPO_ROOT/$file"
 }
+
+# The init prompt choices are declared one per line in .chezmoi.toml.tmpl as
+#   # [[ $choices = append $choices "<module> | <help>" ]] #
+# and the alternative pairs as one `$pairs := list (list "a" "b") ...` line.
+
+# prompt_choices — every `<module> | <help>` label, one per line.
+prompt_choices() {
+  # shellcheck disable=SC2016 # the pattern matches a literal `$choices`
+  sed -nE 's/^# \[\[ \$choices = append \$choices "([^"]*)" \]\] #$/\1/p' "$REPO_ROOT/.chezmoi.toml.tmpl"
+}
+
+# prompt_module_names — the bare module names offered by the init prompt.
+prompt_module_names() { prompt_choices | sed 's/ | .*//'; }
+
+# prompt_help MODULE — the help text of MODULE (empty when not offered).
+prompt_help() { prompt_choices | sed -n "s/^$1 | //p"; }
+
+# prompt_pairs — each alternative pair as "a b", one per line.
+prompt_pairs() {
+  # shellcheck disable=SC2016 # the pattern matches a literal `$pairs`
+  sed -nE 's/^# \[\[ \$pairs := list (.*) \]\] #$/\1/p' "$REPO_ROOT/.chezmoi.toml.tmpl" \
+    | grep -oE '"[a-z_]+" "[a-z_]+"' | tr -d '"'
+}

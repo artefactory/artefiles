@@ -43,10 +43,15 @@ packages:
         brews:
           - 'neovim'
         casks: []
-      terminal:
-        brews: []
+      ghostty:
+        brews:
+          - 'zellij'
         casks:
           - 'ghostty'
+      cmux:
+        brews: []
+        casks:
+          - 'manaflow-ai/cmux/cmux'
       git_advanced:
         brews:
           - 'difftastic'
@@ -62,6 +67,12 @@ packages:
       python_dev:
         brews: []
         casks: []
+      pre_commit:
+        brews: []
+        casks: []
+      prek:
+        brews: []
+        casks: []
       gcloud:
         brews: []
         casks:
@@ -70,7 +81,11 @@ packages:
         brews:
           - 'colima'
         casks: []
-      multiplexer:
+      terraform:
         brews:
-          - 'zellij'
+          - 'hashicorp/tap/terraform'
+        casks: []
+      opentofu:
+        brews:
+          - 'opentofu'
         casks: []

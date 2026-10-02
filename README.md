@@ -77,16 +77,22 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 
 ### Optional Modules
 
-| Module | Contents | Description |
-|--------|----------|-------------|
-| `editor` | Neovim | Terminal editor with nvim aliases |
-| `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
-| `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
-| `atuin` | Atuin | Shell history sync across machines |
-| `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
-| `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
-| `colima` | Colima | Container runtime (darwin only) |
-| `multiplexer` | Zellij | Terminal multiplexer |
+| Module | Description | Alternative to |
+|--------|-------------|----------------|
+| `editor` | Neovim: modal terminal editor with the team configuration (nvim) | — |
+| `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | `cmux` |
+| `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | `ghostty` |
+| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, tuicr (review TUI) | — |
+| `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
+| `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
+| `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
+| `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
+| `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | — |
+| `colima` | Colima: lightweight container runtime for Docker (macOS only) | — |
+| `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
+| `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
+
+> The `terminal` module is now called `ghostty` (an existing `terminal` selection is renamed on the next `chezmoi init`). The `multiplexer` module is gone: Zellij now comes with `ghostty`, so select `ghostty` to keep it. `cmux` does not install Zellij.
 
 ### Changing Modules
 
@@ -111,7 +117,8 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
 - 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
-- 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
+- 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime via uv
+- 🪝 **Git Hooks** (`pre_commit` or `prek`) - [pre-commit](https://pre-commit.com/), or [prek](https://github.com/j178/prek), a faster Rust drop-in replacement (choose one); installed with uv, and the global hooks in `~/.git_template` make every new repository run its `.pre-commit-config.yaml`
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
@@ -125,7 +132,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.gitattributes_global` - Global attributes for merge drivers and file handling
 
 ### Terminal Configuration
-- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
+- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires the `ghostty` or `cmux` module)
 
 ### VS Code Configuration
 VS Code is not installed by this setup; these files apply when you install it yourself. The extension install is skipped when the `code` CLI is missing, and the Python extensions (Python, Pylance, Ruff) install only with the `python_dev` module.
@@ -216,7 +223,7 @@ chezmoi purge --force
   │   ├── config.fish  # Main shell configuration
   │   ├── aliases.fish # Shell aliases and functions
   │   └── functions/   # Custom fish functions
-  ├── ghostty/         # Terminal emulator (terminal module)
+  ├── ghostty/         # Terminal emulator (ghostty or cmux module)
   ├── nvim/            # Editor configuration (editor module)
   ├── uv/              # Python package manager
   └── starship.toml    # Prompt configuration

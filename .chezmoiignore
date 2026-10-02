@@ -39,7 +39,7 @@ Library/Application Support/Code/User/settings.json
 {{ if not (has "editor" .modules) }}
 .config/nvim/**
 {{ end }}
-{{ if not (has "terminal" .modules) }}
+{{ if not (or (has "ghostty" .modules) (has "terminal" .modules) (has "cmux" .modules)) }}
 .config/ghostty/**
 {{ end }}
 {{ if not (has "atuin" .modules) }}
@@ -48,6 +48,9 @@ Library/Application Support/Code/User/settings.json
 {{ end }}
 {{ if not (has "python_dev" .modules) }}
 .chezmoiscripts/zzzzz_install-python-tools.sh
+{{ end }}
+{{ if not (or (has "pre_commit" .modules) (has "prek" .modules)) }}
+.chezmoiscripts/zzzzz_install-git-hooks.sh
 {{ end }}
 {{ if not (has "git_advanced" .modules) }}
 .config/tuicr/**
