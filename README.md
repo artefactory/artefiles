@@ -83,7 +83,9 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
 | `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
-| `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
+| `python_dev` | nbdime (via uv), Python VS Code extensions | Python/Jupyter development tools |
+| `pre_commit` | pre-commit (via uv) | Git hook manager that runs linters and formatters on commit; choose one of the two with `prek` |
+| `prek` | prek (via uv) | Faster Rust drop-in replacement for pre-commit with the same config; choose one of the two |
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
 | `colima` | Colima | Container runtime (darwin only) |
 | `multiplexer` | Zellij | Terminal multiplexer |
@@ -113,7 +115,8 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
 - 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
-- 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
+- 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime via uv
+- 🪝 **Git Hooks** (`pre_commit` or `prek`) - [pre-commit](https://pre-commit.com/), or [prek](https://github.com/j178/prek), a faster Rust drop-in replacement (choose one); installed with uv, and the global hooks in `~/.git_template` make every new repository run its `.pre-commit-config.yaml`
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
