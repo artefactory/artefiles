@@ -4,6 +4,8 @@ This repository comes with an automatic pre-commit configuration that helps main
 
 ## What is pre-commit?
 
+> The `prek` module installs [prek](https://github.com/j178/prek) instead: a faster Rust drop-in replacement that reads the same `.pre-commit-config.yaml`. Pick one of the two modules; everything below applies to both.
+
 [pre-commit](https://pre-commit.com/) is a framework for managing and maintaining Git hooks. It automatically runs a set of checks on your code before each commit, ensuring that your code meets quality standards.
 
 ## How It Works
@@ -65,8 +67,8 @@ If you ever need to bypass pre-commit (not recommended for normal use):
 git commit --no-verify
 ```
 
-If pre-commit is not installed, the global hooks will guide you to install it with:
+If the hook manager is not installed, the global hooks will guide you to install it with:
 
 ```bash
-uv pip install pre-commit
+uv tool install pre-commit   # or: uv tool install prek
 ```
