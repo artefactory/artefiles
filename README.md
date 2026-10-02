@@ -73,7 +73,7 @@ Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you se
 
 ### Core (always installed)
 
-Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font, VS Code.
+Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font.
 
 ### Optional Modules
 
@@ -128,6 +128,8 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
 
 ### VS Code Configuration
+VS Code is not installed by this setup; these files apply when you install it yourself. The extension install is skipped when the `code` CLI is missing, and the Python extensions (Python, Pylance, Ruff) install only with the `python_dev` module.
+
 - `~/.config/Code/User/settings.json` *(Linux)* — Default VS Code settings (Catppuccin theme, FiraCode font, fish terminal, Ruff formatter). Created on first apply only; your edits are never overwritten on `chezmoi update`.
 - `~/Library/Application Support/Code/User/settings.json` *(macOS)* — Same default VS Code settings as the Linux path above. Created on first apply only; never overwritten on `chezmoi update`.
 

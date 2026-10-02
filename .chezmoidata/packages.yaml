@@ -2,11 +2,13 @@ vscode:
   extensions:
     - 'Catppuccin.catppuccin-vsc'
     - 'Catppuccin.catppuccin-vsc-icons'
-    - 'ms-python.python'
-    - 'ms-python.vscode-pylance'
-    - 'charliermarsh.ruff'
     - 'mkhl.direnv'
-  modules: {}
+  modules:
+    python_dev:
+      extensions:
+        - 'ms-python.python'
+        - 'ms-python.vscode-pylance'
+        - 'charliermarsh.ruff'
 
 packages:
   darwin:
@@ -36,7 +38,6 @@ packages:
         - 'mergiraf'
       casks:
         - 'font-fira-code-nerd-font'
-        - 'visual-studio-code'
     modules:
       editor:
         brews:
