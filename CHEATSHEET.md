@@ -30,7 +30,6 @@ This cheatsheet provides quick reference for common commands and workflows. For 
   ├── bat/             # Syntax highlighting
   └── starship.toml    # Prompt configuration
 
-~/.ssh/config          # SSH configuration
 ~/.config/ghostty/config # Terminal configuration
 ~/.gitconfig          # Git configuration
 ```
@@ -190,7 +189,7 @@ Completion Features:
 
 | Task | Config Location | Example |
 |------|----------------|---------|
-| Add server | `~/.ssh/config` | Use `chezmoi edit ~/.ssh/config` |
+| Add server | `~/.ssh/config` | Edit the file directly (not managed by chezmoi) |
 | Update known hosts | `~/.ssh/known_hosts` | Automatic during first connection |
 | Test connection | Use remote_exec | `remote_exec server "echo test"` |
 

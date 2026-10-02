@@ -34,8 +34,6 @@ Library/Application Support/Code/User/settings.json
 .wezterm.lua
 # macOS-specific GUI applications
 .config/aerospace/**
-# SSH client config (remote servers shouldn't override SSH client settings)
-.ssh/config
 {{ end }}
 
 # Module-based exclusions.

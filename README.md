@@ -227,7 +227,6 @@ chezmoi purge --force
   ├── uv/              # Python package manager
   └── starship.toml    # Prompt configuration
 
-~/.ssh/config          # SSH configuration
 ~/.gitconfig           # Git configuration
 ```
 
