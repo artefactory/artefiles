@@ -221,5 +221,11 @@ fi
 
 echo "Running 'chezmoi $*'" >&2
 [ "$dry_run" = "true" ] && exit 0
-# exec: replace current process with chezmoi
-exec "$chezmoi" "$@"
+"$chezmoi" "$@"
+
+# Last step, only reached once chezmoi succeeded (set -e): the login shell
+# change needs sudo and an attentive user, so nothing may depend on it or run
+# alongside it.
+if source_dir="$("$chezmoi" source-path 2> /dev/null)" && [ -f "${source_dir}/offer-default-shell.sh" ]; then
+  sh "${source_dir}/offer-default-shell.sh" || true
+fi

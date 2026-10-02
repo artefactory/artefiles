@@ -123,7 +123,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 
 ## What Files Will Be Created/Modified
 
-⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, you must manually change your default shell (see [Post-Installation Steps](#post-installation-steps)).
+⚠️ **Important**: These dotfiles do NOT modify your shell startup files (.profile, .zprofile, etc.). To benefit from the Fish shell configuration, make Fish your default shell: `install.sh` offers to do it as its last step, or you can do it yourself (see [Post-Installation Steps](#post-installation-steps)).
 
 ### Git Configuration
 - `~/.gitconfig` - Git configuration with modern defaults ([Git Documentation](https://git-scm.com/docs/git-config))
@@ -233,9 +233,9 @@ chezmoi purge --force
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-`install.sh` does **not** change your default shell — this requires `sudo` and is a deliberate user choice.
+`install.sh` asks as its very last step whether to make Fish your default shell. Changing it runs `sudo` and `chsh`, so the default answer is No, and nothing is asked in CI, in Codespaces or without a terminal. `chezmoi apply` itself never changes your shell.
 
-Set Fish as your default login shell after installation:
+If you declined, or installed with `chezmoi init --apply` directly, set Fish as your default login shell yourself:
 
 **macOS:**
 ```bash
