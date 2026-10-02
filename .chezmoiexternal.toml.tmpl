@@ -156,4 +156,24 @@
   url = # [[ gitHubLatestReleaseAssetURL "direnv/direnv" (printf "direnv.linux-%s" .chezmoi.arch) | quote ]] #
   executable = true
 
+# [[ if has "terraform" .modules ]] #
+# Terraform - infrastructure-as-code CLI.
+# HashiCorp releases are not on GitHub, so the version is pinned in
+# .chezmoidata/versions.yaml instead of being looked up at render time.
+[".local/bin/terraform"]
+  type = "archive-file"
+  url = # [[ printf "https://releases.hashicorp.com/terraform/%s/terraform_%s_linux_%s.zip" .versions.terraform .versions.terraform .chezmoi.arch | quote ]] #
+  executable = true
+  path = "terraform"
+# [[ end ]] #
+
+# [[ if has "opentofu" .modules ]] #
+# OpenTofu - open-source alternative to Terraform
+[".local/bin/tofu"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "opentofu/opentofu" (printf "tofu_*_linux_%s.tar.gz" .chezmoi.arch) | quote ]] #
+  executable = true
+  path = "tofu"
+# [[ end ]] #
+
 # [[ end ]] #

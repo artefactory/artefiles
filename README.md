@@ -87,6 +87,8 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
 | `colima` | Colima | Container runtime (darwin only) |
 | `multiplexer` | Zellij | Terminal multiplexer |
+| `terraform` | Terraform | Infrastructure-as-code CLI to plan and apply cloud resources |
+| `opentofu` | OpenTofu | The open-source alternative to Terraform, same workflow (`tofu`); choose one of the two |
 
 ### Changing Modules
 
