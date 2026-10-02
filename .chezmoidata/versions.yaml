@@ -1,0 +1,5 @@
+# Release tags of externals hosted outside GitHub, pinned so that rendering the
+# externals template needs no network call of its own. Bump a tag together
+# with the asset name pattern in .chezmoiexternal.toml.tmpl when it changes.
+versions:
+  mergiraf: "v0.20.0"

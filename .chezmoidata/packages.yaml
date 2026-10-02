@@ -2,11 +2,13 @@ vscode:
   extensions:
     - 'Catppuccin.catppuccin-vsc'
     - 'Catppuccin.catppuccin-vsc-icons'
-    - 'ms-python.python'
-    - 'ms-python.vscode-pylance'
-    - 'charliermarsh.ruff'
     - 'mkhl.direnv'
-  modules: {}
+  modules:
+    python_dev:
+      extensions:
+        - 'ms-python.python'
+        - 'ms-python.vscode-pylance'
+        - 'charliermarsh.ruff'
 
 packages:
   darwin:
@@ -33,9 +35,9 @@ packages:
         - 'uv'
         - 'rust'
         - 'gh'
+        - 'mergiraf'
       casks:
         - 'font-fira-code-nerd-font'
-        - 'visual-studio-code'
     modules:
       editor:
         brews:
@@ -47,8 +49,6 @@ packages:
           - 'ghostty'
       git_advanced:
         brews:
-          - 'jj'
-          - 'mergiraf'
           - 'difftastic'
           - 'git-cliff'
           - 'git-lfs'
@@ -74,12 +74,3 @@ packages:
         brews:
           - 'zellij'
         casks: []
-      aerospace:
-        brews: []
-        casks:
-          - 'nikitabobko/tap/aerospace'
-      onepassword:
-        brews: []
-        casks:
-          - '1password'
-          - '1password-cli'

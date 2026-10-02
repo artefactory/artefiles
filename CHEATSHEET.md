@@ -30,7 +30,6 @@ This cheatsheet provides quick reference for common commands and workflows. For 
   ├── bat/             # Syntax highlighting
   └── starship.toml    # Prompt configuration
 
-~/.ssh/config          # SSH configuration
 ~/.config/ghostty/config # Terminal configuration
 ~/.gitconfig          # Git configuration
 ```
@@ -134,23 +133,6 @@ any unrecognized subcommand passes through to `tuicr` directly.
 | `review list` | Persisted review sessions |
 | `review comments` | Comments stored in a session |
 
-### Agent Skills (`gh skill`, `agent_skills` module)
-
-Every `chezmoi apply` runs `gh skill update --all`, then installs every custom skill
-from the private `artefactory/skills` companion repo plus every skill listed in its
-`recommended-skills.txt` (external pointers, never vendored), for each agent the team
-uses (`claude-code`, `github-copilot`, `codex`, `gemini-cli`) — never `--force`, so a
-name collision with a skill you authored yourself is left alone. Requires an
-authenticated `gh` and read access to `artefactory/skills`.
-
-| Task | Command |
-|------|---------|
-| Add/remove a skill (custom or recommended) | edit `artefactory/skills` (`skills/` or `recommended-skills.txt`), not this repo |
-| Edit agent targets | `.chezmoidata/agent_skills.yaml` |
-| Check for updates (read-only) | `gh skill update --dry-run` |
-| Install one more, for one agent | `gh skill install <owner>/<repo> <skill> --agent codex --scope user` |
-| Publish a new org skill | `gh skill publish --tag vX.Y.Z` from a clone of `artefactory/skills` |
-| Force-refresh now | `chezmoi apply` (or re-run the script directly) |
 
 ### Git Shortcuts
 
@@ -190,7 +172,7 @@ Completion Features:
 
 | Task | Config Location | Example |
 |------|----------------|---------|
-| Add server | `~/.ssh/config` | Use `chezmoi edit ~/.ssh/config` |
+| Add server | `~/.ssh/config` | Edit the file directly (not managed by chezmoi) |
 | Update known hosts | `~/.ssh/known_hosts` | Automatic during first connection |
 | Test connection | Use remote_exec | `remote_exec server "echo test"` |
 
@@ -235,7 +217,7 @@ The `dotfiles_doctor` command performs comprehensive environment checks:
    | Category | Tools Checked |
    |----------|---------------|
    | Core | chezmoi, fish, starship, ghostty, direnv |
-   | Editors | neovim, vscode |
+   | Editors | neovim |
    | CLI Tools | bat, eza, fd, fzf, zoxide, atuin |
    | Git Tools | git, git-lfs, github-cli, difftastic, git-cliff, git-extras, pre-commit |
    | Development | gcloud, uv |

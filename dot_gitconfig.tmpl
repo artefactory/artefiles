@@ -121,19 +121,15 @@
     # Use bat with proper flags for difftastic output
     difftool = true
 
-# [[ if has "git_advanced" .modules ]] #
 [merge "mergiraf"]
     name = mergiraf
     driver = mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L
-# [[ end ]] #
 
 [merge]
     # Include summaries of merged commits in new merge commits
     log = true
-# [[ if has "git_advanced" .modules ]] #
     # Use diff3 conflict style for better compatibility with mergiraf
     conflictstyle = diff3
-# [[ end ]] #
     # Always use rebase for merging
     ff = only
     # Use vscode for manual conflict resolution

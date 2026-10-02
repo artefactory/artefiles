@@ -18,7 +18,7 @@ mk_fake_home() {
 
 # seed_chezmoi_config H DATA_JSON
 #   H         — fake-home path returned by mk_fake_home
-#   DATA_JSON — JSON object with .data fields, e.g. '{"modules":["aerospace"]}'
+#   DATA_JSON — JSON object with .data fields, e.g. '{"modules":["atuin"]}'
 #
 # Writes a minimal chezmoi.toml so `chezmoi apply` skips init/prompts.
 # Required fields (name, email) are filled with stubs unless DATA_JSON
