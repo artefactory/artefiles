@@ -1,5 +1,6 @@
 .github/
 install.sh
+offer-default-shell.sh
 LICENSE
 README.md
 
