@@ -16,9 +16,10 @@ setup() {
 
 @test "prompt module list matches packages.yaml module keys" {
   local prompt_keys yaml_keys
-  prompt_keys=$(grep -oE '"[a-z_]+"' "$REPO_ROOT/.chezmoi.toml.tmpl" \
+  prompt_keys=$(grep 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl" \
+    | sed -E 's/.*\(list ([^)]*)\).*/\1/' \
+    | grep -oE '"[a-z_]+"' \
     | tr -d '"' \
-    | grep -E '^(editor|terminal|git_advanced|atuin|python_dev|gcloud|colima|multiplexer)$' \
     | sort -u)
   yaml_keys=$(awk '/^    modules:$/,/^[^ ]/{ if ($1 ~ /:$/ && $0 ~ /^      [a-z_]+:$/) { gsub(":",""); print $1 } }' \
     "$REPO_ROOT/.chezmoidata/packages.yaml" | sort -u)
