@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Verify the cloud/macos_desktop module split: old names are gone, new
-# atomic modules (gcloud, colima, aerospace, onepassword) gate independently.
+# atomic modules (gcloud, colima) gate independently.
 
 setup() {
   load 'helpers/setup'
@@ -18,7 +18,7 @@ setup() {
   local prompt_keys yaml_keys
   prompt_keys=$(grep -oE '"[a-z_]+"' "$REPO_ROOT/.chezmoi.toml.tmpl" \
     | tr -d '"' \
-    | grep -E '^(editor|terminal|git_advanced|atuin|python_dev|gcloud|colima|multiplexer|aerospace|onepassword)$' \
+    | grep -E '^(editor|terminal|git_advanced|atuin|python_dev|gcloud|colima|multiplexer)$' \
     | sort -u)
   yaml_keys=$(awk '/^    modules:$/,/^[^ ]/{ if ($1 ~ /:$/ && $0 ~ /^      [a-z_]+:$/) { gsub(":",""); print $1 } }' \
     "$REPO_ROOT/.chezmoidata/packages.yaml" | sort -u)
@@ -26,25 +26,6 @@ setup() {
     printf 'prompt keys:\n%s\nyaml keys:\n%s\n' "$prompt_keys" "$yaml_keys" >&2
     return 1
   fi
-}
-
-@test "aerospace module: aerospace dir is materialized" {
-  H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["aerospace"]}'
-  # Let chezmoi's own .chezmoiignore gate (eq .chezmoi.os "darwin") decide
-  # whether this OS even ships aerospace, instead of bashing on uname.
-  if ! chezmoi_managed "$H" | grep -qxF '.config/aerospace'; then
-    skip "aerospace dir not managed on this OS (chezmoi gate)"
-  fi
-  chezmoi_apply "$H"
-  assert_file_exists "$H/.config/aerospace"
-}
-
-@test "onepassword module alone: aerospace dir absent" {
-  H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["onepassword"]}'
-  chezmoi_apply "$H"
-  assert_file_absent "$H/.config/aerospace"
 }
 
 @test "gcloud and colima modules gate independently" {

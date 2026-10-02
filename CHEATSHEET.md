@@ -133,23 +133,6 @@ any unrecognized subcommand passes through to `tuicr` directly.
 | `review list` | Persisted review sessions |
 | `review comments` | Comments stored in a session |
 
-### Agent Skills (`gh skill`, `agent_skills` module)
-
-Every `chezmoi apply` runs `gh skill update --all`, then installs every custom skill
-from the private `artefactory/skills` companion repo plus every skill listed in its
-`recommended-skills.txt` (external pointers, never vendored), for each agent the team
-uses (`claude-code`, `github-copilot`, `codex`, `gemini-cli`) — never `--force`, so a
-name collision with a skill you authored yourself is left alone. Requires an
-authenticated `gh` and read access to `artefactory/skills`.
-
-| Task | Command |
-|------|---------|
-| Add/remove a skill (custom or recommended) | edit `artefactory/skills` (`skills/` or `recommended-skills.txt`), not this repo |
-| Edit agent targets | `.chezmoidata/agent_skills.yaml` |
-| Check for updates (read-only) | `gh skill update --dry-run` |
-| Install one more, for one agent | `gh skill install <owner>/<repo> <skill> --agent codex --scope user` |
-| Publish a new org skill | `gh skill publish --tag vX.Y.Z` from a clone of `artefactory/skills` |
-| Force-refresh now | `chezmoi apply` (or re-run the script directly) |
 
 ### Git Shortcuts
 
