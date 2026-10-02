@@ -3,3 +3,4 @@
 # with the asset name pattern in .chezmoiexternal.toml.tmpl when it changes.
 versions:
   mergiraf: "v0.20.0"
+  terraform: "1.16.5"
