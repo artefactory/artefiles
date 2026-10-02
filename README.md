@@ -73,7 +73,7 @@ Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you se
 
 ### Core (always installed)
 
-Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font, VS Code.
+Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font.
 
 ### Optional Modules
 
@@ -81,15 +81,12 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 |--------|----------|-------------|
 | `editor` | Neovim | Terminal editor with nvim aliases |
 | `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
-| `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
+| `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
 | `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
 | `colima` | Colima | Container runtime (darwin only) |
 | `multiplexer` | Zellij | Terminal multiplexer |
-| `aerospace` | AeroSpace | Tiling window manager (darwin only) |
-| `onepassword` | 1Password, 1Password CLI | Password manager (darwin only) |
-| `agent_skills` | [`gh skill`](https://cli.github.com/manual/gh_skill) sync | Installs and keeps up to date every skill declared in the private `artefactory/skills` companion repo (org-internal, not publicly linkable) — its own custom skills, plus its curated list of recommended external skills |
 
 ### Changing Modules
 
@@ -113,12 +110,11 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Optional Module Highlights
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
-- 🔄 **Advanced Git** (`git_advanced`) - [Jujutsu](https://github.com/jj-vcs/jj), [mergiraf](https://mergiraf.org/), [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with both git and jj), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
+- 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
 - 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
-- 🧠 **Agent Skills** (`agent_skills`) - every `chezmoi apply` runs [`gh skill update --all`](https://cli.github.com/manual/gh_skill) then `gh skill install` for every agent the team uses (`claude-code`, `github-copilot`, `codex`, `gemini-cli`). Never `--force`: a name collision with a skill you authored or installed yourself is left alone, not overwritten; only skills already tracked by `gh skill` get updated. The skill list itself isn't in this repo — it installs every custom skill authored in the private companion repo `artefactory/skills` (org-internal, not publicly linkable), plus every skill listed in that repo's `recommended-skills.txt` (pointers to external repos, never vendored). Add or remove a skill there, not here. Reuses the same authenticated `gh` chezmoi init already requires; silently skipped if `gh` isn't authenticated. Config: `.chezmoidata/agent_skills.yaml`
 
 ## What Files Will Be Created/Modified
 
@@ -132,6 +128,8 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
 
 ### VS Code Configuration
+VS Code is not installed by this setup; these files apply when you install it yourself. The extension install is skipped when the `code` CLI is missing, and the Python extensions (Python, Pylance, Ruff) install only with the `python_dev` module.
+
 - `~/.config/Code/User/settings.json` *(Linux)* — Default VS Code settings (Catppuccin theme, FiraCode font, fish terminal, Ruff formatter). Created on first apply only; your edits are never overwritten on `chezmoi update`.
 - `~/Library/Application Support/Code/User/settings.json` *(macOS)* — Same default VS Code settings as the Linux path above. Created on first apply only; never overwritten on `chezmoi update`.
 
@@ -164,9 +162,6 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.config/atuin/config.toml` - Shell history sync ([Atuin Documentation](https://atuin.sh/)) (requires `atuin` module)
 - `~/.config/tuicr/config.toml` - Code review TUI configuration ([tuicr Documentation](https://tuicr.dev/)) (requires `git_advanced` module)
 - `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/)) (requires `editor` module)
-
-### macOS Window Manager
-- `~/.config/aerospace/aerospace.toml` *(macOS)* - AeroSpace window manager ([AeroSpace Documentation](https://nikitabobko.github.io/AeroSpace/)) (requires `macos_desktop` module)
 
 ## Prerequisites
 
@@ -214,7 +209,6 @@ chezmoi purge --force
 
 ```
 ~/.config/
-  ├── aerospace/       # macOS window manager (macos_desktop module)
   ├── atuin/           # Shell history sync (atuin module)
   ├── bat/             # Syntax highlighting
   ├── direnv/          # Environment management
@@ -227,7 +221,6 @@ chezmoi purge --force
   ├── uv/              # Python package manager
   └── starship.toml    # Prompt configuration
 
-~/.ssh/config          # SSH configuration
 ~/.gitconfig           # Git configuration
 ```
 
