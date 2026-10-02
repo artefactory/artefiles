@@ -33,6 +33,7 @@ packages:
         - 'uv'
         - 'rust'
         - 'gh'
+        - 'mergiraf'
       casks:
         - 'font-fira-code-nerd-font'
         - 'visual-studio-code'
@@ -47,8 +48,6 @@ packages:
           - 'ghostty'
       git_advanced:
         brews:
-          - 'jj'
-          - 'mergiraf'
           - 'difftastic'
           - 'git-cliff'
           - 'git-lfs'

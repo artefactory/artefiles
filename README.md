@@ -81,7 +81,7 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 |--------|----------|-------------|
 | `editor` | Neovim | Terminal editor with nvim aliases |
 | `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
-| `git_advanced` | jj, mergiraf, difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
+| `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
 | `python_dev` | nbdime, pre-commit (via uv) | Python/Jupyter development tools |
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
@@ -113,7 +113,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Optional Module Highlights
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
-- 🔄 **Advanced Git** (`git_advanced`) - [Jujutsu](https://github.com/jj-vcs/jj), [mergiraf](https://mergiraf.org/), [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with both git and jj), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
+- 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
 - 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime and pre-commit via uv
 - 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
