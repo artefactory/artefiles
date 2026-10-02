@@ -16,11 +16,7 @@ setup() {
 
 @test "prompt module list matches packages.yaml module keys" {
   local prompt_keys yaml_keys
-  prompt_keys=$(grep 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl" \
-    | sed -E 's/.*\(list ([^)]*)\).*/\1/' \
-    | grep -oE '"[a-z_]+"' \
-    | tr -d '"' \
-    | sort -u)
+  prompt_keys=$(prompt_module_names | sort -u)
   yaml_keys=$(awk '/^    modules:$/,/^[^ ]/{ if ($1 ~ /:$/ && $0 ~ /^      [a-z_]+:$/) { gsub(":",""); print $1 } }' \
     "$REPO_ROOT/.chezmoidata/packages.yaml" | sort -u)
   if [ "$prompt_keys" != "$yaml_keys" ]; then

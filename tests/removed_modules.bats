@@ -24,9 +24,9 @@ grep_tree() {
 }
 
 @test "the init prompt does not offer the removed modules" {
-  prompt=$(grep -E 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl")
+  prompt=$(prompt_module_names)
   [ -n "$prompt" ]
-  ! printf '%s\n' "$prompt" | grep -qE 'aerospace|onepassword|agent_skills'
+  if printf '%s\n' "$prompt" | grep -qE 'aerospace|onepassword|agent_skills'; then return 1; fi
 }
 
 @test "the removed modules' files are gone" {

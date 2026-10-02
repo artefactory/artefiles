@@ -15,9 +15,8 @@ DARWIN_TMPL=.chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl
 }
 
 @test "the init prompt offers both modules" {
-  prompt=$(grep -E 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl")
-  printf '%s\n' "$prompt" | grep -qF '"terraform"'
-  printf '%s\n' "$prompt" | grep -qF '"opentofu"'
+  prompt_module_names | grep -qx terraform
+  prompt_module_names | grep -qx opentofu
 }
 
 @test "each module installs only its own brew on macOS" {
@@ -41,7 +40,7 @@ DARWIN_TMPL=.chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl
 
 @test "README lists both modules and calls OpenTofu the open-source alternative" {
   grep -qE '^\| `terraform` \|' "$REPO_ROOT/README.md"
-  grep -qE '^\| `opentofu` \|.*open-source alternative to Terraform' "$REPO_ROOT/README.md"
+  grep -qE '^\| `opentofu` \|.*open-source fork of Terraform.*Alternative to terraform: pick one' "$REPO_ROOT/README.md"
 }
 
 @test "terraform is pinned to a version in .chezmoidata/versions.yaml" {

@@ -8,12 +8,33 @@ email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter
 # Set the desired credential helper.
 # Examples: "!gh auth git-credential", "osxkeychain", "cache --timeout=3600"
 credentialHelper = "!gh auth git-credential"
-# [[ $stored := promptMultichoiceOnce . "modules" "Select optional modules" (list "editor" "ghostty" "cmux" "git_advanced" "atuin" "python_dev" "gcloud" "colima" "terraform" "opentofu" "pre_commit" "prek") ]] #
+# [[ $choices := list ]] #
+# [[ $choices = append $choices "editor | Neovim: modal terminal editor with the team configuration (nvim)" ]] #
+# [[ $choices = append $choices "ghostty | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one" ]] #
+# [[ $choices = append $choices "cmux | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one" ]] #
+# [[ $choices = append $choices "git_advanced | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, tuicr (review TUI)" ]] #
+# [[ $choices = append $choices "atuin | Atuin: searchable shell history, synced across machines (Ctrl+R)" ]] #
+# [[ $choices = append $choices "python_dev | Python tools: nbdime (notebook diffs), VS Code extensions" ]] #
+# [[ $choices = append $choices "pre_commit | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one" ]] #
+# [[ $choices = append $choices "prek | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one" ]] #
+# [[ $choices = append $choices "gcloud | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources" ]] #
+# [[ $choices = append $choices "colima | Colima: lightweight container runtime for Docker (macOS only)" ]] #
+# [[ $choices = append $choices "terraform | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one" ]] #
+# [[ $choices = append $choices "opentofu | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one" ]] #
+# Modules that replace each other: selecting both of a pair stops init.
+# [[ $pairs := list (list "ghostty" "cmux") (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
+# [[ $stored := promptMultichoiceOnce . "modules" "Select optional modules" $choices ]] #
 # [[ $modules := list ]] #
 # [[ range $stored ]] #
-# [[ $modules = append $modules (ternary "ghostty" . (eq . "terminal")) ]] #
+# [[ $name := index (splitList " | " .) 0 ]] #
+# [[ $modules = append $modules (ternary "ghostty" $name (eq $name "terminal")) ]] #
 # [[ end ]] #
 # [[ $modules = without ($modules | uniq) "multiplexer" ]] #
+# [[ range $pairs ]] #
+# [[ if and (has (index . 0) $modules) (has (index . 1) $modules) ]] #
+# [[ fail (printf "%s and %s are alternatives: choose one" (index . 0) (index . 1)) ]] #
+# [[ end ]] #
+# [[ end ]] #
 modules = # [[ $modules | toJson ]] #
 
 # [[ if has "git_advanced" $modules ]] #
