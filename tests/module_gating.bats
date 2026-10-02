@@ -33,9 +33,9 @@ setup() {
   assert_file_exists "$H/.config/nvim"
 }
 
-@test "terminal module: ghostty dir is materialized" {
+@test "ghostty module: ghostty dir is materialized" {
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["terminal"]}'
+  seed_chezmoi_config "$H" '{"modules":["ghostty"]}'
   chezmoi_apply "$H"
   assert_file_exists "$H/.config/ghostty"
 }

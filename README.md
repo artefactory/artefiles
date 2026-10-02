@@ -80,7 +80,8 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | Module | Contents | Description |
 |--------|----------|-------------|
 | `editor` | Neovim | Terminal editor with nvim aliases |
-| `terminal` | Ghostty | Modern GPU-accelerated terminal emulator |
+| `ghostty` | Ghostty, Zellij | GPU-accelerated terminal plus the Zellij multiplexer for tabs and panes; choose one of the two with `cmux` |
+| `cmux` | cmux | Ghostty-based macOS terminal that reads the same Ghostty config (pre-1.0); choose one of the two with `ghostty` |
 | `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
 | `atuin` | Atuin | Shell history sync across machines |
 | `python_dev` | nbdime (via uv), Python VS Code extensions | Python/Jupyter development tools |
@@ -88,9 +89,10 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 | `prek` | prek (via uv) | Faster Rust drop-in replacement for pre-commit with the same config; choose one of the two |
 | `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
 | `colima` | Colima | Container runtime (darwin only) |
-| `multiplexer` | Zellij | Terminal multiplexer |
 | `terraform` | Terraform | Infrastructure-as-code CLI to plan and apply cloud resources |
 | `opentofu` | OpenTofu | The open-source alternative to Terraform, same workflow (`tofu`); choose one of the two |
+
+> The `terminal` module is now called `ghostty` (an existing `terminal` selection is renamed on the next `chezmoi init`). The `multiplexer` module is gone: Zellij now comes with `ghostty`, so select `ghostty` to keep it. `cmux` does not install Zellij.
 
 ### Changing Modules
 
@@ -130,7 +132,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 - `~/.gitattributes_global` - Global attributes for merge drivers and file handling
 
 ### Terminal Configuration
-- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires `terminal` module)
+- `~/.config/ghostty/config` - Ghostty terminal configuration ([Ghostty Documentation](https://ghostty.org/)) (requires the `ghostty` or `cmux` module)
 
 ### VS Code Configuration
 VS Code is not installed by this setup; these files apply when you install it yourself. The extension install is skipped when the `code` CLI is missing, and the Python extensions (Python, Pylance, Ruff) install only with the `python_dev` module.
@@ -221,7 +223,7 @@ chezmoi purge --force
   │   ├── config.fish  # Main shell configuration
   │   ├── aliases.fish # Shell aliases and functions
   │   └── functions/   # Custom fish functions
-  ├── ghostty/         # Terminal emulator (terminal module)
+  ├── ghostty/         # Terminal emulator (ghostty or cmux module)
   ├── nvim/            # Editor configuration (editor module)
   ├── uv/              # Python package manager
   └── starship.toml    # Prompt configuration
