@@ -21,11 +21,10 @@ refute() { if "$@"; then return 1; fi; }
 }
 
 @test "init prompt offers ghostty and cmux, not terminal or multiplexer" {
-  list=$(grep 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl" | sed -E 's/.*\(list ([^)]*)\).*/\1/')
-  [[ "$list" == *'"ghostty"'* ]]
-  [[ "$list" == *'"cmux"'* ]]
-  [[ "$list" != *'"terminal"'* ]]
-  [[ "$list" != *'"multiplexer"'* ]]
+  names=$(prompt_module_names)
+  printf '%s\n' "$names" | grep -qx ghostty
+  printf '%s\n' "$names" | grep -qx cmux
+  if printf '%s\n' "$names" | grep -qxE 'terminal|multiplexer'; then return 1; fi
 }
 
 @test "no source file gates on the multiplexer module" {

@@ -65,9 +65,8 @@ gen_calls() { grep -cE '^(prek util init-template-dir|pre-commit init-templatedi
 }
 
 @test "the init prompt offers both modules" {
-  prompt=$(grep -E 'promptMultichoiceOnce' "$REPO_ROOT/.chezmoi.toml.tmpl")
-  printf '%s\n' "$prompt" | grep -qF '"pre_commit"'
-  printf '%s\n' "$prompt" | grep -qF '"prek"'
+  prompt_module_names | grep -qx pre_commit
+  prompt_module_names | grep -qx prek
 }
 
 @test "the git-hooks script is managed only with pre_commit or prek" {
@@ -170,8 +169,8 @@ gen_calls() { grep -cE '^(prek util init-template-dir|pre-commit init-templatedi
 }
 
 @test "README lists both modules as alternatives and python_dev without pre-commit" {
-  grep -qE '^\| `pre_commit` \|.*choose one of the two' "$REPO_ROOT/README.md"
-  grep -qE '^\| `prek` \|.*choose one of the two' "$REPO_ROOT/README.md"
+  grep -qE '^\| `pre_commit` \|.*Alternative to prek: pick one' "$REPO_ROOT/README.md"
+  grep -qE '^\| `prek` \|.*Alternative to pre_commit: pick one' "$REPO_ROOT/README.md"
   ! grep -E '^\| `python_dev` \|' "$REPO_ROOT/README.md" | grep -q 'pre-commit'
 }
 
