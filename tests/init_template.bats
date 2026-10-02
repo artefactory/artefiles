@@ -27,7 +27,7 @@ EOF
     --source "$REPO_ROOT" --destination "$H" \
     --init \
     --promptString "email=t@example.com" \
-    --promptMultichoice "modules=editor,terminal" \
+    --promptMultichoice "modules=editor,ghostty" \
     < "$REPO_ROOT/.chezmoi.toml.tmpl")
 
   printf '%s\n' "$rendered" | grep -q '^name = "testuser"$'
