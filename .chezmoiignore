@@ -2,6 +2,7 @@
 install.sh
 offer-default-shell.sh
 offer-star.sh
+select-modules.sh
 LICENSE
 README.md
 

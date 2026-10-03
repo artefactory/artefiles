@@ -32,7 +32,7 @@ sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main
 This is the recommended path. The script:
 1. Installs [GitHub CLI](https://cli.github.com/) if not already present
 2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
-3. Installs [chezmoi](https://chezmoi.io/) and runs `chezmoi init --apply`
+3. Installs [chezmoi](https://chezmoi.io/), asks which optional modules to install with a checklist (`[x]` will be installed, `[ ]` will not, then a confirmation), and runs `chezmoi init --apply`
 4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to No, and nothing is asked in CI or Codespaces)
 
 > **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
@@ -133,6 +133,8 @@ Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you se
 Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font.
 
 ### Optional Modules
+
+`install.sh` shows them as a checklist before anything is installed: `[x]` means the module will be installed, `[ ]` that it will not. Type a module's number to toggle it, `n` to clear the selection, Enter to continue and confirm the summary. Choosing one module of an alternative pair deselects the other. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
 
 | Module | Description | Alternative to |
 |--------|-------------|----------------|
