@@ -91,6 +91,19 @@ Chezmoi manages every config file of these dotfiles: the source lives in the dir
 | Update from repo | `chezmoi update` |
 | Re-run the module prompt and apply | `chezmoi init && chezmoi apply` |
 
+### Try it in a sandbox
+
+To simulate a new user's install without touching your own machine:
+
+```bash
+./sandbox.sh                                   # the whole install, interactively, then a shell in the sandbox
+./sandbox.sh --gh-token                        # same, lending your gh token so GitHub answers for real
+./sandbox.sh --modules ghostty,atuin           # skip the install and prompts, seed these modules
+./sandbox.sh --modules editor --command 'ls -a "$HOME/.config"'
+```
+
+By default it runs the real `install.sh` inside a temporary home: the gh check and login, chezmoi, the email prompt, the module list with its help texts, the alternatives guard, the files applied from your checkout, and the end-of-install offers (fish as default shell, star the repository). Every side effect on your machine is stubbed and listed at the end as `(sandbox) would run: ...`: brew, downloads, the gh login, starring, `sudo`, `chsh`, and chezmoi's scripts and externals, so nothing is installed and your real configuration is never read or written. Without `--gh-token` (or `GH_TOKEN`), `gh` is logged out as for a brand-new user, and the login is only simulated. `--keep` leaves the sandbox on disk. For a full Linux install in a container, run `./docker-test.sh`.
+
 ### Remove All Chezmoi-Managed Files (Danger)
 
 Review first:
