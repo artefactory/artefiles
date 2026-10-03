@@ -210,6 +210,17 @@ VS Code is not installed by this setup; these files apply when you install it yo
 - `~/.config/fish/functions/review.fish` and `~/.config/fish/completions/review.fish` - The `review` command wrapping tuicr (requires `git_advanced` module)
 - `~/.config/fish/functions/__atuin_fzf_search.fish` and `~/.config/fish/scripts/atuin_fzf_list.sh` - Atuin history rendered through fzf, bound to Ctrl+R/Alt+R/Alt+F (requires `atuin` module and `perl`, present by default on macOS and mainstream Linux distros)
 
+### Running bash snippets in Fish
+
+Fish is not POSIX-compatible, so pasting bash syntax into it fails. The [bass](https://github.com/edc/bass) plugin (installed through `fish_plugins`, needs `python3`) runs a snippet in bash and copies its environment changes into your Fish session.
+
+Works:
+- `bass source "$NVM_DIR/nvm.sh"`: load a bash tool's environment script (nvm and similar). Python virtualenvs ship a Fish script, so use `source .venv/bin/activate.fish` instead
+- `bass export FOO=3`: set a variable the bash way
+- `bash script.sh`, or any script with a `#!/bin/bash` shebang: runs in bash with no plugin needed
+
+Does not work: bash syntax typed directly at the Fish prompt, such as `if [[ ]]`, `for x in ...` or `$(...)`. Wrap it in `bash -c '...'` or put it in a script.
+
 ### Shell Prompt
 - `~/.config/starship.toml` - Shell prompt configuration ([Starship Documentation](https://starship.rs/))
 
