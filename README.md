@@ -269,6 +269,22 @@ gcloud init  # Set up Google Cloud SDK
 
 Restart your terminal (or fully quit and reopen your IDE if using VS Code, Cursor, etc.) for all changes to take effect.
 
+## Try it in a sandbox
+
+To simulate a new user's install without touching your own machine:
+
+```bash
+./sandbox.sh                                   # the whole install, interactively, then a shell in the sandbox
+./sandbox.sh --gh-token                        # same, lending your gh token so GitHub answers for real
+./sandbox.sh --modules atuin,editor            # skip the install and prompts, seed these modules
+./sandbox.sh --modules editor --command 'ls -a "$HOME/.config"'
+./sandbox.sh --clean                           # remove the leftovers of earlier runs
+```
+
+By default it runs the real `install.sh` inside a temporary home: the gh check and login, chezmoi, its prompts and the files applied from your checkout. Every side effect on your machine is stubbed and listed at the end as `(sandbox) would run: ...`: brew, downloads, the gh login, `sudo`, `chsh`, and chezmoi's scripts and externals, so nothing is installed and your real configuration is never read or written. Without `--gh-token` (or `GH_TOKEN`), `gh` is logged out as for a brand-new user, and the login is only simulated. `--keep` leaves the sandbox on disk and `--clean` removes the leftovers of earlier runs, including after a crash; a normal exit or Ctrl-C removes it by itself.
+
+After the install it lists the scripts chezmoi would run, and on Linux the externals it would download (rendered from the real template), so module installs can be reviewed without running them. What it does not exercise: the Quick Start clone path (the sandbox always has the checkout) and a `gh` that is not installed yet. `curl`, `wget`, `sudo` and `chsh` are stubbed and no tool is installed in the sandbox, so its shell can print missing-command messages a real user would not see. For a full Linux install in a container, run `./docker-test.sh`.
+
 ## Need Help?
 
 - Run `dotfiles_doctor` to check your installation
