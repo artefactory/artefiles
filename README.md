@@ -33,6 +33,7 @@ This is the recommended path. The script:
 1. Installs [GitHub CLI](https://cli.github.com/) if not already present
 2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
 3. Installs [chezmoi](https://chezmoi.io/) and runs `chezmoi init --apply`
+4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to No, and nothing is asked in CI or Codespaces)
 
 > **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
 > `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email.
