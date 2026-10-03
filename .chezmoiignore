@@ -12,6 +12,7 @@ CHEATSHEET.md
 cliff.toml
 Dockerfile.linux
 docker-test.sh
+sandbox.sh
 
 # OS-specific exclusions
 {{ if eq .chezmoi.os "darwin" }}
