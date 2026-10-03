@@ -229,3 +229,8 @@ echo "Running 'chezmoi $*'" >&2
 if source_dir="$("$chezmoi" source-path 2> /dev/null)" && [ -f "${source_dir}/offer-default-shell.sh" ]; then
   sh "${source_dir}/offer-default-shell.sh" || true
 fi
+
+# Also last-step and optional: starring is only ever offered, never assumed.
+if [ -n "${source_dir:-}" ] && [ -f "${source_dir}/offer-star.sh" ]; then
+  sh "${source_dir}/offer-star.sh" || true
+fi

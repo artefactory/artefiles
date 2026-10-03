@@ -1,6 +1,7 @@
 .github/
 install.sh
 offer-default-shell.sh
+offer-star.sh
 LICENSE
 README.md
 
