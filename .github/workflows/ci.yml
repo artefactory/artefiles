@@ -72,7 +72,12 @@ jobs:
       - name: install bats
         run: sudo apt-get update && sudo apt-get install -y bats jq yq
       - name: install chezmoi
-        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+        run: |
+          # Download to a file: `sh -c "$(curl ...)"` runs an empty script and
+          # exits 0 when the download fails, leaving no chezmoi on the runner.
+          curl -fsSL --retry 3 --retry-all-errors https://get.chezmoi.io -o "$RUNNER_TEMP/get-chezmoi.sh"
+          sh "$RUNNER_TEMP/get-chezmoi.sh" -b "$HOME/.local/bin"
+          "$HOME/.local/bin/chezmoi" --version
       - name: run bats
         run: |
           export PATH="$HOME/.local/bin:$PATH"
