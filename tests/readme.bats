@@ -47,10 +47,3 @@ setup() {
     return 1
   fi
 }
-
-@test "links resolve" {
-  if ! command -v npx > /dev/null 2>&1; then
-    skip "npx not available — install Node.js to run link-check"
-  fi
-  npx --yes markdown-link-check "$REPO_ROOT/README.md"
-}

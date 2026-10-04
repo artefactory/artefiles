@@ -41,6 +41,21 @@ modules = $modules
 EOF
 }
 
+# test_source — echo a copy of the checkout without .chezmoiexternal.toml.tmpl.
+# chezmoi downloads every archive external to read the source state, even with
+# --exclude=externals, so commands that apply or list files run from this copy
+# and no test leaves GitHub. Built once per bats run and per REPO_ROOT.
+test_source() {
+  local dir
+  dir="${BATS_RUN_TMPDIR}/source-$(printf '%s' "$REPO_ROOT" | cksum | cut -d' ' -f1)"
+  if [ ! -d "$dir" ]; then
+    mkdir -p "$dir"
+    (cd "$REPO_ROOT" && tar --exclude=./.git --exclude=./.workspaces \
+      --exclude=./.chezmoiexternal.toml.tmpl -cf - .) | tar -xf - -C "$dir"
+  fi
+  printf '%s\n' "$dir"
+}
+
 # Run chezmoi against fake-home H, passing --config explicitly so XDG_CONFIG_HOME
 # (set on Linux runners) can't pull a different config from under us. Also clear
 # XDG_CONFIG_HOME for the same reason.
@@ -52,7 +67,7 @@ _chezmoi() {
   shift 2
   XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi "$sub" \
     --config "$h/.config/chezmoi/chezmoi.toml" \
-    --destination "$h" --source "$REPO_ROOT" \
+    --destination "$h" --source "$(test_source)" \
     --exclude=scripts,externals "$@"
 }
 
@@ -67,7 +82,7 @@ chezmoi_managed_with_scripts() {
   shift
   XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi managed \
     --config "$h/.config/chezmoi/chezmoi.toml" \
-    --destination "$h" --source "$REPO_ROOT" \
+    --destination "$h" --source "$(test_source)" \
     --exclude=externals "$@"
 }
 
