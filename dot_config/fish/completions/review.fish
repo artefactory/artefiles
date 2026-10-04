@@ -22,11 +22,8 @@ complete -c review -f -n "__fish_seen_subcommand_from pr" -a '(
         --jq ".[] | \"\(.number)\t\(.title)\"" 2>/dev/null
 )'
 
-# `review branch <base>` completes candidate trunk bookmarks/branches.
+# `review branch <base>` completes candidate trunk branches.
 complete -c review -f -n "__fish_seen_subcommand_from branch" -a '(
-    if type -q jj; and jj root >/dev/null 2>&1
-        jj bookmark list --no-pager -T "name ++ \"\n\"" 2>/dev/null
-    else if type -q git
-        git for-each-ref --format="%(refname:short)" refs/heads/ 2>/dev/null
-    end
+    type -q git
+    and git for-each-ref --format="%(refname:short)" refs/heads/ 2>/dev/null
 )'
