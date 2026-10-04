@@ -27,7 +27,7 @@ setup() {
 
 @test "every script in .chezmoiscripts/<os>/ has its OS-mate ignored" {
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","onepassword","multiplexer","python_dev","aerospace","agent_skills"]}'
+  seed_chezmoi_config "$H" '{"modules":["editor","terminal","atuin","gcloud","colima","git_advanced","multiplexer","python_dev"]}'
   managed=$(chezmoi_managed_with_scripts "$H")
 
   case "$(uname -s)" in

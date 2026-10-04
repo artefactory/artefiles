@@ -23,16 +23,12 @@ docker-test.sh
 # Exclude macOS-specific files on Linux
 .chezmoiscripts/darwin/**
 Library/Application Support/Code/User/settings.json
-# aerospace is a darwin-only window manager (see packages.darwin.modules)
-.config/aerospace/**
 {{ end }}
 
 # Remote SSH server exclusions (when SSH_CLIENT is present)
 {{ if env "SSH_CLIENT" }}
 # Terminal emulator configs (use system defaults on remote servers)
 .wezterm.lua
-# macOS-specific GUI applications
-.config/aerospace/**
 {{ end }}
 
 # Module-based exclusions.
@@ -44,9 +40,6 @@ Library/Application Support/Code/User/settings.json
 {{ end }}
 {{ if not (has "terminal" .modules) }}
 .config/ghostty/**
-{{ end }}
-{{ if and (eq .chezmoi.os "darwin") (not (has "aerospace" .modules)) }}
-.config/aerospace/**
 {{ end }}
 {{ if not (has "atuin" .modules) }}
 .config/atuin/**
@@ -60,9 +53,6 @@ Library/Application Support/Code/User/settings.json
 .config/fish/functions/review.fish
 .config/fish/completions/review.fish
 {{ end }}
-{{ if not (has "agent_skills" .modules) }}
-.chezmoiscripts/zzz_install-agent-skills.sh
-{{ end }}
 
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
 # already excludes them, so only emit these gates on linux.
@@ -73,9 +63,6 @@ Library/Application Support/Code/User/settings.json
 {{   if not (has "git_advanced" .modules) }}
 .chezmoiscripts/linux/install-git-extras.sh
 .chezmoiscripts/linux/install-tuicr.sh
-{{   end }}
-{{   if not (has "onepassword" .modules) }}
-.chezmoiscripts/linux/install-1password-cli.sh
 {{   end }}
 {{ end }}
 

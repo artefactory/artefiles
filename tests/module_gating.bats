@@ -10,21 +10,20 @@ setup() {
   load 'helpers/assertions'
 }
 
-@test "no modules: editor/terminal/atuin/aerospace dirs absent" {
+@test "no modules: editor/terminal/atuin dirs absent" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":[]}'
   chezmoi_apply "$H"
   assert_file_absent "$H/.config/nvim"
   assert_file_absent "$H/.config/ghostty"
   assert_file_absent "$H/.config/atuin"
-  assert_file_absent "$H/.config/aerospace"
 }
 
 @test "no modules: chezmoi managed lists no module dirs" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":[]}'
   managed=$(chezmoi_managed "$H")
-  ! echo "$managed" | grep -qE '^\.config/(nvim|ghostty|atuin|aerospace)(/|$)'
+  ! echo "$managed" | grep -qE '^\.config/(nvim|ghostty|atuin)(/|$)'
 }
 
 @test "editor module: nvim dir is materialized" {
@@ -103,15 +102,6 @@ _assert_script_gating() {
   _assert_script_gating git_advanced .chezmoiscripts/linux/install-tuicr.sh
 }
 
-@test "onepassword module gates its linux install script" {
-  [ "$(uname -s)" = Linux ] || skip "linux-only script"
-  _assert_script_gating onepassword .chezmoiscripts/linux/install-1password-cli.sh
-}
-
 @test "python_dev module gates its install script" {
   _assert_script_gating python_dev .chezmoiscripts/zzzzz_install-python-tools.sh
-}
-
-@test "agent_skills module gates its install script" {
-  _assert_script_gating agent_skills .chezmoiscripts/zzz_install-agent-skills.sh
 }
