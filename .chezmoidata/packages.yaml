@@ -62,6 +62,12 @@ packages:
       python_dev:
         brews: []
         casks: []
+      pre_commit:
+        brews: []
+        casks: []
+      prek:
+        brews: []
+        casks: []
       gcloud:
         brews: []
         casks:
