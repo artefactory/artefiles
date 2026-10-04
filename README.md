@@ -1,6 +1,8 @@
 # Artefiles
 
-A cross-platform dotfiles template that provides a **default and sane configuration for a modern development environment**. Managed with [chezmoi](https://chezmoi.io/), these dotfiles deliver a consistent, opinionated setup focused on productivity and modern tooling.
+A cross-platform dotfiles template that provides a **default and sane configuration for a modern development environment**. Every config it installs is **managed by [chezmoi](https://chezmoi.io/)**, so you can preview, edit, update and roll back your dotfiles with a few commands (see [Using chezmoi](#using-chezmoi)).
+
+> One command gives you Fish, Starship and modern Rust CLI tools, preconfigured and kept up to date with `chezmoi update` — [learn the chezmoi commands](#using-chezmoi).
 
 ## Philosophy
 
@@ -12,6 +14,14 @@ This repository is designed to give you a **batteries-included development envir
 
 ![Terminal Screenshot](docs/images/terminal-demo.png)
 *Modern terminal setup with Fish shell, Starship prompt, and Rust-based tools*
+
+## Prerequisites
+
+- A GitHub account (for git and GitHub-related features)
+  - For non-interactive environments, set `GH_TOKEN` or `GITHUB_TOKEN` before installation
+- SSH keys added to your GitHub account ([instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
+
+After installation, you will need to change your default shell to Fish to get the full experience — see [Post-Installation Steps](#post-installation-steps).
 
 ## Quick Start
 
@@ -65,6 +75,52 @@ If you prefer to manage prerequisites yourself before running chezmoi directly:
 4. Install these dotfiles directly with chezmoi:
    ```bash
    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefactory/artefiles
+   ```
+
+## Using chezmoi
+
+Chezmoi manages every config file of these dotfiles: the source lives in the directory printed by `chezmoi source-path` and `chezmoi apply` writes it to your home directory. Main docs: https://www.chezmoi.io/user-guide/command-overview/
+
+| Task | Command |
+|------|---------|
+| See pending changes | `chezmoi status` |
+| Inspect diffs | `chezmoi diff` |
+| Edit a file | `chezmoi edit ~/.config/fish/config.fish` |
+| Apply changes | `chezmoi apply` |
+| Update from repo | `chezmoi update` |
+| Re-run the module prompt and apply | `chezmoi init && chezmoi apply` |
+
+### Remove All Chezmoi-Managed Files (Danger)
+
+Review first:
+```bash
+chezmoi managed -p absolute
+```
+
+Remove all managed files, then remove chezmoi state/source:
+```bash
+chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
+chezmoi purge --force
+```
+
+## Clone and personalize
+
+To make these dotfiles your own while still receiving upstream updates:
+
+1. **Fork** [artefactory/artefiles](https://github.com/artefactory/artefiles) on GitHub (or clone it and push to your own repository).
+2. Initialize chezmoi from your fork:
+   ```bash
+   chezmoi init --apply <your-user>/artefiles
+   ```
+   From a local clone, run `./install.sh` inside it instead: it uses the checkout as the chezmoi source.
+3. Edit a managed file with `chezmoi edit ~/.config/fish/config.fish`, then review with `chezmoi diff` and apply with `chezmoi apply`.
+4. Commit and push your changes from the source directory (`chezmoi cd`). `chezmoi update` pulls from your fork.
+5. Keep upstream updates: add the original repository as `upstream` once, then merge it when you want the latest changes (the global git config already uses mergiraf for structured merges):
+   ```bash
+   git -C "$(chezmoi source-path)" remote add upstream https://github.com/artefactory/artefiles.git
+   git -C "$(chezmoi source-path)" fetch upstream
+   git -C "$(chezmoi source-path)" merge upstream/main
+   chezmoi apply
    ```
 
 ## Modular Architecture
@@ -170,14 +226,6 @@ VS Code is not installed by this setup; these files apply when you install it yo
 - `~/.config/tuicr/config.toml` - Code review TUI configuration ([tuicr Documentation](https://tuicr.dev/)) (requires `git_advanced` module)
 - `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/)) (requires `editor` module)
 
-## Prerequisites
-
-- A GitHub account (for git and GitHub-related features)
-  - For non-interactive environments, set `GH_TOKEN` or `GITHUB_TOKEN` before installation
-- SSH keys added to your GitHub account ([instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent))
-
-After installation, you will need to change your default shell to Fish to get the full experience — see [Post-Installation Steps](#post-installation-steps).
-
 ## Common Tasks
 
 | Task | Command |
@@ -186,31 +234,6 @@ After installation, you will need to change your default shell to Fish to get th
 | Edit config | `chezmoi edit <path>` |
 | Health check | `dotfiles_doctor` |
 | New Python project | `mkdir project && cd project && echo 'layout uv' > .envrc && direnv allow` |
-
-## Chezmoi Basics
-
-Chezmoi is the manager for these dotfiles. Main docs: https://www.chezmoi.io/user-guide/command-overview/
-
-| Task | Command |
-|------|---------|
-| See pending changes | `chezmoi status` |
-| Inspect diffs | `chezmoi diff` |
-| Edit a file | `chezmoi edit ~/.config/fish/config.fish` |
-| Apply changes | `chezmoi apply` |
-| Update from repo | `chezmoi update` |
-
-### Remove All Chezmoi-Managed Files (Danger)
-
-Review first:
-```bash
-chezmoi managed -p absolute
-```
-
-Remove all managed files, then remove chezmoi state/source:
-```bash
-chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
-chezmoi purge --force
-```
 
 ## Configuration Structure
 
