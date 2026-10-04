@@ -322,6 +322,8 @@ By default it runs the real `install.sh` inside a temporary home: the gh check a
 
 After the install it lists the scripts chezmoi would run, and on Linux the externals it would download (rendered from the real template), so module installs can be reviewed without running them. What it does not exercise: the Quick Start clone path (the sandbox always has the checkout) and a `gh` that is not installed yet. `curl`, `wget`, `sudo` and `chsh` are stubbed and no tool is installed in the sandbox, so its shell can print missing-command messages a real user would not see. For a full Linux install in a container, run `./docker-test.sh`.
 
+The install's own steps are shown too: the module checklist (pick modules, then the Submit row), and the star offer, which is answered without a token because the sandbox only logs the star it would send.
+
 ## Need Help?
 
 - Run `dotfiles_doctor` to check your installation
