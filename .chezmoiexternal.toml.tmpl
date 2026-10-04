@@ -65,7 +65,7 @@
   path = "git-lfs"
 # [[ end ]] #
 
-# [[ if has "multiplexer" .modules ]] #
+# [[ if or (has "ghostty" .modules) (has "terminal" .modules) ]] #
 # zellij - A terminal workspace with batteries included
 [".local/bin/zellij"]
   type = "archive-file"
@@ -81,7 +81,7 @@
   executable = true
   path = "starship"
 
-# [[ if has "terminal" .modules ]] #
+# [[ if or (has "ghostty" .modules) (has "terminal" .modules) ]] #
 # ghostty - A fast, feature-rich, and cross-platform terminal emulator
 [".local/bin/ghostty"]
   type = "file"
