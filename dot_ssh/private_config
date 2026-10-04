@@ -1,9 +1,0 @@
-# SSH configuration
-
-# Keep SSH connections alive
-Host *
-  ServerAliveInterval 60
-  ServerAliveCountMax 3
-  TCPKeepAlive yes
-
-# Per-host configuration can be added below this line
