@@ -77,20 +77,20 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 
 ### Optional Modules
 
-| Module | Contents | Description |
-|--------|----------|-------------|
-| `editor` | Neovim | Terminal editor with nvim aliases |
-| `ghostty` | Ghostty, Zellij | GPU-accelerated terminal plus the Zellij multiplexer for tabs and panes; choose one of the two with `cmux` |
-| `cmux` | cmux | Ghostty-based macOS terminal that reads the same Ghostty config (pre-1.0); choose one of the two with `ghostty` |
-| `git_advanced` | difftastic, git-cliff, git-lfs, git-extras | Advanced version control tooling |
-| `atuin` | Atuin | Shell history sync across machines |
-| `python_dev` | nbdime (via uv), Python VS Code extensions | Python/Jupyter development tools |
-| `pre_commit` | pre-commit (via uv) | Git hook manager that runs linters and formatters on commit; choose one of the two with `prek` |
-| `prek` | prek (via uv) | Faster Rust drop-in replacement for pre-commit with the same config; choose one of the two |
-| `gcloud` | Google Cloud SDK | Google Cloud CLI (cask on darwin, manual install on linux) |
-| `colima` | Colima | Container runtime (darwin only) |
-| `terraform` | Terraform | Infrastructure-as-code CLI to plan and apply cloud resources |
-| `opentofu` | OpenTofu | The open-source alternative to Terraform, same workflow (`tofu`); choose one of the two |
+| Module | Description | Alternative to |
+|--------|-------------|----------------|
+| `editor` | Neovim: modal terminal editor with the team configuration (nvim) | — |
+| `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | `cmux` |
+| `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | `ghostty` |
+| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, tuicr (review TUI) | — |
+| `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
+| `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
+| `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
+| `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
+| `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | — |
+| `colima` | Colima: lightweight container runtime for Docker (macOS only) | — |
+| `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
+| `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 
 > The `terminal` module is now called `ghostty` (an existing `terminal` selection is renamed on the next `chezmoi init`). The `multiplexer` module is gone: Zellij now comes with `ghostty`, so select `ghostty` to keep it. `cmux` does not install Zellij.
 
