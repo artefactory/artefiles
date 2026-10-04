@@ -211,7 +211,7 @@ VS Code is not installed by this setup; these files apply when you install it yo
 - `~/.config/fish/completions/cd.fish` - Zoxide-ranked `cd` completions, with an unambiguous-jump shortcut that skips the picker
 - `~/.config/fish/conf.d/direnv.fish` - Defers direnv's shell hook to the first prompt instead of every startup
 - `~/.config/fish/functions/review.fish` and `~/.config/fish/completions/review.fish` - The `review` command wrapping tuicr (requires `git_advanced` module)
-- `~/.config/fish/functions/__atuin_fzf_search.fish` and `~/.config/fish/scripts/atuin_fzf_list.sh` - Atuin history rendered through fzf, bound to Ctrl+R/Alt+R/Alt+F (requires `atuin` module and `perl`, present by default on macOS and mainstream Linux distros)
+- `~/.config/fish/functions/__atuin_fzf_search.fish`, `__atuin_fzf_up.fish` and `~/.config/fish/scripts/atuin_fzf_list.sh` - Atuin history rendered through fzf, bound to Ctrl+R/Alt+R/Alt+F and up-arrow (requires `atuin` module and `perl`, present by default on macOS and mainstream Linux distros)
 
 ### Shell Prompt
 - `~/.config/starship.toml` - Shell prompt configuration ([Starship Documentation](https://starship.rs/))

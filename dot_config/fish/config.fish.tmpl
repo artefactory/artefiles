@@ -221,10 +221,12 @@ if status is-interactive; and type -q fzf; and type -q atuin
     bind ctrl-r '__atuin_fzf_search directory'
     bind alt-r '__atuin_fzf_search directory'
     bind alt-f '__atuin_fzf_search global'
+    bind up '__atuin_fzf_up'
     if bind -M insert >/dev/null 2>&1
         bind -M insert ctrl-r '__atuin_fzf_search directory'
         bind -M insert alt-r '__atuin_fzf_search directory'
         bind -M insert alt-f '__atuin_fzf_search global'
+        bind -M insert up '__atuin_fzf_up'
     end
 end
 # [[ end -]] #
