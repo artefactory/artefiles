@@ -8,12 +8,13 @@ function __atuin_fzf_search --description 'atuin history search rendered through
     set -l script "$HOME/.config/fish/scripts/atuin_fzf_list.sh"
     set -l initial_query (commandline -b)
 
-    set -l selection (fzf --disabled --ansi --tac --no-sort --read0 --print0 --no-multi-line \
+    # The list is loaded once and fzf filters it in memory: re-running the
+    # formatter on every keystroke is what made the picker slow.
+    set -l selection (fzf --ansi --tac --no-sort --read0 --print0 --no-multi-line \
         --delimiter "$us" --with-nth=1 \
         --header "atuin: $filter_mode" \
         --query "$initial_query" \
-        --bind "start:reload:$script {q} $filter_mode" \
-        --bind "change:reload:$script {q} $filter_mode" < /dev/null | string split0)
+        --bind "start:reload:$script '' $filter_mode" < /dev/null | string split0)
 
     if test -n "$selection"
         set -l fields (string split "$us" -- $selection)
