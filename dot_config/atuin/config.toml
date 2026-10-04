@@ -32,7 +32,7 @@ filter_mode = "global"        # Options: global, host, session, directory, works
 workspaces = true               # Enable git repository detection for workspace filtering
 
 ## Shell key binding behavior
-filter_mode_shell_up_key_binding = "workspace"
+filter_mode_shell_up_key_binding = "global"
 search_mode_shell_up_key_binding = "fuzzy"
 
 ## UI appearance
