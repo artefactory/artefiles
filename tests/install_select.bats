@@ -52,9 +52,9 @@ run_quick_start() {
     PATH="$BIN:$PATH" "$@" sh -c "$(cat "$REPO_ROOT/install.sh")"
 }
 
-# answers KEY... — type the editor/atuin/... rows with the arrows, then Submit and the confirmation.
+# answers NAME... — clear the defaults, type the editor/atuin/... rows with the arrows, then Submit and the confirmation.
 answers() {
-  local pos=1 keys="" row
+  local pos=1 keys="n" row
   for name in "$@"; do
     row=$(idx "$name")
     while [ "$pos" -lt "$row" ]; do keys+=$'\033[B'; pos=$((pos + 1)); done

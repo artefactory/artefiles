@@ -2,7 +2,8 @@
 # Module checklist run by install.sh before `chezmoi init`.
 #
 # Every optional module is a row shown as [x] (will be installed) or [ ] (will
-# not), with its help text, followed by a Submit row. Move the pointer with the
+# not), with its help text; the modules listed as defaults in the template start
+# selected, followed by a Submit row. Move the pointer with the
 # up and down arrows (or k and j), press space to toggle the module under it,
 # and press Enter on the Submit row to continue; a summary then asks for
 # confirmation before anything starts. Enter on a module row toggles it too, n
@@ -10,7 +11,7 @@
 # Choosing one module of an alternative pair deselects the other.
 #
 # The module names, help texts and alternative pairs are read from
-# .chezmoi.toml.tmpl, the one place that defines them. The UI goes to stderr and
+# .chezmoi.toml.tmpl, the one place that defines them (as is the default selection). The UI goes to stderr and
 # the result, a JSON array of bare module names in list order, to stdout. Exits
 # 2 without output when there is no terminal to read, and 1 when the input ends
 # or the user cancels before the selection is confirmed.
@@ -31,10 +32,12 @@ choices=$(sed -nE 's/^# \[\[ \$choices = append \$choices "([^"]*)" \]\] #$/\1/p
 # shellcheck disable=SC2016
 pairs=$(sed -nE 's/^# \[\[ \$pairs := list (.*) \]\] #$/\1/p' "$template" |
   grep -oE '"[a-z_]+" "[a-z_]+"' | tr -d '"')
+# shellcheck disable=SC2016
+defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$template" | tr -d '"' | tr ' ' ',')
 [ -n "$choices" ] || exit 1
 count=$(printf '%s\n' "$choices" | wc -l | tr -d ' ')
 
-selected=","
+selected=",${defaults:+${defaults},}"
 notice=""
 cur=1
 saved_tty=""

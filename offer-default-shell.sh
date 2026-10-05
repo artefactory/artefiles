@@ -4,8 +4,8 @@
 # chsh, so it must never run inside `chezmoi apply`, where other steps could
 # depend on it or nobody is watching.
 #
-# Only an explicit "y" or "yes", read from the terminal, changes anything.
-# Every other path prints the manual commands and exits 0, so a refusal or a
+# An empty answer (Enter), "y" or "yes", read from the terminal, accepts; any
+# other answer, or input that ends, declines. Every other path prints the manual commands and exits 0, so a refusal or a
 # failure here never fails the install.
 #
 # ARTEFILES_TTY and ARTEFILES_SHELLS_FILE only exist so tests can feed an
@@ -45,12 +45,12 @@ if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ] || ! ( : < "$tty_dev" ) 2> /dev/
   exit 0
 fi
 
-printf '\nMake fish your default shell? This runs sudo and chsh. [y/N] ' >&2
+printf '\nMake fish your default shell? This runs sudo and chsh. [Y/n] ' >&2
 answer=""
-IFS= read -r answer < "$tty_dev" || answer=""
+IFS= read -r answer < "$tty_dev" || answer="n"
 
 case "$answer" in
-  y | Y | yes | YES | Yes) ;;
+  "" | y | Y | yes | YES | Yes) ;;
   *)
     print_manual
     exit 0

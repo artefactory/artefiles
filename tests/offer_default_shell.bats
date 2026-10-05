@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Changing the login shell needs sudo and chsh, so it is only ever offered as
-# the very last step of install.sh, behind an explicit y/N prompt read from the
+# the very last step of install.sh, behind a [Y/n] prompt read from the
 # terminal. Nothing in `chezmoi apply` may change it.
 
 setup() {
@@ -23,12 +23,12 @@ setup() {
   ANSWER="$BATS_TEST_TMPDIR/answer"
 }
 
-# run_offer ANSWER_TEXT [VAR=VALUE ...] — run the script with a stubbed PATH,
+# run_offer ANSWER_TEXT ("<eof>" feeds no answer at all) [VAR=VALUE ...] — run the script with a stubbed PATH,
 # the answer fed through the fake terminal, and no CI variables.
 run_offer() {
   local answer="$1"
   shift
-  printf '%s\n' "$answer" > "$ANSWER"
+  if [ "$answer" = "<eof>" ]; then : > "$ANSWER"; else printf '%s\n' "$answer" > "$ANSWER"; fi
   run env -i PATH="$STUBS:/usr/bin:/bin" HOME="$BATS_TEST_TMPDIR/home" \
     SHELL=/bin/zsh ARTEFILES_TTY="$ANSWER" ARTEFILES_SHELLS_FILE="$SHELLS_FILE" \
     "$@" sh "$SCRIPT"
@@ -41,14 +41,21 @@ chsh_calls() { grep -c '^chsh ' "$CALLS" || true; }
   shellcheck "$SCRIPT"
 }
 
-@test "an empty answer changes nothing and prints the manual commands" {
+@test "an empty answer accepts: fish is registered and chsh runs once" {
   run_offer ""
+  [ "$status" -eq 0 ]
+  [ "$(chsh_calls)" = "1" ]
+  grep -qx "chsh -s $STUBS/fish" "$CALLS"
+}
+
+@test "input that ends without an answer declines and prints the manual commands" {
+  run_offer "<eof>"
   [ "$status" -eq 0 ]
   [ "$(chsh_calls)" = "0" ]
   [[ "$output" == *"chsh -s $STUBS/fish"* ]]
 }
 
-@test "anything other than y or yes changes nothing" {
+@test "any other answer than Enter, y or yes changes nothing" {
   for answer in n no N maybe " " "yep" "y es"; do
     run_offer "$answer"
     [ "$status" -eq 0 ]

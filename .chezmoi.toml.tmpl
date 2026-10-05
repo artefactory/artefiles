@@ -22,6 +22,8 @@ credentialHelper = "!gh auth git-credential"
 # [[ $choices = append $choices "terraform | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one" ]] #
 # [[ $choices = append $choices "opentofu | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one" ]] #
 # Modules that replace each other: selecting both of a pair stops init.
+# Modules the install checklist starts with already selected.
+# [[ $defaults := list "editor" "git_advanced" "atuin" "python_dev" "gcloud" ]] #
 # [[ $pairs := list (list "ghostty" "cmux") (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
 # [[ $stored := promptMultichoiceOnce . "modules" "Select optional modules" $choices ]] #
 # [[ $modules := list ]] #
