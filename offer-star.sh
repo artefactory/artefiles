@@ -2,7 +2,8 @@
 # Offer to star artefactory/artefiles. install.sh runs this after the default
 # shell offer, once chezmoi has finished.
 #
-# Only an explicit "y" or "yes", read from the terminal, stars anything. The
+# An empty answer (Enter), "y" or "yes", read from the terminal, accepts; any
+# other answer, or input that ends, declines. The
 # offer is skipped silently when nobody can answer (CI, Codespaces, no
 # terminal), when gh is missing, when the repository is already starred, or when
 # GitHub answers anything but "not starred". Every path exits 0, so a refusal or
@@ -39,12 +40,12 @@ To star ${repo} later, open https://github.com/${repo} or run:
 MANUAL
 }
 
-printf '\nEnjoying artefiles? Star %s on GitHub? [y/N] ' "$repo" >&2
+printf '\nEnjoying artefiles? Star %s on GitHub? [Y/n] ' "$repo" >&2
 answer=""
-IFS= read -r answer < "$tty_dev" || answer=""
+IFS= read -r answer < "$tty_dev" || answer="n"
 
 case "$answer" in
-  y | Y | yes | YES | Yes) ;;
+  "" | y | Y | yes | YES | Yes) ;;
   *)
     print_manual
     exit 0

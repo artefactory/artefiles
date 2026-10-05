@@ -19,7 +19,9 @@ submit_idx() { echo $(($(prompt_module_names | wc -l) + 1)); }
 # Keystrokes are built as a byte string: KEYS accumulates, POS tracks the pointer.
 DOWN=$'\033[B'
 UP=$'\033[A'
-reset_keys() { KEYS=""; POS=1; }
+# reset_keys starts from an empty selection (n clears the defaults); keep_defaults starts from the template's.
+reset_keys() { KEYS="n"; POS=1; }
+keep_defaults() { KEYS=""; POS=1; }
 # to ROW — move the pointer to ROW with arrow keys.
 to() {
   while [ "$POS" -lt "$1" ]; do KEYS+="$DOWN"; POS=$((POS + 1)); done
@@ -44,13 +46,13 @@ run_keys() {
   shellcheck "$SCRIPT"
 }
 
-@test "the first screen has a legend, the pointer on the first row and every module unselected with its help" {
-  reset_keys; submit; raw $'y\n'; run_keys
+@test "the first screen has a legend, the pointer on the first row and every module with its help" {
+  keep_defaults; submit; raw $'y\n'; run_keys
   [[ "$ui" == *"[x] will be installed"* ]]
   [[ "$ui" == *"[ ] will not be installed"* ]]
-  printf '%s\n' "$ui" | grep -qE "^> \[ \] $(prompt_module_names | head -1) "
+  printf '%s\n' "$ui" | grep -qE "^> \[.\] $(prompt_module_names | head -1) "
   for m in $(prompt_module_names); do
-    printf '%s\n' "$ui" | grep -qE "^[> ] \[ \] ${m} " || { echo "no unselected line for $m" >&2; return 1; }
+    printf '%s\n' "$ui" | grep -qE "^[> ] \[.\] ${m} " || { echo "no line for $m" >&2; return 1; }
     [[ "$ui" == *"$(prompt_help "$m")"* ]] || { echo "help of $m missing" >&2; return 1; }
   done
 }
@@ -63,9 +65,9 @@ run_keys() {
 }
 
 @test "the down arrow moves the pointer" {
-  reset_keys; raw "$DOWN"; raw "$DOWN"; raw q; run_keys
+  keep_defaults; raw "$DOWN"; raw "$DOWN"; raw q; run_keys
   third=$(prompt_module_names | sed -n 3p)
-  printf '%s\n' "$ui" | grep -qE "^> \[ \] ${third} "
+  printf '%s\n' "$ui" | grep -qE "^> \[.\] ${third} "
 }
 
 @test "k and j move like the arrows" {
@@ -80,7 +82,7 @@ run_keys() {
 
 @test "the down arrow wraps from Submit to the first row" {
   reset_keys; to "$(submit_idx)"; raw "$DOWN"; raw q; run_keys
-  printf '%s\n' "$ui" | tail -n 30 | grep -qE "^> \[ \] $(prompt_module_names | head -1) "
+  printf '%s\n' "$ui" | tail -n 30 | grep -qE "^> \[.\] $(prompt_module_names | head -1) "
 }
 
 @test "Enter on a module row toggles it" {
@@ -183,4 +185,38 @@ run_keys() {
   reset_keys; raw q; run_keys
   [[ "$ui" == *"up/down"* ]]
   [[ "$ui" == *"space toggles"* ]]
+}
+
+# defaults — the modules the template lists as preselected, one per line.
+defaults() {
+  # shellcheck disable=SC2016 # the pattern matches a literal `$defaults`
+  sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$REPO_ROOT/.chezmoi.toml.tmpl" | tr -d '"' | tr ' ' '\n'
+}
+
+@test "the template lists the default modules and each one is offered" {
+  [ "$(defaults | wc -l | tr -d ' ')" -gt 0 ]
+  for m in $(defaults); do
+    prompt_module_names | grep -qx "$m" || { echo "$m is a default but not offered" >&2; return 1; }
+  done
+}
+
+@test "the first screen shows the default modules as [x] and the others as [ ]" {
+  keep_defaults; raw q; run_keys
+  first=$(printf '%s\n' "$ui" | awk '/Select the optional modules/{n++} n==1')
+  for m in $(prompt_module_names); do
+    if defaults | grep -qx "$m"; then want='\[x\]'; else want='\[ \]'; fi
+    printf '%s\n' "$first" | grep -qE "^[> ] ${want} ${m} " || { echo "$m is not $want" >&2; return 1; }
+  done
+}
+
+@test "confirming straight away installs exactly the default modules" {
+  keep_defaults; submit; raw $'y\n'; run_keys
+  expected=$(for m in $(prompt_module_names); do if defaults | grep -qx "$m"; then printf '"%s",' "$m"; fi; done)
+  [ "$output" = "[${expected%,}]" ]
+}
+
+@test "a default can be untoggled" {
+  keep_defaults; pick editor; submit; raw $'y\n'; run_keys
+  [[ "$output" != *'"editor"'* ]]
+  [[ "$output" == *'"atuin"'* ]]
 }

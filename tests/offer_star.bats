@@ -33,12 +33,12 @@ STUB
   ANSWER="$BATS_TEST_TMPDIR/answer"
 }
 
-# run_offer ANSWER_TEXT [VAR=VALUE ...] — run with a stubbed PATH, the answer
+# run_offer ANSWER_TEXT ("<eof>" feeds no answer at all) [VAR=VALUE ...] — run with a stubbed PATH, the answer
 # fed through the fake terminal and no CI variables.
 run_offer() {
   local answer="$1"
   shift
-  printf '%s\n' "$answer" > "$ANSWER"
+  if [ "$answer" = "<eof>" ]; then : > "$ANSWER"; else printf '%s\n' "$answer" > "$ANSWER"; fi
   run env -i PATH="$STUBS:/usr/bin:/bin" HOME="$BATS_TEST_TMPDIR" \
     ARTEFILES_TTY="$ANSWER" "$@" sh "$SCRIPT"
 }
@@ -57,14 +57,20 @@ puts() { grep -c '^gh api -X PUT' "$CALLS" || true; }
   [ -z "$output" ]
 }
 
-@test "an empty answer stars nothing and says how to star later" {
+@test "an empty answer stars the repository once" {
   run_offer ""
+  [ "$status" -eq 0 ]
+  [ "$(puts)" = "1" ]
+}
+
+@test "input that ends without an answer stars nothing and says how to star later" {
+  run_offer "<eof>"
   [ "$status" -eq 0 ]
   [ "$(puts)" = "0" ]
   [[ "$output" == *"artefactory/artefiles"* ]]
 }
 
-@test "anything other than y or yes stars nothing" {
+@test "any other answer than Enter, y or yes stars nothing" {
   for answer in n no N maybe " " yep "y es"; do
     run_offer "$answer"
     [ "$status" -eq 0 ]

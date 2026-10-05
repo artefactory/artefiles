@@ -32,8 +32,8 @@ sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main
 This is the recommended path. The script:
 1. Installs [GitHub CLI](https://cli.github.com/) if not already present
 2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
-3. Installs [chezmoi](https://chezmoi.io/), asks which optional modules to install with a checklist (`[x]` will be installed, `[ ]` will not, then a confirmation), and runs `chezmoi init --apply`
-4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to No, and nothing is asked in CI or Codespaces)
+3. Installs [chezmoi](https://chezmoi.io/), asks which optional modules to install with a checklist (`[x]` will be installed, `[ ]` will not, then a confirmation; the editor, git tools, atuin, Python tools and gcloud start selected), and runs `chezmoi init --apply`
+4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to Yes: press Enter to accept, and nothing is asked in CI or Codespaces)
 
 > **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
 > `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email.
@@ -134,7 +134,7 @@ Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, dir
 
 ### Optional Modules
 
-`install.sh` shows them as a checklist before anything is installed: `[x]` means the module will be installed, `[ ]` that it will not. Move with the up and down arrows (or `k` and `j`), press space to toggle the module under the pointer, `n` to clear the selection, `q` to cancel, and Enter on the Submit row to continue and confirm the summary. Choosing one module of an alternative pair deselects the other. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
+`install.sh` shows them as a checklist before anything is installed (editor, git_advanced, atuin, python_dev and gcloud start selected): `[x]` means the module will be installed, `[ ]` that it will not. Move with the up and down arrows (or `k` and `j`), press space to toggle the module under the pointer, `n` to clear the selection, `q` to cancel, and Enter on the Submit row to continue and confirm the summary. Choosing one module of an alternative pair deselects the other. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
 
 | Module | Description | Alternative to |
 |--------|-------------|----------------|
@@ -261,7 +261,7 @@ VS Code is not installed by this setup; these files apply when you install it yo
 
 ### 1. Change Default Shell to Fish (Required for Full Experience)
 
-`install.sh` asks as its very last step whether to make Fish your default shell. Changing it runs `sudo` and `chsh`, so the default answer is No, and nothing is asked in CI, in Codespaces or without a terminal. `chezmoi apply` itself never changes your shell.
+`install.sh` asks as its very last step whether to make Fish your default shell. Changing it runs `sudo` and `chsh`, so it asks first (Enter accepts, anything but y, yes or Enter declines), and nothing is asked in CI, in Codespaces or without a terminal. `chezmoi apply` itself never changes your shell.
 
 If you declined, or installed with `chezmoi init --apply` directly, set Fish as your default login shell yourself:
 
