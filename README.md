@@ -221,6 +221,17 @@ VS Code is not installed by this setup; these files apply when you install it yo
 - [Presets gallery](https://starship.rs/presets/) - ready-made prompt styles
 - [Catppuccin theme](https://github.com/catppuccin/starship) - palette currently in use
 
+### Running bash snippets in Fish
+
+Fish is not bash, but recent releases accept part of its syntax. Checked on fish 4.9.2 (`fish --version`; older releases accept less):
+
+Works in Fish as is: `$(...)` (since 3.4), `a && b || c`, `FOO=1 cmd`, `export FOO=3`, `{ a; b }` (since 4.1), `cmd1 |& cmd2`.
+
+Still fails: `if ...; then ...; fi`, `for x in ...; do ...; done`, `VAR=$(cmd)`, `$((1 + 2))`, `f() { ...; }` and sourcing a bash file. For these, the [replay.fish](https://github.com/jorgebucaran/replay.fish) plugin (installed through `fish_plugins`, pure Fish) runs a snippet in bash and copies its environment changes into your Fish session:
+- `replay 'source "$NVM_DIR/nvm.sh"'`: load a bash tool's environment script (nvm and similar). Python virtualenvs ship a Fish script, so use `source .venv/bin/activate.fish` instead
+- `replay 'export FOO=3'`: set a variable from bash
+- `bash script.sh`, or any script with a `#!/bin/bash` shebang: runs in bash with no plugin needed
+
 ### Development Tools
 - `~/.config/bat/config` - Syntax highlighter configuration ([Bat Documentation](https://github.com/sharkdp/bat))
 - `~/.config/direnv/direnvrc` - Environment management ([Direnv Documentation](https://direnv.net/))
