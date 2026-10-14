@@ -300,6 +300,20 @@ fi
 
 echo "Running 'chezmoi $*'" >&2
 [ "$dry_run" = "true" ] && exit 0
+
+# chezmoi looks up the latest GitHub releases through the GitHub API, which
+# allows 60 requests per hour per IP address without a token, and an office
+# often shares one address. gh is already logged in, so lend its token to chezmoi
+# unless one is set; it lives only in this process's environment.
+if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITHUB_ACCESS_TOKEN:-}" ] && [ -z "${CHEZMOI_GITHUB_ACCESS_TOKEN:-}" ]; then
+  gh_token="$(gh auth token 2> /dev/null || true)"
+  if [ -n "$gh_token" ]; then
+    GITHUB_TOKEN="$gh_token"
+    export GITHUB_TOKEN
+  fi
+  unset gh_token
+fi
+
 "$chezmoi" "$@"
 
 # Last step, only reached once chezmoi succeeded (set -e): the login shell
