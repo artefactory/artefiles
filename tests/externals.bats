@@ -87,3 +87,19 @@ tomllib.loads(sys.stdin.read())
 
   if printf '%s\n' "$rendered" | grep -qF '".local/bin/jj"'; then return 1; fi
 }
+
+@test "fnm is installed on linux with no modules, from its release asset for the host arch" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+
+  render_externals "$H"
+
+  printf '%s\n' "$rendered" | grep -qF '[".local/bin/fnm"]'
+  fnm_url=$(printf '%s\n' "$rendered" | grep -A2 -F '[".local/bin/fnm"]' | grep '^  url = ')
+  [[ "$fnm_url" == *"github.com/Schniz/fnm/releases/download/"* ]]
+  if [ "$(chezmoi execute-template '{{ .chezmoi.arch }}')" = "amd64" ]; then
+    [[ "$fnm_url" == *"/fnm-linux.zip"* ]]
+  else
+    [[ "$fnm_url" == *"/fnm-arm64.zip"* ]]
+  fi
+}

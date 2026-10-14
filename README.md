@@ -170,6 +170,7 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
   - `fzf` - Fuzzy finder for quickly searching through files and command history. Also rebound onto Tab as the completion picker: every fish completion — commands, subcommands, flags, and flag values — opens in fzf instead of fish's native pager, with live re-filtering as you type
   - `rip` - Safe `rm` replacement with a recoverable graveyard
   - `ripgrep` - Lightning-fast text search across files
+- 🟢 **[fnm](https://github.com/Schniz/fnm)** - Node.js version manager that works natively in Fish; the install adds the current Node.js LTS (needed by the nvim language servers and `prettier`) and `.node-version` files switch versions per project
 - 🌟 **[Catppuccin](https://github.com/catppuccin/catppuccin)** - A beautiful, consistent color theme applied across all tools for a cohesive look
 
 ### Optional Module Highlights

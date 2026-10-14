@@ -18,10 +18,6 @@ section() {
   if grep -rqi 'bass' "$REPO_ROOT/dot_config/fish/fish_plugins" "$REPO_ROOT/dot_config/fish/config.fish.tmpl" "$README"; then return 1; fi
 }
 
-@test "the nvm integration only uses replay once the plugin is installed" {
-  grep -qE 'functions -q replay' "$REPO_ROOT/dot_config/fish/config.fish.tmpl"
-}
-
 @test "the README documents running bash snippets from fish" {
   body=$(section "Running bash snippets in Fish")
   [ -n "$body" ]

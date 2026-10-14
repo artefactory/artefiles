@@ -36,6 +36,7 @@ packages:
         - 'rust'
         - 'gh'
         - 'mergiraf'
+        - 'fnm'
       casks:
         - 'font-fira-code-nerd-font'
     modules:

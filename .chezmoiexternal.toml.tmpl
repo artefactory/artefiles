@@ -89,6 +89,13 @@
   executable = true
 # [[ end ]] #
 
+# fnm - Fast Node Manager; run_onchange_after_install-node.sh installs Node LTS with it
+[".local/bin/fnm"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "Schniz/fnm" (eq .chezmoi.arch "amd64" | ternary "fnm-linux.zip" "fnm-arm64.zip") | quote ]] #
+  executable = true
+  path = "fnm"
+
 # fzf - A command-line fuzzy finder
 [".local/bin/fzf"]
   type = "archive-file"
