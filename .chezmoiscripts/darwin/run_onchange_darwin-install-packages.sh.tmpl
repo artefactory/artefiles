@@ -1,13 +1,22 @@
 #!/bin/bash
 
+# A package named owner/tap/name only resolves once its tap is added, so a
+# module that uses one lists the tap and it is declared before any package.
 brew bundle --upgrade --force --file=/dev/stdin << EOF
+{{- $modules := .modules }}
+{{- range $name, $pkgs := .packages.darwin.modules }}
+{{-   if has $name $modules }}
+{{-     range (index $pkgs "taps") }}
+tap {{ . | quote }}
+{{-     end }}
+{{-   end }}
+{{- end }}
 {{- range .packages.darwin.core.brews }}
 brew {{ . | quote }}
 {{- end }}
 {{- range .packages.darwin.core.casks }}
 cask {{ . | quote }}
 {{- end }}
-{{- $modules := .modules }}
 {{- range $name, $pkgs := .packages.darwin.modules }}
 {{-   if has $name $modules }}
 {{-     range $pkgs.brews }}

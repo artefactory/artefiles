@@ -71,3 +71,38 @@ setup() {
     done <<< "$casks"
   done <<< "$modules"
 }
+
+# every_qualified_package — "module owner/tap/name" for each brew or cask named
+# through a third-party tap.
+every_qualified_package() {
+  yq -r '.packages.darwin.modules | to_entries[] | .key as $m | ((.value.brews // []) + (.value.casks // []))[] | select(test("^[^/]+/[^/]+/[^/]+$")) | $m + " " + .' \
+    "$REPO_ROOT/.chezmoidata/packages.yaml"
+}
+
+@test "every package from a third-party tap has its tap declared in the same module" {
+  [ -n "$(every_qualified_package)" ]
+  while read -r module pkg; do
+    tap="${pkg%/*}"
+    yq -e ".packages.darwin.modules.$module.taps | contains([\"$tap\"])" "$REPO_ROOT/.chezmoidata/packages.yaml" > /dev/null \
+      || { echo "$module: $pkg needs the tap $tap" >&2; return 1; }
+  done < <(every_qualified_package)
+}
+
+@test "a selected module declares its tap before any package" {
+  while read -r module pkg; do
+    H=$(mk_fake_home "$BATS_TEST_TMPDIR/on-$module")
+    seed_chezmoi_config "$H" "{\"modules\":[\"$module\"]}"
+    rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
+    tap_line=$(printf '%s\n' "$rendered" | grep -nxF "tap \"${pkg%/*}\"" | head -1 | cut -d: -f1)
+    pkg_line=$(printf '%s\n' "$rendered" | grep -nE "^(brew|cask) \"$pkg\"$" | head -1 | cut -d: -f1)
+    [ -n "$tap_line" ] && [ -n "$pkg_line" ] && [ "$tap_line" -lt "$pkg_line" ] \
+      || { echo "$module: tap ${pkg%/*} is not declared before $pkg" >&2; return 1; }
+  done < <(every_qualified_package)
+}
+
+@test "no tap is declared when no module needs one" {
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/none")
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
+  if printf '%s\n' "$rendered" | grep -q '^tap '; then return 1; fi
+}
