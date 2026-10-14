@@ -3,8 +3,17 @@ sourceDir = # [[ .chezmoi.sourceDir | quote ]] #
 
 [data]
 name = # [[ output "gh" "api" "user" "--jq" ".login" | trim | quote ]] #
+# The default email is the public GitHub one, else firstname.lastname@<company>
+# built from a profile name of exactly two plain words; any other name gets no
+# guess rather than a wrong address.
+# [[ $companyDomain := "artefact.com" ]] #
 # [[ $ghEmail := output "gh" "api" "user" "--jq" ".email // empty" | trim ]] #
-email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter to accept)" $ghEmail) $ghEmail | quote ]] #
+# [[ $ghName := output "gh" "api" "user" "--jq" ".name // empty" | trim ]] #
+# [[ $defaultEmail := $ghEmail ]] #
+# [[ if and (not $defaultEmail) (regexMatch "^[A-Za-z-]+ [A-Za-z-]+$" $ghName) ]] #
+# [[ $defaultEmail = printf "%s@%s" ($ghName | lower | replace " " ".") $companyDomain ]] #
+# [[ end ]] #
+email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter to accept)" $defaultEmail) $defaultEmail | quote ]] #
 # Set the desired credential helper.
 # Examples: "!gh auth git-credential", "osxkeychain", "cache --timeout=3600"
 credentialHelper = "!gh auth git-credential"
