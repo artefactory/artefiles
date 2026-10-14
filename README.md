@@ -36,7 +36,7 @@ This is the recommended path. The script:
 4. As its very last step, asks whether to make Fish your default shell and whether to star this repository (both answers default to Yes: press Enter to accept, and nothing is asked in CI or Codespaces)
 
 > **Why not `curl get.chezmoi.io | sh ... init --apply` directly?**
-> `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email.
+> `.chezmoi.toml.tmpl` calls `gh api user` at init time to pre-populate your name and email. The email offered is your public GitHub one; without it, a profile name of exactly two plain words gives `firstname.lastname@artefact.com`, and any other name gets no guess. You can always type another address.
 > GitHub CLI must be installed and authenticated *before* `chezmoi init` runs.
 > `install.sh` enforces that order; the chezmoi-direct path does not.
 
