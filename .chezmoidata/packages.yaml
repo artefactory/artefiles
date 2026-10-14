@@ -49,6 +49,8 @@ packages:
         casks:
           - 'ghostty'
       cmux:
+        taps:
+          - 'manaflow-ai/cmux'
         brews: []
         casks:
           - 'manaflow-ai/cmux/cmux'
@@ -82,6 +84,8 @@ packages:
           - 'colima'
         casks: []
       terraform:
+        taps:
+          - 'hashicorp/tap'
         brews:
           - 'hashicorp/tap/terraform'
         casks: []
