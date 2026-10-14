@@ -158,7 +158,58 @@ ensure_github_auth() {
   exit 1
 }
 
+# True when someone can answer prompts: a terminal on stdin, stdout and stderr,
+# and neither CI nor Codespaces, which win even with a terminal attached.
+# ARTEFILES_SELECT_TTY only exists so tests can stand in for the terminal.
+interactive=false
+if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ]; then
+  interactive=false
+elif [ -n "${ARTEFILES_SELECT_TTY:-}" ]; then
+  interactive=true
+elif [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
+  interactive=true
+fi
+
+# Homebrew's installer and some casks need sudo. With no ticket each asks on its
+# own, often behind scrolling output so the install looks stuck. Ask once, up
+# front, then refresh the ticket until the install ends. Only on macOS, at a
+# terminal, and never in dry-run: elsewhere nothing before the final shell offer
+# uses sudo.
+sudo_keepalive_pid=""
+stop_sudo_keepalive() {
+  if [ -n "$sudo_keepalive_pid" ]; then
+    kill "$sudo_keepalive_pid" 2> /dev/null || :
+    sudo_keepalive_pid=""
+  fi
+}
+start_sudo_keepalive() {
+  [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] || return 0
+  [ "$(uname)" = "Darwin" ] && command -v sudo > /dev/null 2>&1 || return 0
+  echo "Some steps need administrator rights: enter your password once if asked." >&2
+  if ! sudo -v; then
+    cat >&2 << 'MSG'
+Your account may not be allowed to use sudo (a managed Mac can remove it).
+Homebrew and casks such as ghostty will fail without it. Ask your IT team to
+restore administrator rights, then run the install again. Continuing anyway.
+MSG
+    return 0
+  fi
+  # $$ is the install's pid even in the subshell, so the loop ends with it.
+  (
+    while kill -0 "$$" 2> /dev/null; do
+      sleep "${ARTEFILES_SUDO_REFRESH:-50}"
+      sudo -n -v 2> /dev/null || exit 0
+    done
+  ) &
+  sudo_keepalive_pid=$!
+}
+trap stop_sudo_keepalive EXIT
+trap 'stop_sudo_keepalive; exit 130' INT
+trap 'stop_sudo_keepalive; exit 143' TERM
+trap 'stop_sudo_keepalive; exit 129' HUP
+
 # Install Homebrew first on macOS so chezmoi scripts inherit brew on PATH
+start_sudo_keepalive
 install_homebrew
 if [ "$(uname)" = "Darwin" ]; then
   # A fresh `install_homebrew` writes brew to /opt/homebrew/bin (Apple
@@ -212,12 +263,6 @@ script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 # here and store the answer; chezmoi init then reuses it without prompting. Only
 # at a terminal, never in CI, and never over an existing chezmoi config.
 chezmoi_config="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi/chezmoi.toml"
-interactive=false
-if [ -n "${ARTEFILES_SELECT_TTY:-}" ]; then
-  interactive=true
-elif [ -z "${CI:-}" ] && [ -z "${CODESPACES:-}" ] && [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
-  interactive=true
-fi
 if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_config" ]; then
   # The Quick Start has no checkout: clone with gh so the checklist is available.
   if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
