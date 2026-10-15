@@ -346,6 +346,12 @@ The install's own steps are shown too: the module checklist (arrows and space to
 - [CHEATSHEET.md](CHEATSHEET.md) - Common commands and shortcuts
 - [CHANGELOG.md](CHANGELOG.md) - Version history and updates
 
+## Releases
+
+Releases use [calendar versioning](https://calver.org/): `YYYY.MM.PATCH`, the year and month of the release and a counter that restarts at 0 each month (`2026.10.0`, `2026.10.1`, `2026.11.0`). The version exists only as a git tag (`v2026.10.0`).
+
+Label a pull request `release` and merging it tags `main` and publishes a GitHub release whose notes are the commits since the previous tag, grouped by [git-cliff](https://git-cliff.org/). Every pull request shows the entry it adds in its "Changelog entry" job summary. To release a commit already on `main`, run `gh workflow run release.yaml --ref main`.
+
 ## License
 
 MIT

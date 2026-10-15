@@ -1,0 +1,44 @@
+name: Changelog preview
+
+# Shows, in the job summary, the changelog entry this pull request adds, so the author
+# sees how the commit messages read before the release notes are written from them.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Pinned so the preview matches what the release workflow publishes (release.yaml pins
+# the same version).
+env:
+  GIT_CLIFF_VERSION: "2.12.0"
+
+concurrency:
+  group: changelog-preview-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
+
+      - name: Render the entry for this pull request
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # -o overrides the `output = "CHANGELOG.md"` of cliff.toml, which would
+          # otherwise rewrite the file on the runner and print nothing.
+          uvx "git-cliff@${GIT_CLIFF_VERSION}" --strip all -o "$RUNNER_TEMP/entry.md" "origin/${BASE}..${HEAD_SHA}"
+          {
+            echo "## Changelog entry for this pull request"
+            echo
+            cat "$RUNNER_TEMP/entry.md"
+          } >> "$GITHUB_STEP_SUMMARY"
