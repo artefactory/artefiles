@@ -291,6 +291,7 @@ sourceDir = "${copy}"
 name = "sandbox"
 email = "sandbox@example.com"
 credentialHelper = "cache"
+modulesVersion = $(cat "${source_dir}/.chezmoitemplates/modulesVersion")
 modules = ${module_list}
 CONFIG
   # The seeded config always differs from the template, which makes chezmoi warn
