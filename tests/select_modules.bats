@@ -164,11 +164,6 @@ run_keys() {
   if chezmoi_managed "$H" | grep -F 'select-modules'; then return 1; fi
 }
 
-@test "the README explains the checklist" {
-  grep -qF '[x]' "$REPO_ROOT/README.md"
-  grep -qi 'checklist' "$REPO_ROOT/README.md"
-}
-
 @test "a Submit row closes the list and has no checkbox" {
   reset_keys; submit; raw $'y\n'; run_keys
   last=$(printf '%s\n' "$ui" | grep -E '^[> ] \[ Submit \]' | head -1)
@@ -219,4 +214,16 @@ defaults() {
   keep_defaults; pick editor; submit; raw $'y\n'; run_keys
   [[ "$output" != *'"editor"'* ]]
   [[ "$output" == *'"atuin"'* ]]
+}
+
+# A bare `chezmoi init` (no install.sh) asks the same question; pressing Enter at
+# the module prompt must give the same defaults. No gh on PATH: the profile calls
+# fall back to empty, so nothing leaves the machine.
+@test "a bare chezmoi init preselects the default modules" {
+  H=$(mk_fake_home)
+  run env -i HOME="$H" XDG_CONFIG_HOME="$H/.config" PATH="$(dirname "$(command -v chezmoi)"):/usr/bin:/bin" \
+    sh -c "printf '\n\n' | chezmoi init --no-tty --source '$REPO_ROOT' --config-path '$H/.config/chezmoi/chezmoi.toml' --destination '$H/dest' --exclude=externals"
+  [ "$status" -eq 0 ]
+  expected=$(for m in $(prompt_module_names); do if defaults | grep -qx "$m"; then printf '"%s",' "$m"; fi; done)
+  grep -qxF "modules = [${expected%,}]" "$H/.config/chezmoi/chezmoi.toml"
 }

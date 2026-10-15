@@ -130,25 +130,30 @@ Artefiles uses a **core + opt-in modules** design. During `chezmoi init`, you se
 
 ### Core (always installed)
 
-Fish, Starship, Git, bat, eza, fd, fzf, ripgrep, zoxide, rip2, dust, bottom, direnv, uv, Rust, FiraCode Nerd Font.
+Fish, Starship, Git, GitHub CLI, mergiraf, uv, fnm and the FiraCode Nerd Font. The checklist lists them above the choices.
 
 ### Optional Modules
 
-`install.sh` shows them as a checklist before anything is installed (editor, git_advanced, atuin, python_dev and gcloud start selected): `[x]` means the module will be installed, `[ ]` that it will not. Move with the up and down arrows (or `k` and `j`), press space to toggle the module under the pointer, `n` to clear the selection, `q` to cancel, and Enter on the Submit row to continue and confirm the summary. Choosing one module of an alternative pair deselects the other. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
+`install.sh` shows them as a checklist before anything is installed; the screen explains its own keys. Without a terminal (CI, Codespaces) chezmoi's own prompt is used instead.
 
 | Module | Description | Alternative to |
 |--------|-------------|----------------|
 | `editor` | Neovim: modal terminal editor with the team configuration (nvim) | — |
+| `shell_tools` | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd) | — |
+| `cli_extras` | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2 | — |
+| `rust` | Rust toolchain (rustup, cargo) to build Rust tools | — |
 | `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | `cmux` |
 | `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | `ghostty` |
-| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, tuicr (review TUI) | — |
+| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras | — |
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
+| `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | — |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
 | `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | — |
-| `colima` | Colima: lightweight container runtime for Docker (macOS only) | — |
+| `containers` | Containers on macOS: Colima (runtime) and the docker CLI | — |
 | `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
+| `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 | `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 
 > The `terminal` module is now called `ghostty` (an existing `terminal` selection is renamed on the next `chezmoi init`). The `multiplexer` module is gone: Zellij now comes with `ghostty`, so select `ghostty` to keep it. `cmux` does not install Zellij.
@@ -176,10 +181,10 @@ Re-run `chezmoi init` to update your module selection, then `chezmoi apply`.
 ### Optional Module Highlights
 
 - 📝 **[Neovim](https://neovim.io/)** (`editor`) - A powerful text editor with syntax highlighting, plugins, and modern features
-- 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
+- 🔄 **Advanced Git** (`git_advanced`) - [difftastic](https://github.com/Wilfred/difftastic), [git-cliff](https://git-cliff.org/), [Git LFS](https://git-lfs.com/), [git-extras](https://github.com/tj/git-extras) (~80 helper subcommands like `git summary`, `git undo`, `git ignore`, `git wip`), and, with the `review` module, [tuicr](https://tuicr.dev/) - a vim-keybinding code review TUI (works with git), wired up as the `review` fish command: `review` (uncommitted changes), `review file <path>`, `review branch [base]`, `review commit [rev]`, `review pr <n>`, `review list`, `review comments` — `review <Tab>` opens the fzf picker with a description for each
 - 📊 **Jupyter Notebook Support** (`python_dev`) - nbdime via uv
 - 🪝 **Git Hooks** (`pre_commit` or `prek`) - [pre-commit](https://pre-commit.com/), or [prek](https://github.com/j178/prek), a faster Rust drop-in replacement (choose one); installed with uv, and the global hooks in `~/.git_template` make every new repository run its `.pre-commit-config.yaml`
-- 🐋 **Container Development** (`cloud`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
+- 🐋 **Container Development** (`containers`) - [Colima](https://github.com/abiosoft/colima) for running Docker containers on macOS without Docker Desktop
 - ⏰ **Shell History** (`atuin`) - [Atuin](https://atuin.sh/) syncs your command history across machines with powerful search
 - 📁 **Smart Navigation** - [Zoxide](https://github.com/ajeetdsouza/zoxide) learns your most-used directories for instant navigation
 
@@ -211,7 +216,7 @@ VS Code is not installed by this setup; these files apply when you install it yo
 - `~/.config/fish/functions/fuzzy_complete.fish` - Tab completion picker backed by fzf, plus its helpers (`_fuzzy_complete_render.fish`, `_fuzzy_complete_insert.fish`, `__cached_init.fish`)
 - `~/.config/fish/completions/cd.fish` - Zoxide-ranked `cd` completions, with an unambiguous-jump shortcut that skips the picker
 - `~/.config/fish/conf.d/direnv.fish` - Defers direnv's shell hook to the first prompt instead of every startup
-- `~/.config/fish/functions/review.fish` and `~/.config/fish/completions/review.fish` - The `review` command wrapping tuicr (requires `git_advanced` module)
+- `~/.config/fish/functions/review.fish` and `~/.config/fish/completions/review.fish` - The `review` command wrapping tuicr (requires `review` module)
 - `~/.config/fish/functions/__atuin_fzf_search.fish`, `__atuin_fzf_up.fish` and `~/.config/fish/scripts/atuin_fzf_list.sh` - Atuin history rendered through fzf, bound to Ctrl+R/Alt+R/Alt+F and up-arrow (requires `atuin` module and `perl`, present by default on macOS and mainstream Linux distros)
 
 ### Shell Prompt
@@ -242,7 +247,7 @@ Bash functions are not copied, so a tool that exists only as a bash function (nv
 - `~/.config/direnv/direnvrc` - Environment management ([Direnv Documentation](https://direnv.net/))
 - `~/.config/uv/uv.toml` - Python package manager configuration ([uv Documentation](https://docs.astral.sh/uv/))
 - `~/.config/atuin/config.toml` - Shell history sync ([Atuin Documentation](https://atuin.sh/)) (requires `atuin` module)
-- `~/.config/tuicr/config.toml` - Code review TUI configuration ([tuicr Documentation](https://tuicr.dev/)) (requires `git_advanced` module)
+- `~/.config/tuicr/config.toml` - Code review TUI configuration ([tuicr Documentation](https://tuicr.dev/)) (requires `review` module)
 - `~/.config/nvim/init.lua` - Neovim editor configuration ([Neovim Documentation](https://neovim.io/doc/)) (requires `editor` module)
 
 ## Common Tasks

@@ -1,4 +1,5 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# [[ $modules := includeTemplate "modules" . | fromJson ]] #
 # [[ if eq .chezmoi.os "linux" ]] #
 # External dependencies managed by chezmoi for Linux systems
 # Reference: https://www.chezmoi.io/reference/special-files-and-directories/chezmoiexternal-format/
@@ -6,7 +7,7 @@
 # [[ $rustArch := (eq .chezmoi.arch "amd64" | ternary "x86_64" "aarch64") ]] #
 # [[ $fzfArch := (eq .chezmoi.arch "amd64" | ternary "amd64" "arm64") ]] #
 
-# [[ if has "editor" .modules ]] #
+# [[ if has "editor" $modules ]] #
 # Neovim AppImage
 [".local/bin/nvim"]
   type = "file"
@@ -15,13 +16,16 @@
   executable = true
 # [[ end ]] #
 
+# [[ if has "shell_tools" $modules ]] #
 # eza - A modern replacement for 'ls'
 [".local/bin/eza"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "eza-community/eza" (printf "eza_%s-unknown-linux-gnu.zip" $rustArch) | quote ]] #
   executable = true
   path = "eza"
+# [[ end ]] #
 
+# [[ if has "shell_tools" $modules ]] #
 # bat - A cat clone with syntax highlighting
 [".local/bin/bat"]
   type = "archive-file"
@@ -29,7 +33,9 @@
   executable = true
   stripComponents = 1
   path = "bat"
+# [[ end ]] #
 
+# [[ if has "shell_tools" $modules ]] #
 # fd - A simple, fast and user-friendly alternative to 'find'
 [".local/bin/fd"]
   type = "archive-file"
@@ -37,6 +43,7 @@
   executable = true
   stripComponents = 1
   path = "fd"
+# [[ end ]] #
 
 # mergiraf - A syntax-aware merge tool
 # Hosted on Codeberg, which has no chezmoi helper analogous to
@@ -48,7 +55,7 @@
   executable = true
   path = "mergiraf"
 
-# [[ if has "git_advanced" .modules ]] #
+# [[ if has "git_advanced" $modules ]] #
 # difftastic - A structural diff tool
 [".local/bin/difft"]
   type = "archive-file"
@@ -65,7 +72,7 @@
   path = "git-lfs"
 # [[ end ]] #
 
-# [[ if or (has "ghostty" .modules) (has "terminal" .modules) ]] #
+# [[ if or (has "ghostty" $modules) (has "terminal" $modules) ]] #
 # zellij - A terminal workspace with batteries included
 [".local/bin/zellij"]
   type = "archive-file"
@@ -81,7 +88,7 @@
   executable = true
   path = "starship"
 
-# [[ if or (has "ghostty" .modules) (has "terminal" .modules) ]] #
+# [[ if or (has "ghostty" $modules) (has "terminal" $modules) ]] #
 # ghostty - A fast, feature-rich, and cross-platform terminal emulator
 [".local/bin/ghostty"]
   type = "file"
@@ -96,14 +103,16 @@
   executable = true
   path = "fnm"
 
+# [[ if has "shell_tools" $modules ]] #
 # fzf - A command-line fuzzy finder
 [".local/bin/fzf"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "junegunn/fzf" (printf "fzf-*-%s_%s.tar.gz" "linux" $fzfArch) | quote ]] #
   executable = true
   path = "fzf"
+# [[ end ]] #
 
-# [[ if has "atuin" .modules ]] #
+# [[ if has "atuin" $modules ]] #
 # atuin - Magical shell history
 [".local/bin/atuin"]
   type = "archive-file"
@@ -113,12 +122,14 @@
   path = "atuin"
 # [[ end ]] #
 
+# [[ if has "shell_tools" $modules ]] #
 # zoxide - A smarter cd command
 [".local/bin/zoxide"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "ajeetdsouza/zoxide" (printf "zoxide-*-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "zoxide"
+# [[ end ]] #
 
 # uv - An extremely fast Python package installer and resolver
 [".local/bin/uv"]
@@ -135,6 +146,7 @@
   stripComponents = 1
   path = "uvx"
 
+# [[ if has "cli_extras" $modules ]] #
 # dust - More intuitive version of du in Rust
 [".local/bin/dust"]
   type = "archive-file"
@@ -142,28 +154,35 @@
   executable = true
   stripComponents = 1
   path = "dust"
+# [[ end ]] #
 
+# [[ if has "cli_extras" $modules ]] #
 # bottom - A customizable cross-platform graphical process/system monitor
 [".local/bin/btm"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "ClementTsang/bottom" (printf "bottom_%s-unknown-linux-*.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "btm"
+# [[ end ]] #
 
+# [[ if has "cli_extras" $modules ]] #
 # rip2 - A safe and ergonomic rm replacement (binary name: rip)
 [".local/bin/rip"]
   type = "archive-file"
   url = # [[ gitHubLatestReleaseAssetURL "MilesCranmer/rip2" (printf "rip-Linux-%s-*.tar.gz" $rustArch) | quote ]] #
   executable = true
   path = "rip"
+# [[ end ]] #
 
+# [[ if has "shell_tools" $modules ]] #
 # direnv - Unclutter your .profile
 [".local/bin/direnv"]
   type = "file"
   url = # [[ gitHubLatestReleaseAssetURL "direnv/direnv" (printf "direnv.linux-%s" .chezmoi.arch) | quote ]] #
   executable = true
+# [[ end ]] #
 
-# [[ if has "terraform" .modules ]] #
+# [[ if has "terraform" $modules ]] #
 # Terraform - infrastructure-as-code CLI.
 # HashiCorp releases are not on GitHub, so the version is pinned in
 # .chezmoidata/versions.yaml instead of being looked up at render time.
@@ -174,7 +193,7 @@
   path = "terraform"
 # [[ end ]] #
 
-# [[ if has "opentofu" .modules ]] #
+# [[ if has "opentofu" $modules ]] #
 # OpenTofu - open-source alternative to Terraform
 [".local/bin/tofu"]
   type = "archive-file"

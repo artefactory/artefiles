@@ -26,10 +26,12 @@ mk_fake_home() {
 seed_chezmoi_config() {
   local h="$1" data="${2:-{\}}"
   local cfg="$h/.config/chezmoi/chezmoi.toml"
-  local name email modules
+  local name email modules version
   name=$(printf '%s' "$data" | jq -r '.name // "test-user"')
   email=$(printf '%s' "$data" | jq -r '.email // "test@example.com"')
   modules=$(printf '%s' "$data" | jq -c '.modules // []')
+  # modulesVersion defaults to the current module set; {"modulesVersion":null} omits it, like an old config.
+  version=$(printf '%s' "$data" | jq -r 'if has("modulesVersion") then .modulesVersion else 2 end')
   cat > "$cfg" << EOF
 sourceDir = "$REPO_ROOT"
 
@@ -39,6 +41,7 @@ email = "$email"
 credentialHelper = "cache"
 modules = $modules
 EOF
+  if [ "$version" != null ]; then printf 'modulesVersion = %s\n' "$version" >> "$cfg"; fi
 }
 
 # test_source — echo a copy of the checkout without .chezmoiexternal.toml.tmpl.
@@ -108,6 +111,10 @@ prompt_choices() {
 
 # prompt_module_names — the bare module names offered by the init prompt.
 prompt_module_names() { prompt_choices | sed 's/ | .*//'; }
+
+# all_modules_json — every module the prompt offers, as a JSON array, so "all modules on"
+# tests follow the template instead of a list that goes stale.
+all_modules_json() { prompt_module_names | jq -R . | jq -sc .; }
 
 # prompt_help MODULE — the help text of MODULE (empty when not offered).
 prompt_help() { prompt_choices | sed -n "s/^$1 | //p"; }

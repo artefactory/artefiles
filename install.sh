@@ -277,7 +277,9 @@ if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_c
     case "$status" in
       0)
         mkdir -p "$(dirname "$chezmoi_config")"
-        printf '[data]\n  modules = %s\n' "$selection" > "$chezmoi_config"
+        # The version marks the list as made for the current module set (see .chezmoi.toml.tmpl).
+        version="$(cat "${script_dir}/.chezmoitemplates/modulesVersion")"
+        printf '[data]\n  modulesVersion = %s\n  modules = %s\n' "$version" "$selection" > "$chezmoi_config"
         ;;
       1)
         echo "Installation cancelled." >&2

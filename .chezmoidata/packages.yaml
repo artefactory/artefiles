@@ -17,25 +17,9 @@ packages:
         - 'fish'
         - 'starship'
         - 'git'
-        - 'bat'
-        - 'eza'
-        - 'fd'
-        - 'fzf'
-        - 'ripgrep'
-        - 'zoxide'
-        - 'rip2'
-        - 'dust'
-        - 'dysk'
-        - 'procs'
-        - 'sd'
-        - 'choose-rust'
-        - 'hyperfine'
-        - 'bottom'
-        - 'direnv'
-        - 'uv'
-        - 'rust'
         - 'gh'
         - 'mergiraf'
+        - 'uv'
         - 'fnm'
       casks:
         - 'font-fira-code-nerd-font'
@@ -43,6 +27,35 @@ packages:
       editor:
         brews:
           - 'neovim'
+        casks: []
+      shell_tools:
+        brews:
+          - 'bat'
+          - 'eza'
+          - 'fd'
+          - 'fzf'
+          - 'ripgrep'
+          - 'zoxide'
+          - 'direnv'
+        casks: []
+      cli_extras:
+        brews:
+          - 'rip2'
+          - 'dust'
+          - 'dysk'
+          - 'procs'
+          - 'sd'
+          - 'choose-rust'
+          - 'hyperfine'
+          - 'bottom'
+        casks: []
+      rust:
+        brews:
+          - 'rust'
+        casks: []
+      review:
+        brews:
+          - 'tuicr'
         casks: []
       ghostty:
         brews:
@@ -61,7 +74,6 @@ packages:
           - 'git-cliff'
           - 'git-lfs'
           - 'git-extras'
-          - 'tuicr'
         casks: []
       atuin:
         brews:
@@ -80,9 +92,10 @@ packages:
         brews: []
         casks:
           - 'gcloud-cli'
-      colima:
+      containers:
         brews:
           - 'colima'
+          - 'docker'
         casks: []
       terraform:
         taps:

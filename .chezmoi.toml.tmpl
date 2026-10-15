@@ -25,26 +25,47 @@ email = # [[ promptStringOnce . "email" (printf "Email (default: %s, press enter
 credentialHelper = "!gh auth git-credential"
 # [[ $choices := list ]] #
 # [[ $choices = append $choices "editor | Neovim: modal terminal editor with the team configuration (nvim)" ]] #
+# [[ $choices = append $choices "shell_tools | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd)" ]] #
+# [[ $choices = append $choices "cli_extras | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2" ]] #
+# [[ $choices = append $choices "rust | Rust toolchain (rustup, cargo) to build Rust tools" ]] #
 # [[ $choices = append $choices "ghostty | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one" ]] #
 # [[ $choices = append $choices "cmux | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one" ]] #
-# [[ $choices = append $choices "git_advanced | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, tuicr (review TUI)" ]] #
+# [[ $choices = append $choices "git_advanced | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras" ]] #
 # [[ $choices = append $choices "atuin | Atuin: searchable shell history, synced across machines (Ctrl+R)" ]] #
+# [[ $choices = append $choices "review | tuicr: terminal UI to review a diff, a branch or a pull request (review command)" ]] #
 # [[ $choices = append $choices "python_dev | Python tools: nbdime (notebook diffs), VS Code extensions" ]] #
 # [[ $choices = append $choices "pre_commit | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one" ]] #
 # [[ $choices = append $choices "prek | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one" ]] #
 # [[ $choices = append $choices "gcloud | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources" ]] #
-# [[ $choices = append $choices "colima | Colima: lightweight container runtime for Docker (macOS only)" ]] #
+# [[ $choices = append $choices "containers | Containers on macOS: Colima (runtime) and the docker CLI" ]] #
 # [[ $choices = append $choices "terraform | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one" ]] #
 # [[ $choices = append $choices "opentofu | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one" ]] #
 # Modules that replace each other: selecting both of a pair stops init.
+# Tools every install gets, shown above the checklist.
+# [[ $required := "fish, git, gh, starship, mergiraf, uv and fnm" ]] #
 # Modules the install checklist starts with already selected.
-# [[ $defaults := list "editor" "git_advanced" "atuin" "python_dev" "gcloud" ]] #
+# [[ $defaults := list "editor" "shell_tools" "cli_extras" "rust" "git_advanced" "atuin" "python_dev" "gcloud" ]] #
 # [[ $pairs := list (list "ghostty" "cmux") (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
-# [[ $stored := promptMultichoiceOnce . "modules" "Select optional modules" $choices ]] #
+# The bare `chezmoi init` prompt starts with the same modules checked; the default must be the full choice text.
+# [[ $preselected := list ]] #
+# [[ range $choices ]] #
+# [[ if has (index (splitList " | " .) 0) $defaults ]] #
+# [[ $preselected = append $preselected . ]] #
+# [[ end ]] #
+# [[ end ]] #
+# The saved module list carries the version of the module set it was made for
+# (.chezmoitemplates/modulesVersion). A list saved for an older set is migrated by
+# .chezmoitemplates/modules, the same template that apply and update consult.
+# [[ $modulesVersion := includeTemplate "modulesVersion" . | int ]] #
+# [[ $legacy := and (hasKey . "modules") (lt (int (default 0 (get . "modulesVersion"))) $modulesVersion) ]] #
+# [[ $stored := promptMultichoiceOnce . "modules" "Select optional modules" $choices $preselected ]] #
 # [[ $modules := list ]] #
 # [[ range $stored ]] #
 # [[ $name := index (splitList " | " .) 0 ]] #
 # [[ $modules = append $modules (ternary "ghostty" $name (eq $name "terminal")) ]] #
+# [[ end ]] #
+# [[ if $legacy ]] #
+# [[ $modules = includeTemplate "modules" (dict "modules" $modules) | fromJson ]] #
 # [[ end ]] #
 # [[ $modules = without ($modules | uniq) "multiplexer" ]] #
 # [[ range $pairs ]] #
@@ -52,6 +73,7 @@ credentialHelper = "!gh auth git-credential"
 # [[ fail (printf "%s and %s are alternatives: choose one" (index . 0) (index . 1)) ]] #
 # [[ end ]] #
 # [[ end ]] #
+modulesVersion = # [[ $modulesVersion ]] #
 modules = # [[ $modules | toJson ]] #
 
 # [[ if has "git_advanced" $modules ]] #

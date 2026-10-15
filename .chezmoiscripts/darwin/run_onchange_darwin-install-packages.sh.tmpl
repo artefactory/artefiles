@@ -2,8 +2,8 @@
 
 # A package named owner/tap/name only resolves once its tap is added, so a
 # module that uses one lists the tap and it is declared before any package.
-brew bundle --upgrade --force --file=/dev/stdin << EOF
-{{- $modules := .modules }}
+brew bundle --verbose --upgrade --force --file=/dev/stdin << EOF
+{{- $modules := includeTemplate "modules" . | fromJson }}
 {{- range $name, $pkgs := .packages.darwin.modules }}
 {{-   if has $name $modules }}
 {{-     range (index $pkgs "taps") }}

@@ -29,7 +29,7 @@ STUB
 echo "gh \$*" >> "$CALLS"
 if [ "\$1 \$2" = "repo clone" ]; then
   mkdir -p "\$4"
-  cp "$REPO_ROOT/select-modules.sh" "$REPO_ROOT/.chezmoi.toml.tmpl" "\$4/"
+  cp "$REPO_ROOT/select-modules.sh" "$REPO_ROOT/.chezmoi.toml.tmpl" "\$4/"; mkdir -p "\$4/.chezmoitemplates"; cp "$REPO_ROOT/.chezmoitemplates/modulesVersion" "\$4/.chezmoitemplates/"
 fi
 exit 0
 STUB

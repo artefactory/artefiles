@@ -49,15 +49,15 @@ terminal_restored() {
   in_terminal '[
     ["Select the optional modules","n"],
     ["Selection cleared","\u001b[B"],
-    ["> [ ] ghostty"," "],
-    ["> [x] ghostty","\u001b[A\u001b[A"],
+    ["> [ ] shell_tools"," "],
+    ["> [x] shell_tools","\u001b[A\u001b[A"],
     ["> [ Submit ]","\n"],
     ["Install these modules?","y\n"]
   ]'
   [ "$status" -eq 0 ]
-  [[ "$output" == *"You will install: ghostty"* ]]
+  [[ "$output" == *"You will install: shell_tools"* ]]
   [[ "$output" == *"INSTALL_EXIT=0"* ]]
-  grep -qF 'modules = ["ghostty"]' "$H/.config/chezmoi/chezmoi.toml"
+  grep -qF 'modules = ["shell_tools"]' "$H/.config/chezmoi/chezmoi.toml"
   grep -q '^chezmoi init' "$CALLS"
 }
 

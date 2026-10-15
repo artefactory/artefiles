@@ -1,0 +1,20 @@
+{{- /*
+The module list every template consults, as JSON. Input: the template data.
+A list saved before the module set was split (no modulesVersion, or one below
+the current version) predates shell_tools, cli_extras, rust and review: it gets
+the first three, review when it had git_advanced (tuicr used to belong to it),
+and colima is read as containers. chezmoi re-renders the config file only on
+`chezmoi init`, so apply and update rely on this to keep installing the same tools.
+*/ -}}
+{{- $version := int (includeTemplate "modulesVersion" .) -}}
+{{- $modules := list -}}
+{{- range (default (list) (get . "modules")) -}}
+{{-   $modules = append $modules (ternary "containers" . (eq . "colima")) -}}
+{{- end -}}
+{{- if lt (int (default 0 (get . "modulesVersion"))) $version -}}
+{{-   $modules = concat $modules (list "shell_tools" "cli_extras" "rust") -}}
+{{-   if has "git_advanced" $modules -}}
+{{-     $modules = append $modules "review" -}}
+{{-   end -}}
+{{- end -}}
+{{- $modules | uniq | toJson -}}
