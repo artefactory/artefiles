@@ -10,7 +10,8 @@ setup() {
   load 'helpers/setup'
 }
 
-ALL_MODULES='["editor","ghostty","cmux","git_advanced","atuin","python_dev","gcloud","colima","terraform","opentofu","pre_commit","prek"]'
+# Evaluated per use: the helper needs REPO_ROOT, which setup() loads.
+all_modules() { all_modules_json; }
 
 # Sets $rendered to .chezmoiexternal.toml.tmpl evaluated for home $1. The
 # template is guarded by `eq .chezmoi.os "linux"` and renders empty elsewhere,
@@ -34,7 +35,7 @@ render_externals() {
     skip "python3 not available"
   fi
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" "{\"modules\":$ALL_MODULES}"
+  seed_chezmoi_config "$H" "{\"modules\":$(all_modules)}"
 
   render_externals "$H"
 
@@ -50,7 +51,7 @@ tomllib.loads(sys.stdin.read())
 
 @test "externals.toml urls have no empty arch interpolations" {
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" "{\"modules\":$ALL_MODULES}"
+  seed_chezmoi_config "$H" "{\"modules\":$(all_modules)}"
 
   render_externals "$H"
 
@@ -81,7 +82,7 @@ tomllib.loads(sys.stdin.read())
 
 @test "jj is not installed by the linux externals" {
   H=$(mk_fake_home)
-  seed_chezmoi_config "$H" "{\"modules\":$ALL_MODULES}"
+  seed_chezmoi_config "$H" "{\"modules\":$(all_modules)}"
 
   render_externals "$H"
 

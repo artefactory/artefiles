@@ -1,3 +1,4 @@
+{{- $modules := includeTemplate "modules" . | fromJson -}}
 .github/
 install.sh
 offer-default-shell.sh
@@ -39,23 +40,23 @@ Library/Application Support/Code/User/settings.json
 # Patterns match TARGET paths (chezmoi strips dot_/private_/.tmpl before
 # matching, and run_<modifier>_ from script targets), so use ".config/..."
 # not "dot_config/...".
-{{ if not (has "editor" .modules) }}
+{{ if not (has "editor" $modules) }}
 .config/nvim/**
 {{ end }}
-{{ if not (or (has "ghostty" .modules) (has "terminal" .modules) (has "cmux" .modules)) }}
+{{ if not (or (has "ghostty" $modules) (has "terminal" $modules) (has "cmux" $modules)) }}
 .config/ghostty/**
 {{ end }}
-{{ if not (has "atuin" .modules) }}
+{{ if not (has "atuin" $modules) }}
 .config/atuin/**
 .config/fish/scripts/atuin_fzf_list.sh
 {{ end }}
-{{ if not (has "python_dev" .modules) }}
+{{ if not (has "python_dev" $modules) }}
 .chezmoiscripts/zzzzz_install-python-tools.sh
 {{ end }}
-{{ if not (or (has "pre_commit" .modules) (has "prek" .modules)) }}
+{{ if not (or (has "pre_commit" $modules) (has "prek" $modules)) }}
 .chezmoiscripts/zzzzz_install-git-hooks.sh
 {{ end }}
-{{ if not (has "git_advanced" .modules) }}
+{{ if not (has "review" $modules) }}
 .config/tuicr/**
 .config/fish/functions/review.fish
 .config/fish/completions/review.fish
@@ -64,12 +65,17 @@ Library/Application Support/Code/User/settings.json
 # Per-module linux install scripts. On darwin .chezmoiscripts/linux/** above
 # already excludes them, so only emit these gates on linux.
 {{ if eq .chezmoi.os "linux" }}
-{{   if not (has "gcloud" .modules) }}
+{{   if not (has "gcloud" $modules) }}
 .chezmoiscripts/linux/install-gcloud.sh
 {{   end }}
-{{   if not (has "git_advanced" .modules) }}
+{{   if not (has "git_advanced" $modules) }}
 .chezmoiscripts/linux/install-git-extras.sh
+{{   end }}
+{{   if not (has "review" $modules) }}
 .chezmoiscripts/linux/install-tuicr.sh
+{{   end }}
+{{   if not (has "rust" $modules) }}
+.chezmoiscripts/linux/install-rust.sh
 {{   end }}
 {{ end }}
 

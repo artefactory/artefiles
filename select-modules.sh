@@ -33,6 +33,8 @@ choices=$(sed -nE 's/^# \[\[ \$choices = append \$choices "([^"]*)" \]\] #$/\1/p
 pairs=$(sed -nE 's/^# \[\[ \$pairs := list (.*) \]\] #$/\1/p' "$template" |
   grep -oE '"[a-z_]+" "[a-z_]+"' | tr -d '"')
 # shellcheck disable=SC2016
+required=$(sed -nE 's/^# \[\[ \$required := "(.*)" \]\] #$/\1/p' "$template")
+# shellcheck disable=SC2016 # the pattern matches a literal `$defaults`
 defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$template" | tr -d '"' | tr ' ' ',')
 [ -n "$choices" ] || exit 1
 count=$(printf '%s\n' "$choices" | wc -l | tr -d ' ')
@@ -98,7 +100,8 @@ render() {
   fi
   {
     printf 'Select the optional modules to install\n\n'
-    printf '  [x] will be installed    [ ] will not be installed\n\n'
+    printf '  [x] will be installed    [ ] will not be installed\n'
+    printf '  Always installed: %s\n\n' "$required"
     i=0
     printf '%s\n' "$choices" | while IFS= read -r line; do
       i=$((i + 1))

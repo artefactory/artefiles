@@ -118,7 +118,7 @@ chezmoi purge --force
 | View PR | `ghprv` (alias for `gh pr view`) |
 | List PRs | `ghprl` (alias for `gh pr list`) |
 
-### Code Review (tuicr, `git_advanced` module)
+### Code Review (tuicr, `review` module)
 
 `review <Tab>` opens the fzf picker over these subcommands with descriptions;
 any unrecognized subcommand passes through to `tuicr` directly.
