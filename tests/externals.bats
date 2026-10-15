@@ -104,3 +104,24 @@ tomllib.loads(sys.stdin.read())
     [[ "$fnm_url" == *"/fnm-arm64.zip"* ]]
   fi
 }
+
+@test "ripgrep is installed with the shell_tools module, from its static musl archive" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":["shell_tools"]}'
+
+  render_externals "$H"
+
+  printf '%s\n' "$rendered" | grep -qF '[".local/bin/rg"]'
+  rg_url=$(printf '%s\n' "$rendered" | grep -A2 -F '[".local/bin/rg"]' | grep '^  url = ')
+  [[ "$rg_url" == *"github.com/BurntSushi/ripgrep/releases/download/"* ]]
+  [[ "$rg_url" == *"-unknown-linux-musl.tar.gz"* ]]
+}
+
+@test "ripgrep is not installed without the shell_tools module" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+
+  render_externals "$H"
+
+  if printf '%s\n' "$rendered" | grep -qF '".local/bin/rg"'; then return 1; fi
+}

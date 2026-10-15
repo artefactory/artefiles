@@ -123,6 +123,15 @@
 # [[ end ]] #
 
 # [[ if has "shell_tools" $modules ]] #
+# ripgrep - A fast recursive search tool (binary name: rg). The musl archive is the only
+# x86_64 Linux build ripgrep publishes, and aarch64 has it too, so one pattern fits both.
+[".local/bin/rg"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "BurntSushi/ripgrep" (printf "ripgrep-*-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
+  executable = true
+  stripComponents = 1
+  path = "rg"
+
 # zoxide - A smarter cd command
 [".local/bin/zoxide"]
   type = "archive-file"
