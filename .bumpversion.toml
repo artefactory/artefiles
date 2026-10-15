@@ -1,0 +1,24 @@
+# bump-my-version configuration for the release workflow (.github/workflows/release.yaml).
+#
+# The version is CalVer, YYYY.MM.PATCH: the year and month of the release and a counter
+# that restarts at 0 each month. No file holds it; the current value is read from the
+# most recent v<YYYY>.<MM>.<PATCH> tag reachable from HEAD, and a release only adds a
+# tag, so nothing is committed back to the protected main branch.
+[tool.bumpversion]
+parse = """(?x)
+    (?P<release>
+        (?:[1-9][0-9]{3})\\.     # YYYY.
+        (?:1[0-2]|0[1-9])        # 0M
+    )
+    \\.(?P<patch>\\d+)           # .patch
+"""
+serialize = ["{release}.{patch}"]
+commit = false
+tag = true
+tag_name = "v{new_version}"
+
+[tool.bumpversion.parts.release]
+calver_format = "{YYYY}.{0M}"
+
+[tool.bumpversion.parts.patch]
+first_value = "0"

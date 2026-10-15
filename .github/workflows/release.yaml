@@ -1,0 +1,110 @@
+name: Release
+
+# A merge to main releases only when its pull request carried the `release` label. The
+# tag is created here rather than by hand, and the release notes come from the commits
+# since the previous tag. A release can also be started by hand from main:
+#   gh workflow run release.yaml --ref main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The tools run through uvx at a pinned version, so a release does not change with the
+# latest PyPI upload. changelog-preview.yaml pins the same git-cliff.
+env:
+  BUMP_MY_VERSION_VERSION: "1.5.1"
+  GIT_CLIFF_VERSION: "2.12.0"
+
+# Serialised, not cancelled: two merges landing together must not both compute "the next
+# version" from the same tags.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the tag and create the GitHub release
+      pull-requests: read # find the pull request that carried the label
+    steps:
+      # A push event carries no labels, so the merged pull request is resolved from the
+      # commit. A commit that belongs to no pull request (a direct push) releases
+      # nothing: a version number is spent permanently and cannot be reissued.
+      # Run by hand, the request is the decision; it is refused off main because a tag
+      # on a side branch is not reachable from main.
+      - name: Look for the release label on the merged pull request
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = workflow_dispatch ]; then
+            if [ "$REF" != refs/heads/main ]; then
+              echo "::error::a manual release runs from main only, not $REF"
+              exit 1
+            fi
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          labels=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[].labels[].name] | join(" ")')
+          echo "labels on the merged pull request: ${labels:-<none>}"
+          if printf '%s' "$labels" | tr ' ' '\n' | grep -qx release; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "not labelled release: nothing is tagged or published"
+          fi
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: steps.gate.outputs.release == 'true'
+        with:
+          # The next version and the notes are both read from the tag history.
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
+        if: steps.gate.outputs.release == 'true'
+
+      # The next version is read from the tags by bump-my-version (.bumpversion.toml).
+      # A commit that already carries a release tag has been released: a version number
+      # is spent once, so this stops rather than tagging the same tree twice.
+      - name: Tag this commit
+        id: tag
+        if: steps.gate.outputs.release == 'true'
+        env:
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+        run: |
+          set -euo pipefail
+          if tagged=$(git describe --tags --exact-match --match 'v[0-9]*' HEAD 2> /dev/null); then
+            echo "::error::HEAD is already released as $tagged; nothing to tag"
+            exit 1
+          fi
+          # Annotated tags carry a tagger, which a runner has no identity for by default.
+          # It is the account that triggered the release, under its GitHub noreply address.
+          git config user.name "$ACTOR"
+          git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
+          version=$(uvx "bump-my-version@${BUMP_MY_VERSION_VERSION}" show new_version --increment patch)
+          # --new-version, not a second computation, so the tag is the version shown above.
+          uvx "bump-my-version@${BUMP_MY_VERSION_VERSION}" bump --new-version "$version" patch
+          git push origin "v$version"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      # Created last: a failure before this point leaves a tag but no release to correct,
+      # and the tag itself is already pushed.
+      - name: Publish the GitHub release
+        if: steps.gate.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          uvx "git-cliff@${GIT_CLIFF_VERSION}" --latest --strip all -o RELEASE_NOTES.md
+          gh release create "$TAG" --verify-tag --title "$TAG" --notes-file RELEASE_NOTES.md
