@@ -28,6 +28,59 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# The tag or branch to install: ARTEFILES_VERSION when set, else the latest GitHub
+# release, else (no release, or gh cannot reach it) the default branch with a
+# warning. An explicit value never falls back, so a typo fails instead of
+# installing something else. Prints nothing when the default branch is meant.
+resolve_ref() {
+  if [ -n "${ARTEFILES_VERSION:-}" ]; then
+    # The value reaches git as an argument: refuse anything git could read as an option.
+    case "$ARTEFILES_VERSION" in
+      -* | *[!A-Za-z0-9._/-]*)
+        echo "ARTEFILES_VERSION='${ARTEFILES_VERSION}' is not a valid tag or branch name." >&2
+        return 1
+        ;;
+    esac
+    printf '%s\n' "$ARTEFILES_VERSION"
+    return 0
+  fi
+  # A dry run never calls GitHub.
+  [ "$dry_run" = "true" ] && return 0
+  if tag="$(gh release view --repo artefactory/artefiles --json tagName --jq .tagName 2> /dev/null)" && [ -n "$tag" ]; then
+    printf '%s\n' "$tag"
+  else
+    echo "Could not find the latest release; installing the default branch instead." >&2
+  fi
+}
+
+# Clone the repo at $ref (the default branch when empty) into $1.
+clone_repo() {
+  if [ -n "$ref" ]; then
+    gh repo clone artefactory/artefiles "$1" -- --branch "$ref"
+  else
+    gh repo clone artefactory/artefiles "$1"
+  fi
+}
+
+# Move an existing clone in $1 to $ref, so a re-run with ARTEFILES_VERSION installs
+# that version and not whatever the earlier install left checked out. A tag wins
+# over a branch of the same name. Fails, naming the clone, when $ref does not
+# exist or the working tree has changes that block the checkout.
+checkout_ref() {
+  git -C "$1" fetch --quiet --force --tags origin '+refs/heads/*:refs/remotes/origin/*' || {
+    echo "Could not fetch ${ref} into ${1}." >&2
+    return 1
+  }
+  if ! target="$(git -C "$1" rev-parse --verify --quiet "refs/tags/${ref}^{commit}" || git -C "$1" rev-parse --verify --quiet "refs/remotes/origin/${ref}^{commit}")"; then
+    echo "${ref} is not a tag or branch of artefactory/artefiles." >&2
+    return 1
+  fi
+  git -C "$1" checkout --quiet --detach "$target" || {
+    echo "Could not check out ${ref} in ${1}; commit or stash its changes, or remove the folder." >&2
+    return 1
+  }
+}
+
 # Set bin directory based on OS
 set_bin_dir() {
   if [ "$(uname)" = "Darwin" ]; then
@@ -259,6 +312,15 @@ fi
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
+# A checkout installs itself; only the Quick Start and the manual path fetch a version.
+ref=""
+if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+  [ -z "${ARTEFILES_VERSION:-}" ] || echo "Installing from ${script_dir}; ARTEFILES_VERSION is ignored." >&2
+else
+  ref="$(resolve_ref)"
+  [ -z "$ref" ] || echo "Installing artefiles ${ref}" >&2
+fi
+
 # Module checklist: chezmoi's own prompt does not show what is selected, so ask
 # here and store the answer; chezmoi init then reuses it without prompting. Only
 # at a terminal, never in CI, and never over an existing chezmoi config.
@@ -267,7 +329,11 @@ if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_c
   # The Quick Start has no checkout: clone with gh so the checklist is available.
   if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
     clone_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
-    if [ -f "${clone_dir}/.chezmoi.toml.tmpl" ] || { [ ! -e "$clone_dir" ] && gh repo clone artefactory/artefiles "$clone_dir" >&2; }; then
+    if [ -f "${clone_dir}/.chezmoi.toml.tmpl" ]; then
+      # A clone from an earlier install is reused; bring it to the requested version.
+      [ -z "$ref" ] || checkout_ref "$clone_dir" >&2 || exit 1
+      script_dir="$clone_dir"
+    elif [ ! -e "$clone_dir" ] && clone_repo "$clone_dir" >&2; then
       script_dir="$clone_dir"
     fi
   fi
@@ -295,7 +361,9 @@ fi
 if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
   set -- init --apply "--source=${script_dir}"
 else
-  set -- init --apply artefactory/artefiles
+  set -- init --apply
+  [ -z "$ref" ] || set -- "$@" "--branch=${ref}"
+  set -- "$@" artefactory/artefiles
 fi
 [ -n "${destination}" ] && set -- "$@" "--destination=${destination}"
 [ "$dry_run" = "true" ] && set -- "$@" "--dry-run"

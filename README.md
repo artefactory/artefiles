@@ -29,6 +29,15 @@ After installation, you will need to change your default shell to Fish to get th
 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 ```
 
+This installs the latest [release](https://github.com/artefactory/artefiles/releases). To install another release, or the tip of `main`, set `ARTEFILES_VERSION` to a tag or branch name:
+
+```bash
+ARTEFILES_VERSION=v2026.10.0 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+ARTEFILES_VERSION=main sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+```
+
+Without a release, or when GitHub cannot be reached, the script warns and installs `main`. A value that does not exist stops the install instead of falling back.
+
 This is the recommended path. The script:
 1. Installs [GitHub CLI](https://cli.github.com/) if not already present
 2. Authenticates you with GitHub (interactive browser flow, or reads a token from the environment — see below)
@@ -75,8 +84,9 @@ If you prefer to manage prerequisites yourself before running chezmoi directly:
 
 4. Install these dotfiles directly with chezmoi:
    ```bash
-   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply artefactory/artefiles
+   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply --branch "$(gh release view --repo artefactory/artefiles --json tagName --jq .tagName)" artefactory/artefiles
    ```
+   The `gh release view` call picks the latest release; write a tag such as `v2026.10.0`, or `main`, in its place to choose another version.
 
 ## Using chezmoi
 
