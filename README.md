@@ -344,7 +344,7 @@ The install's own steps are shown too: the module checklist (arrows and space to
 ## Detailed Documentation
 
 - [CHEATSHEET.md](CHEATSHEET.md) - Common commands and shortcuts
-- [CHANGELOG.md](CHANGELOG.md) - Version history and updates
+- [Releases](https://github.com/artefactory/artefiles/releases) - What changed in each version, and what to do about breaking changes
 
 ## Releases
 
