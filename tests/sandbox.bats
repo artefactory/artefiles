@@ -61,6 +61,12 @@ run_sandbox() {
   [[ "$output" == *'"editor"'* ]] && [[ "$output" == *'"atuin"'* ]]
 }
 
+@test "--modules installs exactly the modules asked for, none added by the migration" {
+  run_sandbox --modules editor,atuin --command 'chezmoi execute-template --config "$XDG_CONFIG_HOME/chezmoi/chezmoi.toml" "{{ includeTemplate \"modules\" . }}"'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'["editor","atuin"]'* ]]
+}
+
 @test "scripts and externals are never run" {
   grep -qF -- '--exclude=scripts,externals' "$SCRIPT"
 }
