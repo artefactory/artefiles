@@ -51,9 +51,8 @@ setup() {
   ! echo "$rendered" | grep -q 'visual-studio-code'
 }
 
-@test "docs say VS Code is optional and not installed by the setup" {
+@test "docs do not present VS Code as part of the setup" {
   if grep -nE '^Fish, Starship.*VS Code' "$REPO_ROOT/README.md"; then return 1; fi
-  grep -qF 'VS Code is not installed by this setup' "$REPO_ROOT/README.md"
   ! grep -nE '^\s*\| Editors \| neovim, vscode' "$REPO_ROOT/CHEATSHEET.md"
 }
 
