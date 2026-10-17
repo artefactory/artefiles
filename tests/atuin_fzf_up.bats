@@ -37,6 +37,6 @@ render_config() {
   fish -n "$REPO_ROOT/dot_config/fish/functions/__atuin_fzf_up.fish"
 }
 
-@test "the README lists the up-arrow among the picker's bindings" {
-  grep -qE 'Ctrl\+R/Alt\+R/Alt\+F.*up-arrow|up-arrow.*Ctrl\+R' "$REPO_ROOT/README.md"
+@test "the cheatsheet lists the up-arrow among the picker's bindings" {
+  grep -qE 'Ctrl\+R/Alt\+R/Alt\+F.*up-arrow|up-arrow.*Ctrl\+R' "$REPO_ROOT/CHEATSHEET.md"
 }

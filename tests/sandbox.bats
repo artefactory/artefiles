@@ -77,9 +77,9 @@ run_sandbox() {
   if chezmoi_managed "$H" | grep -F 'sandbox.sh'; then return 1; fi
 }
 
-@test "the README documents the sandbox" {
-  grep -qF 'sandbox.sh' "$REPO_ROOT/README.md"
-  grep -qF 'docker-test.sh' "$REPO_ROOT/README.md"
+@test "the cheatsheet documents the sandbox" {
+  grep -qF 'sandbox.sh' "$REPO_ROOT/CHEATSHEET.md"
+  grep -qF 'docker-test.sh' "$REPO_ROOT/CHEATSHEET.md"
 }
 
 # fake_gh — a gh that says "not starred" and records any star request.
@@ -236,7 +236,7 @@ leftovers() {
   [[ "$output" == *".local/bin/starship"* ]]
 }
 
-@test "the README says what the sandbox does not exercise and how to clean up" {
-  grep -qiE 'curl.*stub|stubbed.*curl|missing-command|not installed' "$REPO_ROOT/README.md"
-  grep -qF -- '--clean' "$REPO_ROOT/README.md"
+@test "the cheatsheet says what the sandbox does not exercise and how to clean up" {
+  grep -qiE 'curl.*stub|stubbed.*curl|missing-command|not installed' "$REPO_ROOT/CHEATSHEET.md"
+  grep -qF -- '--clean' "$REPO_ROOT/CHEATSHEET.md"
 }

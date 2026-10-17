@@ -74,19 +74,29 @@ chezmoi purge --force
 
 ### Post-Installation Steps
 
-1. Shell History Sync (atuin):
+1. Default shell (if you declined the installer's offer):
+   ```bash
+   # macOS
+   command -v fish | sudo tee -a /etc/shells
+   chsh -s "$(command -v fish)"
+   # Linux
+   chsh -s "$(command -v fish)"
+   ```
+   Log out and back in, and fully quit and reopen your IDE, for the change to show.
+
+2. Shell History Sync (atuin):
    ```bash
    atuin register     # Create new account
    atuin login        # Login to existing account
    atuin import auto  # Import existing shell history
    ```
 
-2. Git Configuration:
+3. Git Configuration:
    - Edit configuration: `chezmoi edit ~/.gitconfig`
    - Set commit signing: `git config --global commit.gpgsign true`
    - Configure user info: `git config --global user.name "Your Name"`
 
-3. Cloud Tools:
+4. Cloud Tools:
    - Google Cloud SDK: `gcloud init` and `gcloud auth login`
    - Set default project: `gcloud config set project PROJECT_ID`
    - Install components: `gcloud components install kubectl`
@@ -102,6 +112,23 @@ chezmoi purge --force
 | Fuzzy find files | `fzf` |
 | Tab completion picker | `Tab` opens an fzf picker over every fish completion (commands, flags, flag values); `Tab`/`Shift-Tab` cycle, typing re-filters live, `Esc` cancels, `Enter` inserts |
 | Search shell history via fzf | `Ctrl-R` / `Alt-R` (this directory) / `Alt-F` (global) — requires `atuin` module |
+
+Atuin history is rendered through fzf and bound to Ctrl+R/Alt+R/Alt+F and up-arrow (requires the `atuin` module and `perl`, present by default on macOS and mainstream Linux distros).
+
+### Running bash snippets in Fish
+
+Fish is not bash, but recent releases accept part of its syntax. Checked on fish 4.9.2 (`fish --version`; older releases accept less):
+
+Works in Fish as is: `$(...)` (since 3.4), `a && b || c`, `FOO=1 cmd`, `export FOO=3`, `{ a; b }` (since 4.1), `cmd1 |& cmd2`.
+
+Still fails: `if ...; then ...; fi`, `for x in ...; do ...; done`, `VAR=$(cmd)`, `$((1 + 2))`, `f() { ...; }` and sourcing a bash file. For these, the [replay.fish](https://github.com/jorgebucaran/replay.fish) plugin (installed through `fish_plugins`, pure Fish) runs a snippet in bash and copies the variables, `PATH` changes and aliases it made into your Fish session:
+- `replay 'export PATH="$HOME/.local/bin:$PATH"'`: add a folder to `PATH`
+- `replay 'if [ -f "$HOME/.env" ]; then set -a; source "$HOME/.env"; set +a; fi'`: load a `.env` file
+- `replay 'VERSION=$(date +%Y.%m); export VERSION'`: bash-only assignment syntax
+- `replay 'eval "$(some-tool env)"'`: the pattern many tools document for bash
+- `bash script.sh`, or any script with a `#!/bin/bash` shebang: runs in bash with no plugin needed
+
+Bash functions are not copied, so a tool that exists only as a bash function (nvm, for example) is not usable in Fish through `replay`. Python virtualenvs ship a Fish script, so use `source .venv/bin/activate.fish` instead.
 
 ## Git & Version Control
 
@@ -313,3 +340,21 @@ data:
 sourceDir: /path/to/artefiles/repo
 destDir: /tmp/chezmoi-test
 ```
+
+### Try it in a sandbox
+
+To simulate a new user's install without touching your own machine:
+
+```bash
+./sandbox.sh                                   # the whole install, interactively, then a shell in the sandbox
+./sandbox.sh --gh-token                        # same, lending your gh token so GitHub answers for real
+./sandbox.sh --modules atuin,editor            # skip the install and prompts, seed these modules
+./sandbox.sh --modules editor --command 'ls -a "$HOME/.config"'
+./sandbox.sh --clean                           # remove the leftovers of earlier runs
+```
+
+By default it runs the real `install.sh` inside a temporary home: the gh check and login, chezmoi, its prompts and the files applied from your checkout. Every side effect on your machine is stubbed and listed at the end as `(sandbox) would run: ...`: brew, downloads, the gh login, `sudo`, `chsh`, and chezmoi's scripts and externals, so nothing is installed and your real configuration is never read or written. Without `--gh-token` (or `GH_TOKEN`), `gh` is logged out as for a brand-new user, and the login is only simulated. `--keep` leaves the sandbox on disk and `--clean` removes the leftovers of earlier runs, including after a crash; a normal exit or Ctrl-C removes it by itself.
+
+After the install it lists the scripts chezmoi would run, and on Linux the externals it would download (rendered from the real template), so module installs can be reviewed without running them. What it does not exercise: the Quick Start clone path (the sandbox always has the checkout) and a `gh` that is not installed yet. `curl`, `wget`, `sudo` and `chsh` are stubbed and no tool is installed in the sandbox, so its shell can print missing-command messages a real user would not see. For a full Linux install in a container, run `./docker-test.sh`.
+
+The install's own steps are shown too: the module checklist (arrows and space to pick modules, then Enter on the Submit row), and the star offer, which is answered without a token because the sandbox only logs the star it would send.

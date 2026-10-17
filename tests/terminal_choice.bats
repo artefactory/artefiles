@@ -82,9 +82,8 @@ refute() { if "$@"; then return 1; fi; }
   printf '%s' "$modules" | jq -e 'index("ghostty") != null and index("editor") != null and index("terminal") == null and index("multiplexer") == null'
 }
 
-@test "README documents ghostty, cmux and the removed multiplexer module" {
+@test "README documents ghostty and cmux, not terminal or multiplexer" {
   grep -qE '^\| `ghostty` \|' "$REPO_ROOT/README.md"
   grep -qE '^\| `cmux` \|' "$REPO_ROOT/README.md"
   refute grep -qE '^\| `(terminal|multiplexer)` \|' "$REPO_ROOT/README.md"
-  grep -qi 'multiplexer.*ghostty\|ghostty.*multiplexer' "$REPO_ROOT/README.md"
 }

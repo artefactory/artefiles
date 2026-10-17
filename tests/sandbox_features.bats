@@ -109,7 +109,7 @@ STUB
   [[ "$output" == *".local/bin/terraform"* ]]
 }
 
-@test "the README says which install features the sandbox shows" {
-  grep -qiE 'star offer.*without a token|without a token.*star' "$REPO_ROOT/README.md"
-  grep -qiE 'checklist' "$REPO_ROOT/README.md"
+@test "the cheatsheet says which install features the sandbox shows" {
+  grep -qiE 'star offer.*without a token|without a token.*star' "$REPO_ROOT/CHEATSHEET.md"
+  grep -qiE 'checklist' "$REPO_ROOT/CHEATSHEET.md"
 }
