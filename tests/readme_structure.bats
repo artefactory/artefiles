@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # The README must tell users that chezmoi manages their configs, list the
-# prerequisites before the installation, document the chezmoi commands right
-# after it, and explain how to fork or clone the repo to personalize it.
+# prerequisites before the installation, document the chezmoi commands before
+# the personalization steps, and explain how to fork or clone the repo.
 
 setup() {
   load 'helpers/setup'
@@ -24,14 +24,15 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
   head -12 "$README" | grep -qF '(#using-chezmoi)'
 }
 
-@test "sections come in the order prerequisites, install, chezmoi, personalize, modules" {
+@test "sections come in the order prerequisites, install, what you get, chezmoi, personalize, update" {
   p=$(line_of "Prerequisites")
-  q=$(line_of "Quick Start")
+  q=$(line_of "Install")
+  m=$(line_of "What you get")
   c=$(line_of "Using chezmoi")
-  z=$(line_of "Clone and personalize")
-  m=$(line_of "Modular Architecture")
-  for n in "$p" "$q" "$c" "$z" "$m"; do [ -n "$n" ] || return 1; done
-  [ "$p" -lt "$q" ] && [ "$q" -lt "$c" ] && [ "$c" -lt "$z" ] && [ "$z" -lt "$m" ]
+  z=$(line_of "Make it yours")
+  u=$(line_of "Update")
+  for n in "$p" "$q" "$m" "$c" "$z" "$u"; do [ -n "$n" ] || return 1; done
+  [ "$p" -lt "$q" ] && [ "$q" -lt "$m" ] && [ "$m" -lt "$c" ] && [ "$c" -lt "$z" ] && [ "$z" -lt "$u" ]
 }
 
 @test "there is one Prerequisites section and no separate Chezmoi Basics section" {
@@ -46,8 +47,8 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
   done
 }
 
-@test "Clone and personalize covers fork, init, edit, diff, apply and upstream updates" {
-  body=$(section "Clone and personalize")
+@test "Make it yours covers fork, init, edit, diff, apply and upstream updates" {
+  body=$(section "Make it yours")
   for word in 'fork' 'chezmoi init --apply' 'chezmoi edit' 'chezmoi diff' 'chezmoi apply' 'upstream'; do
     printf '%s\n' "$body" | grep -qiF "$word" || { echo "missing: $word" >&2; return 1; }
   done
