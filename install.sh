@@ -64,19 +64,40 @@ clone_repo() {
 
 # Move an existing clone in $1 to $ref, so a re-run with ARTEFILES_VERSION installs
 # that version and not whatever the earlier install left checked out. A tag wins
-# over a branch of the same name. Fails, naming the clone, when $ref does not
-# exist or the working tree has changes that block the checkout.
+# over a branch of the same name and is checked out detached. A branch is checked
+# out as a local branch tracking origin, so `chezmoi update` can pull it later; an
+# existing local branch is only fast-forwarded, never reset. Fails, naming the
+# clone, when $ref does not exist, the local branch has commits of its own, or the
+# working tree has changes that block the checkout.
 checkout_ref() {
   git -C "$1" fetch --quiet --force --tags origin '+refs/heads/*:refs/remotes/origin/*' || {
     echo "Could not fetch ${ref} into ${1}." >&2
     return 1
   }
-  if ! target="$(git -C "$1" rev-parse --verify --quiet "refs/tags/${ref}^{commit}" || git -C "$1" rev-parse --verify --quiet "refs/remotes/origin/${ref}^{commit}")"; then
+  if target="$(git -C "$1" rev-parse --verify --quiet "refs/tags/${ref}^{commit}")"; then
+    set -- "$1" --detach "$target"
+  elif git -C "$1" rev-parse --verify --quiet "refs/remotes/origin/${ref}^{commit}" > /dev/null; then
+    if ! git -C "$1" rev-parse --verify --quiet "refs/heads/${ref}" > /dev/null; then
+      set -- "$1" -b "$ref" --track "origin/${ref}"
+    elif git -C "$1" merge-base --is-ancestor "refs/heads/${ref}" "refs/remotes/origin/${ref}"; then
+      set -- "$1" "$ref"
+    else
+      echo "The local branch ${ref} in ${1} has commits of its own; push or remove them, or remove the folder." >&2
+      return 1
+    fi
+  else
     echo "${ref} is not a tag or branch of artefactory/artefiles." >&2
     return 1
   fi
-  git -C "$1" checkout --quiet --detach "$target" || {
-    echo "Could not check out ${ref} in ${1}; commit or stash its changes, or remove the folder." >&2
+  dir="$1"
+  shift
+  git -C "$dir" checkout --quiet "$@" || {
+    echo "Could not check out ${ref} in ${dir}; commit or stash its changes, or remove the folder." >&2
+    return 1
+  }
+  [ "$1" = "$ref" ] || return 0
+  git -C "$dir" merge --quiet --ff-only "origin/${ref}" || {
+    echo "Could not move ${ref} in ${dir} to origin/${ref}; commit or stash its changes, or remove the folder." >&2
     return 1
   }
 }

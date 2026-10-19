@@ -76,6 +76,34 @@ credentialHelper = "!gh auth git-credential"
 modulesVersion = # [[ $modulesVersion ]] #
 modules = # [[ $modules | toJson ]] #
 
+# A release install leaves the clone on a detached tag, where chezmoi's default
+# `git pull --rebase` fails. The command runs in the clone and uses its own
+# origin, so a fork keeps updating from the fork: on a branch (a fork, or a
+# branch chosen with ARTEFILES_VERSION) it pulls as chezmoi does, on a tag it
+# moves to the newest release tag of that origin.
+[update]
+  command = "sh"
+  args = ["-c", '''
+    if git symbolic-ref -q HEAD > /dev/null; then
+      exec git pull --autostash --rebase
+    fi
+    current=$(git describe --tags --exact-match --match "v[0-9]*" 2> /dev/null) || {
+      echo 'The source is not on a branch or a release tag; put it on one with: git -C "$(chezmoi source-path)" switch <branch>' >&2
+      exit 1
+    }
+    git fetch --quiet --force --tags origin || exit 1
+    latest=$(git tag --list "v[0-9]*" | sort -V | tail -n 1)
+    if [ "$latest" = "$current" ]; then
+      echo "already at $current"
+      exit 0
+    fi
+    git checkout --quiet --detach "$latest" || {
+      echo "Could not check out $latest; commit or stash the changes in the source." >&2
+      exit 1
+    }
+    echo "moved from $current to $latest"
+  ''']
+
 # [[ if has "git_advanced" $modules ]] #
 [merge]
   command = "mergiraf"
