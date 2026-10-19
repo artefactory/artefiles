@@ -151,6 +151,8 @@ in_terminal_with() {
   [[ "$output" == *"INSTALL_EXIT=0"* ]]
   [ "$(cat "$CLONE/version")" = v1 ]
   grep -q -- "--source=$CLONE" "$CALLS"
+  # A tag stays detached: there is no branch to follow.
+  if git -C "$CLONE" symbolic-ref -q HEAD; then return 1; fi
 }
 
 @test "an existing clone is moved to the tip of a requested branch" {
@@ -161,6 +163,41 @@ in_terminal_with() {
   in_terminal_with dev
   [[ "$output" == *"INSTALL_EXIT=0"* ]]
   [ "$(cat "$CLONE/version")" = dev ]
+  # On the branch itself, so `chezmoi update` can pull it later.
+  [ "$(git -C "$CLONE" symbolic-ref --short HEAD)" = dev ]
+  [ "$(git -C "$CLONE" rev-parse --abbrev-ref dev@{upstream})" = origin/dev ]
+}
+
+@test "an existing local branch is fast-forwarded to the requested branch" {
+  existing_clone
+  git -C "$CLONE" checkout --quiet -b dev --track origin/dev
+  git -C "$CLONE" checkout --quiet --detach v1
+  git -C "$ORIGIN" checkout --quiet dev
+  echo dev > "$ORIGIN/version"
+  git -C "$ORIGIN" commit --quiet -am dev-tip
+  in_terminal_with dev
+  [[ "$output" == *"INSTALL_EXIT=0"* ]]
+  [ "$(git -C "$CLONE" symbolic-ref --short HEAD)" = dev ]
+  [ "$(cat "$CLONE/version")" = dev ]
+}
+
+@test "a local branch with its own commits stops the install instead of being reset" {
+  existing_clone
+  git -C "$CLONE" config user.email t@example.com
+  git -C "$CLONE" config user.name t
+  git -C "$CLONE" config commit.gpgsign false
+  git -C "$CLONE" checkout --quiet -b dev --track origin/dev
+  echo mine > "$CLONE/version"
+  git -C "$CLONE" commit --quiet -am mine
+  mine=$(git -C "$CLONE" rev-parse HEAD)
+  git -C "$ORIGIN" checkout --quiet dev
+  echo dev > "$ORIGIN/version"
+  git -C "$ORIGIN" commit --quiet -am dev-tip
+  in_terminal_with dev
+  [[ "$output" == *"has commits of its own"* ]]
+  [[ "$output" != *"INSTALL_EXIT=0"* ]]
+  [ "$(git -C "$CLONE" rev-parse dev)" = "$mine" ]
+  if grep -q '^chezmoi init' "$CALLS"; then return 1; fi
 }
 
 @test "an existing clone is left alone when no version is chosen and there is no release" {
@@ -184,6 +221,20 @@ in_terminal_with() {
   echo mine > "$CLONE/version"
   in_terminal_with v1
   [[ "$output" == *"Could not check out v1"* ]]
+  [ "$(cat "$CLONE/version")" = mine ]
+  if grep -q '^chezmoi init' "$CALLS"; then return 1; fi
+}
+
+@test "local changes that block the fast-forward stop the install with a message" {
+  existing_clone
+  git -C "$CLONE" checkout --quiet -b dev --track origin/dev
+  git -C "$ORIGIN" checkout --quiet dev
+  echo dev > "$ORIGIN/version"
+  git -C "$ORIGIN" commit --quiet -am dev-tip
+  echo mine > "$CLONE/version"
+  in_terminal_with dev
+  [[ "$output" == *"Could not move dev in"* ]]
+  [[ "$output" != *"INSTALL_EXIT=0"* ]]
   [ "$(cat "$CLONE/version")" = mine ]
   if grep -q '^chezmoi init' "$CALLS"; then return 1; fi
 }

@@ -109,7 +109,7 @@ chezmoi keeps a copy of every config in a source directory (`chezmoi source-path
 
 ## Update
 
-`chezmoi update` pulls the latest and applies it. Each [release](https://github.com/artefactory/artefiles/releases) lists what changed and what to do about breaking changes.
+`chezmoi update` moves to the newest [release](https://github.com/artefactory/artefiles/releases) and applies it; a clone on a branch (a fork, or `ARTEFILES_VERSION=<branch>`) pulls that branch instead. Each release lists what changed and what to do about breaking changes.
 
 ## More
 
