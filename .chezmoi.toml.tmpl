@@ -106,6 +106,12 @@ modules = # [[ $modules | toJson ]] #
     echo "moved from $current to $latest"
   ''']
 
+# The externals ask the GitHub API for 16 latest releases. chezmoi keeps the
+# answers for this long (one minute by default), so applies within a day ask
+# once, and without a token too.
+[gitHub]
+  refreshPeriod = "24h"
+
 # [[ if has "git_advanced" $modules ]] #
 [merge]
   command = "mergiraf"
