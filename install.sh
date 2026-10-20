@@ -494,6 +494,9 @@ if [ -n "${destination}" ]; then
   set -- "$@" "--destination=${destination}"
   apply_destination="--destination=${destination}"
 fi
+# chezmoi's prompts need a terminal and fail without one; there, every prompt
+# takes its default (the GitHub email, the default modules).
+[ -t 0 ] || set -- "$@" --promptDefaults
 
 # Before chezmoi init: everything it is given must be usable. A version that a
 # clone or checkout_ref has not already found must exist on GitHub, since chezmoi
