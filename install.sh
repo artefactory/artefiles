@@ -512,6 +512,13 @@ preflight_init() {
   if [ -n "$destination" ] && [ -e "$destination" ] && [ ! -w "$destination" ]; then
     fail_check "cannot write to ${destination}: the files are written there."
   fi
+  # chezmoi apply does not create a missing destination, so install.sh does,
+  # inside the nearest folder that exists.
+  if [ -n "$destination" ] && [ ! -e "$destination" ]; then
+    parent="$destination"
+    while [ ! -e "$parent" ]; do parent="$(dirname "$parent")"; done
+    [ -w "$parent" ] || fail_check "cannot create ${destination}: ${parent} cannot be written."
+  fi
 }
 preflight_init
 stop_on_failures
@@ -533,6 +540,7 @@ if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITHUB_ACCESS_TOKEN:-}" ] && [ -z "${CH
   unset gh_token
 fi
 
+[ -z "$destination" ] || mkdir -p "$destination"
 "$chezmoi" "$@"
 if [ -n "$apply_destination" ]; then
   "$chezmoi" apply "$apply_destination"
