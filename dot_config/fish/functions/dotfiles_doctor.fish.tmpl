@@ -1,173 +1,257 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
+# [[ $modules := includeTemplate "modules" . | fromJson -]] #
+# dotfiles_doctor checks the install: the tools of the selected modules, the
+# configs chezmoi manages, the source repository and chezmoi doctor. A problem
+# (✗) makes it return 1; a warning (!) is printed and does not.
+
+function __dd_problem --description "Print a problem and count it"
+    echo "  ✗ $argv"
+    set -g __dd_problems (math $__dd_problems + 1)
+end
+
+function __dd_warning --description "Print a warning and count it"
+    echo "  ! $argv"
+    set -g __dd_warnings (math $__dd_warnings + 1)
+end
+
 function __check_tool_with_configs --description "Check tool installation and its configs"
     set -l tool_name $argv[1]
     set -l config_paths $argv[2]
-    set -l managed_files $argv[3]
-    set -l check_cmd $argv[4]
-
-    set -l success_icon "✓"
-    set -l error_icon "✗"
-
-    # Check if tool is installed
-    if test -z "$check_cmd"
-        set check_cmd "$tool_name --version"
-    end
+    set -l managed_files $argv[3..-1]
 
     if command -v $tool_name >/dev/null 2>&1
-        # Get version info
-        set -l ver_info (eval $check_cmd 2>&1 | head -n 1)
-        echo "  $success_icon $tool_name: $ver_info"
+        set -l ver_info ($tool_name --version 2>&1 | head -n 1)
+        echo "  ✓ $tool_name: $ver_info"
     else
-        echo "  $error_icon $tool_name: not installed"
+        __dd_problem "$tool_name: not installed"
     end
 
-    # Check config files
-    if test -n "$config_paths"
-        set -l config_list (string split ":" $config_paths)
-
-        for cfg in $config_list
-            set -l managed_status ""
-            if contains $cfg $managed_files
-                set managed_status "(managed by chezmoi)"
-            end
-
-            set -l file_path "$HOME/$cfg"
-            if test -f $file_path
-                echo "    $success_icon config: $cfg $managed_status"
-            else
-                echo "    $error_icon config: $cfg missing $managed_status"
-            end
+    # A config is checked only when chezmoi manages it: an unselected module's
+    # config is not expected on disk.
+    for cfg in (string split ":" -- $config_paths)
+        test -n "$cfg"; or continue
+        contains -- $cfg $managed_files; or continue
+        if test -f "$HOME/$cfg"
+            echo "    ✓ config: $cfg"
+        else
+            __dd_problem "config: $cfg missing"
         end
     end
 end
 
 function __check_forbidden_conda --description "Flag conda installations (forbidden by policy)"
-    set -l warning_icon "!"
-    set -l success_icon "✓"
     set -l found 0
     for path in "$HOME/anaconda3" "$HOME/miniconda3" "$HOME/anaconda" "$HOME/miniconda" \
                 "$HOME/opt/anaconda3" "$HOME/opt/miniconda3" \
                 "$HOME/.local/anaconda3" "$HOME/.local/miniconda3" "/opt/conda"
         if test -d $path
-            echo "  $warning_icon conda: forbidden installation at $path"
+            __dd_problem "conda: forbidden installation at $path"
             set found 1
         end
     end
     if command -v conda >/dev/null 2>&1
-        echo "  $warning_icon conda: forbidden, found in PATH at "(command -v conda)
+        __dd_problem "conda: forbidden, found in PATH at "(command -v conda)
         set found 1
     end
     if test $found -eq 0
-        echo "  $success_icon conda: not installed (correct)"
+        echo "  ✓ conda: not installed (correct)"
     end
 end
 
 function __check_forbidden_docker_desktop --description "Flag Docker Desktop (forbidden by policy)"
-    set -l warning_icon "!"
-    set -l success_icon "✓"
     set -l found 0
     # [[ if eq .chezmoi.os "darwin" -]] #
     if test -d "/Applications/Docker.app"
-        echo "  $warning_icon docker-desktop: forbidden, found at /Applications/Docker.app"
+        __dd_problem "docker-desktop: forbidden, found at /Applications/Docker.app"
         set found 1
     end
     for path in "$HOME/Library/Group Containers/group.com.docker" \
                 "$HOME/Library/Containers/com.docker.docker"
         if test -d $path
-            echo "  $warning_icon docker-desktop: forbidden support data at $path"
+            __dd_problem "docker-desktop: forbidden support data at $path"
             set found 1
         end
     end
     # [[ end ]] #
     # [[ if eq .chezmoi.os "linux" -]] #
     if command -v docker-desktop >/dev/null 2>&1
-        echo "  $warning_icon docker-desktop: forbidden, found in PATH"
+        __dd_problem "docker-desktop: forbidden, found in PATH"
         set found 1
     end
     # [[ end ]] #
     if test $found -eq 0
-        echo "  $success_icon docker-desktop: not installed (correct — use Colima or Docker Engine)"
+        echo "  ✓ docker-desktop: not installed (correct — use Colima or Docker Engine)"
+    end
+end
+
+function __check_source_repo --description "Check the chezmoi source repository"
+    set -l source (chezmoi source-path 2>/dev/null)
+    if test -z "$source"; or not test -d "$source/.git"
+        __dd_problem "source: no git repository at '$source'"
+        return
+    end
+    set -l where (git -C $source symbolic-ref -q --short HEAD 2>/dev/null)
+    if test -z "$where"
+        set where (git -C $source describe --tags --exact-match 2>/dev/null)
+    end
+    if test -z "$where"
+        __dd_warning "source: $source is neither on a branch nor on a tag; chezmoi update cannot follow it"
+    else
+        echo "  ✓ source: $source at $where ("(git -C $source rev-parse --short HEAD)")"
+    end
+    if test -n "$(git -C $source status --porcelain 2>/dev/null)"
+        __dd_warning "source: uncommitted changes in $source"
+    end
+    # Scripts are excluded: a run_onchange script that already ran is not drift.
+    # A failing chezmoi status (a GitHub rate limit while it renders the
+    # externals, say) is a problem, never an empty, clean-looking list.
+    set -l drift (chezmoi status --exclude=scripts 2>&1)
+    if test $status -ne 0
+        __dd_problem "files: chezmoi status failed: $drift[1]"
+    else if test (count $drift) -eq 0
+        echo "  ✓ files: every managed file matches the source"
+    else
+        __dd_warning "files: "(count $drift)" differ from the source (chezmoi diff shows them, chezmoi apply restores them)"
+        for line in $drift
+            echo "      $line"
+        end
+    end
+end
+
+function __check_chezmoi_doctor --description "Run chezmoi doctor and count its errors"
+    # chezmoi doctor exits 1 only on an "error" line: a check that could not run
+    # ("failed") or a "warning" leaves it at 0, so its lines are read instead.
+    set -l out (chezmoi doctor --no-network 2>&1)
+    for line in $out
+        echo "    $line"
+    end
+    for line in (string match -r '^(error|failed)\s+.*' -- $out)
+        __dd_problem "chezmoi doctor: "(string replace -ar '\s+' ' ' -- $line)
+    end
+    for line in (string match -r '^warning\s+.*' -- $out)
+        __dd_warning "chezmoi doctor: "(string replace -ar '\s+' ' ' -- $line)
     end
 end
 
 function dotfiles_doctor --description "Check dotfiles health and tool installations"
-    set -l success_icon "✓"
-    set -l warning_icon "!"
-    set -l error_icon "✗"
+    set -g __dd_problems 0
+    set -g __dd_warnings 0
 
     echo "Dotfiles Health Check"
     echo ""
     echo "System information:"
-    echo "  $success_icon hostname:       "(hostname)
-    echo "  $success_icon os:             # [[ .chezmoi.os ]] #"
-    echo "  $success_icon arch:           # [[ .chezmoi.arch ]] #"
-    echo -n "  $success_icon chezmoi version: "
-    command -v chezmoi >/dev/null 2>&1 && chezmoi --version 2>/dev/null || echo "not installed"
+    echo "  ✓ hostname:       "(hostname)
+    echo "  ✓ os:             # [[ .chezmoi.os ]] #"
+    echo "  ✓ arch:           # [[ .chezmoi.arch ]] #"
+    echo "  ✓ modules:        # [[ $modules | join " " ]] #"
+    if not command -v chezmoi >/dev/null 2>&1
+        __dd_problem "chezmoi: not installed"
+        echo ""
+        echo "1 problem: install chezmoi, then run dotfiles_doctor again."
+        return 1
+    end
+    echo "  ✓ chezmoi:        "(chezmoi --version 2>/dev/null)
     echo ""
 
-    # Get managed files from chezmoi
-    set -l managed_files (chezmoi managed)
+    # Without the managed list every config check would be skipped silently.
+    set -l managed_files (chezmoi managed --include=files 2>&1)
+    if test $status -ne 0
+        __dd_problem "chezmoi managed failed, configs not checked: $managed_files[1]"
+        set managed_files
+    end
 
     echo "Tools and Configuration:"
     echo ""
-
-    # Shell Tools
-    echo "## Shell Tools"
-    __check_tool_with_configs "fish" ".config/fish/config.fish:.config/fish/aliases.fish" "$managed_files"
-    __check_tool_with_configs "starship" ".config/starship.toml" "$managed_files"
-
-    echo ""
-    echo "## File Utilities"
-    __check_tool_with_configs "bat" ".config/bat/config" "$managed_files"
-    __check_tool_with_configs "eza" "" "$managed_files"
-    __check_tool_with_configs "fd" "" "$managed_files"
-    __check_tool_with_configs "zoxide" "" "$managed_files"
-    __check_tool_with_configs "fzf" "" "$managed_files"
+    echo "## Core"
+    __check_tool_with_configs fish ".config/fish/config.fish:.config/fish/aliases.fish" $managed_files
+    __check_tool_with_configs starship ".config/starship.toml" $managed_files
+    __check_tool_with_configs git ".gitconfig:.git_template/hooks/pre-commit" $managed_files
+    __check_tool_with_configs gh "" $managed_files
+    __check_tool_with_configs fnm "" $managed_files
+    __check_tool_with_configs mergiraf "" $managed_files
+    # [[- if or (eq .chezmoi.os "darwin") (has "shell_tools" $modules) ]] #
+    __check_tool_with_configs uv "" $managed_files
+    # [[- end ]] #
+    # [[- if has "shell_tools" $modules ]] #
 
     echo ""
-    echo "## Git Tools"
-    __check_tool_with_configs "git" ".gitconfig:.git_template/hooks/pre-commit" "$managed_files"
-    __check_tool_with_configs "git-lfs" "" "$managed_files"
-    __check_tool_with_configs "difft" "" "$managed_files"
-    __check_tool_with_configs "gh" "" "$managed_files"
+    echo "## Shell tools"
+    __check_tool_with_configs bat ".config/bat/config" $managed_files
+    __check_tool_with_configs eza "" $managed_files
+    __check_tool_with_configs fd "" $managed_files
+    __check_tool_with_configs fzf "" $managed_files
+    __check_tool_with_configs rg "" $managed_files
+    __check_tool_with_configs zoxide "" $managed_files
+    __check_tool_with_configs direnv ".config/direnv/direnvrc" $managed_files
+    # [[- end ]] #
+    # [[- if has "cli_extras" $modules ]] #
 
     echo ""
-    echo "## Development Tools"
-    __check_tool_with_configs "nvim" ".config/nvim/init.lua" "$managed_files"
-    __check_tool_with_configs "direnv" ".config/direnv/direnvrc" "$managed_files"
-    __check_tool_with_configs "atuin" ".config/atuin/config.toml" "$managed_files"
-    __check_tool_with_configs "uv" "" "$managed_files"
-    __check_tool_with_configs "rustc" "" "$managed_files" "rustc --version"
-    __check_tool_with_configs "cargo" "" "$managed_files" "cargo --version"
+    echo "## CLI extras"
+    __check_tool_with_configs dust "" $managed_files
+    __check_tool_with_configs btm "" $managed_files
+    __check_tool_with_configs rip "" $managed_files
+    # [[- end ]] #
+    # [[- if has "git_advanced" $modules ]] #
 
     echo ""
-    echo "## Cloud Tools"
-    __check_tool_with_configs "gcloud" "" "$managed_files"
+    echo "## Git tools"
+    __check_tool_with_configs difft "" $managed_files
+    __check_tool_with_configs git-lfs "" $managed_files
+    # [[- end ]] #
+    # [[- if has "editor" $modules ]] #
 
     echo ""
-    echo "## Forbidden Tools"
+    echo "## Editor"
+    __check_tool_with_configs nvim ".config/nvim/init.lua" $managed_files
+    # [[- end ]] #
+    # [[- if has "atuin" $modules ]] #
+
+    echo ""
+    echo "## History"
+    __check_tool_with_configs atuin ".config/atuin/config.toml" $managed_files
+    # [[- end ]] #
+    # [[- if has "rust" $modules ]] #
+
+    echo ""
+    echo "## Rust"
+    __check_tool_with_configs rustc "" $managed_files
+    __check_tool_with_configs cargo "" $managed_files
+    # [[- end ]] #
+    # [[- if has "gcloud" $modules ]] #
+
+    echo ""
+    echo "## Cloud"
+    __check_tool_with_configs gcloud "" $managed_files
+    # [[- end ]] #
+    # [[- if has "terraform" $modules ]] #
+    __check_tool_with_configs terraform "" $managed_files
+    # [[- end ]] #
+    # [[- if has "opentofu" $modules ]] #
+    __check_tool_with_configs tofu "" $managed_files
+    # [[- end ]] #
+
+    echo ""
+    echo "## Forbidden tools"
     __check_forbidden_conda
     __check_forbidden_docker_desktop
 
     echo ""
+    echo "## Source repository"
+    __check_source_repo
+
+    echo ""
+    echo "## chezmoi doctor"
+    __check_chezmoi_doctor
+
+    echo ""
     echo "Environment Variables:"
-    # Get current fish theme
-    set -l current_theme "Unknown"
-    if type -q fish_config
-        # Try to get the current theme
-        set -l theme_output (fish_config theme show 2>/dev/null)
-        if test $status -eq 0
-            # Extract theme name from output
-            set current_theme (string match -r 'theme: (.*)' -- "$theme_output" | string replace -r 'theme: (.*)' '$1')
-        end
-    end
+    echo "  EDITOR: $EDITOR"
+    echo "  TERM:   $TERM"
 
-    echo "  $success_icon EDITOR:         $EDITOR"
-    echo "  $success_icon TERM:           $TERM"
-
-    if command -v chezmoi >/dev/null 2>&1
-        echo ""
-        echo "Chezmoi Status:"
-        chezmoi doctor
-    end
+    echo ""
+    echo "$__dd_problems problem(s), $__dd_warnings warning(s)."
+    set -l problems $__dd_problems
+    set -e __dd_problems __dd_warnings
+    test $problems -eq 0
 end
