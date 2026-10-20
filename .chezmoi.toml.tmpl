@@ -1,5 +1,7 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
 sourceDir = # [[ .chezmoi.sourceDir | quote ]] #
+# Kept like sourceDir, so a later apply or update writes where init was told to.
+destDir = # [[ .chezmoi.destDir | quote ]] #
 
 [data]
 # The profile calls return an empty string when gh is missing, logged out or
