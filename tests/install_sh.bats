@@ -32,6 +32,12 @@ setup() {
   [[ "$output" != *"--source="* ]]
 }
 
+@test "without a terminal chezmoi init takes the prompt defaults" {
+  run "$REPO_ROOT/install.sh" --destination "$BATS_TEST_TMPDIR/h" --dry-run < /dev/null
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Running 'chezmoi init "*" --promptDefaults'"* ]]
+}
+
 @test "checkout invocation: --source is the checkout" {
   root="$(cd "$REPO_ROOT" && pwd -P)"
   cd "$BATS_TEST_TMPDIR"

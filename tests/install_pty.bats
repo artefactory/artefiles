@@ -58,6 +58,9 @@ terminal_restored() {
   [[ "$output" == *"You will install: shell_tools"* ]]
   [[ "$output" == *"INSTALL_EXIT=0"* ]]
   grep -qF 'modules = ["shell_tools"]' "$H/.config/chezmoi/chezmoi.toml"
+  # At a terminal chezmoi may still prompt, so it is not told to take the defaults.
+  grep -q '^chezmoi init ' "$CALLS"
+  if grep -q -- '--promptDefaults' "$CALLS"; then return 1; fi
   grep -q '^chezmoi init' "$CALLS"
 }
 
