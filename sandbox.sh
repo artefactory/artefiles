@@ -101,8 +101,8 @@ source_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 # flow chezmoi init enforces it itself.
 if [ "$modules_set" = "true" ]; then
   # shellcheck disable=SC2016 # the pattern matches a literal `$pairs`
-  pairs=$(sed -nE 's/^# \[\[ \$pairs := list (.*) \]\] #$/\1/p' "${source_dir}/.chezmoi.toml.tmpl" |
-    grep -oE '"[a-z_]+" "[a-z_]+"' | tr -d '"')
+  pairs=$(sed -nE 's/^# \[\[ \$pairs := list (.*) \]\] #$/\1/p' "${source_dir}/.chezmoi.toml.tmpl" \
+    | grep -oE '"[a-z_]+" "[a-z_]+"' | tr -d '"')
   selected=",${modules},"
   printf '%s\n' "$pairs" | while read -r a b; do
     [ -n "$a" ] || continue
@@ -162,9 +162,18 @@ trap 'exit 129' HUP
 actions_log="${stubs}/actions.log"
 : > "$actions_log"
 
-# Commands that would change the machine: log them and do nothing.
-for tool in sudo chsh curl wget; do
-  printf '#!/bin/sh\necho "%s $*" >> "%s"\nexit 1\n' "$tool" "$actions_log" > "${stubs}/${tool}"
+# Commands that would change the machine: log them and do nothing. install.sh's
+# network probe only asks for headers (curl -fsSI), so it goes to the real curl.
+for tool in curl wget; do
+  real="$(command -v "$tool" 2> /dev/null || true)"
+  cat > "${stubs}/${tool}" << STUB
+#!/bin/sh
+case "\$1" in
+  -fsSI) [ -n "${real}" ] && exec "${real}" "\$@" ;;
+esac
+echo "${tool} \$*" >> "${actions_log}"
+exit 1
+STUB
 done
 printf '#!/bin/sh\necho "sudo $*" >> "%s"\nexit 0\n' "$actions_log" > "${stubs}/sudo"
 printf '#!/bin/sh\necho "chsh $*" >> "%s"\nexit 0\n' "$actions_log" > "${stubs}/chsh"
