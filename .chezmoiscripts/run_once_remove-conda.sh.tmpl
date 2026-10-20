@@ -25,9 +25,27 @@ remove_conda() {
     unset CONDA_PYTHON_EXE
   fi
 
-  # Remove the entire directory
-  echo "Removing $conda_path directory..."
-  rm -rf "$conda_path"
+  # A Homebrew cask is uninstalled through brew, which keeps its records right.
+  case "$conda_path" in
+    */Caskroom/*/*)
+      cask=${conda_path#*/Caskroom/}
+      cask=${cask%%/*}
+      echo "Uninstalling the $cask Homebrew cask..."
+      if ! brew uninstall --cask "$cask"; then
+        echo "Could not uninstall $cask: run 'brew uninstall --cask $cask'." >&2
+        return 0
+      fi
+      ;;
+    *)
+      # A system-wide install needs an administrator: say so, and go on.
+      if [ ! -w "$conda_path" ] || [ ! -w "$(dirname "$conda_path")" ]; then
+        echo "Cannot remove $conda_path without administrator rights: run 'sudo rm -rf $conda_path'." >&2
+        return 0
+      fi
+      echo "Removing $conda_path directory..."
+      rm -rf "$conda_path"
+      ;;
+  esac
 
   # Clean up .bashrc, .zshrc, and config.fish
   for rc_file in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
@@ -43,6 +61,23 @@ remove_conda() {
   echo "Removing conda configuration files..."
   rm -rf "$HOME/.conda"
   rm -rf "$HOME/.condarc"
+}
+
+# conda_root COMMAND — the conda install that holds COMMAND: the nearest folder
+# above it, symlinks resolved, that has conda-meta/. Prints nothing when there is
+# none, so a conda command alone (/usr/bin/conda) never names a folder to delete.
+conda_root() {
+  dir=$(dirname "$(realpath "$1" 2> /dev/null || printf '%s' "$1")")
+  while [ "$dir" != "/" ] && [ "$dir" != "." ]; do
+    if [ -d "$dir/conda-meta" ]; then
+      case "$dir" in
+        "$HOME" | /usr | /usr/local | /opt | /opt/homebrew) return 0 ;;
+      esac
+      printf '%s\n' "$dir"
+      return 0
+    fi
+    dir=$(dirname "$dir")
+  done
 }
 
 # Common conda installation locations - using POSIX-compatible approach
@@ -74,12 +109,14 @@ for path in \
 done
 
 # Check for conda in PATH
-if command -v conda > /dev/null 2>&1; then
+if conda_cmd=$(command -v conda 2> /dev/null) && [ -e "$conda_cmd" ]; then
   FOUND_CONDA=true
-  CONDA_PATH=$(dirname "$(dirname "$(command -v conda)")")
-  echo "Found conda in PATH at $CONDA_PATH"
-  echo "Removing conda executable from PATH..."
-  remove_conda "$CONDA_PATH" "conda"
+  CONDA_PATH=$(conda_root "$conda_cmd")
+  if [ -n "$CONDA_PATH" ]; then
+    remove_conda "$CONDA_PATH" "conda"
+  else
+    echo "Found $conda_cmd, but no conda install (a folder with conda-meta/) holds it: nothing removed." >&2
+  fi
 fi
 
 # Final message
