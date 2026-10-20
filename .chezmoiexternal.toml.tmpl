@@ -7,6 +7,14 @@
 # [[ $rustArch := (eq .chezmoi.arch "amd64" | ternary "x86_64" "aarch64") ]] #
 # [[ $fzfArch := (eq .chezmoi.arch "amd64" | ternary "amd64" "arm64") ]] #
 
+# fish - the default shell; the release's static build, so nothing is compiled.
+# run_onchange_z-install-fish.sh starts it from bash and zsh.
+[".local/bin/fish"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "fish-shell/fish-shell" (printf "fish-*-linux-%s.tar.xz" $rustArch) | quote ]] #
+  executable = true
+  path = "fish"
+
 # [[ if has "editor" $modules ]] #
 # Neovim AppImage
 [".local/bin/nvim"]
