@@ -341,6 +341,19 @@ sourceDir: /path/to/artefiles/repo
 destDir: /tmp/chezmoi-test
 ```
 
+### Tests and CI
+
+| What | Where | Command |
+|------|-------|---------|
+| Unit tests (local only) | `tests/*.bats` | `bats tests/` |
+| One file | `tests/<name>.bats` | `bats tests/preflight.bats` |
+| Full install, packages included, on macOS + Linux | `.github/workflows/ci.yml` | every ready pull request on `main` |
+| Same, plus the Quick Start route | `.github/workflows/ci.yml` | the merge queue ("Merge when ready") |
+| Full install with packages | `.github/workflows/full-install.yml` | weekly, or `gh workflow run full-install.yml --ref <branch>` |
+| Claude review | `.github/workflows/claude-code-review.yml` | add the `claude-review` label |
+
+CI runs `install.sh` on fresh runners, then `.github/scripts/verify-install.sh` checks the source commit, the stored answers, that the core files are managed and written, `chezmoi verify` and `chezmoi doctor`. On pull requests the install is full, packages included; the Quick Start route in the merge queue runs no scripts and downloads no externals. The weekly full install on `main` catches a download that breaks between pull requests. Draft pull requests and pull requests stacked on another branch run nothing. `ci-ok` is the one check the merge queue requires.
+
 ### Try it in a sandbox
 
 To simulate a new user's install without touching your own machine:
