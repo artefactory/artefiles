@@ -292,6 +292,26 @@ nothing_changed() {
   if grep -q '^chezmoi init' "$CALLS"; then return 1; fi
 }
 
+@test "a missing destination folder is created before chezmoi init" {
+  run_install
+  [ "$status" -eq 0 ]
+  [ -d "$H/dest" ]
+  grep -q '^chezmoi init' "$CALLS"
+}
+
+@test "a missing destination inside a folder that cannot be written stops the install" {
+  mkdir -p "$H/locked"
+  chmod u-w "$H/locked"
+  run env -u CI -u CODESPACES HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_DATA_HOME="$H/.local/share" \
+    PATH="$BIN:$PATH" ARTEFILES_SELECT_TTY="$ANSWERS" ARTEFILES_SUDO_REFRESH=1 \
+    /bin/sh "$REPO_ROOT/install.sh" --destination "$H/locked/a/b"
+  chmod u+w "$H/locked"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot create $H/locked/a/b: $H/locked cannot be written"* ]]
+  [ ! -e "$H/locked/a" ]
+  if grep -q '^chezmoi init' "$CALLS"; then return 1; fi
+}
+
 @test "every check before chezmoi init is printed together" {
   mkdir -p "$H/dest"
   chmod u-w "$H/dest"
