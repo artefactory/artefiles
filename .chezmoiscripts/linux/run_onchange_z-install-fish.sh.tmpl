@@ -1,145 +1,26 @@
 #!/bin/sh
-# chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
-# Install fish shell for Linux without requiring root/sudo
+# Start fish from bash and zsh on Linux. fish itself is the static release
+# build that .chezmoiexternal.toml.tmpl installs to ~/.local/bin/fish.
 # https://fishshell.com/
-#
-# The line below embeds the latest fish tag resolved at chezmoi-render
-# time. When a new fish version ships, the rendered script content
-# changes, and chezmoi re-runs this run_onchange script on next apply.
-# That gives us the same auto-update behavior as gitHubLatestReleaseAssetURL
-# does for binary externals.
-# Latest fish tag: # [[ (gitHubLatestRelease "fish-shell/fish-shell").TagName ]] #
 
 set -eu
 
-# Function to compare major.minor versions
-version_gt() {
-  # Extract MAJOR.MINOR from versions ignoring patch
-  # shellcheck disable=SC3043
-  local ver1_major_minor
-  ver1_major_minor=$(echo "$1" | cut -d. -f1-2)
-  # shellcheck disable=SC3043
-  local ver2_major_minor
-  ver2_major_minor=$(echo "$2" | cut -d. -f1-2)
-
-  # Compare using float comparison
-  awk "BEGIN {exit !($ver1_major_minor > $ver2_major_minor)}"
-}
-
-# Fallback used only if the GitHub API is unreachable or rate-limited.
-# Bumped from 3.6.1 because fish 4.x was rewritten in Rust and we want
-# the fallback to land us on a roughly-current major.
-FISH_FALLBACK_VERSION="4.7.1"
-
-# Get latest release version from GitHub
-get_latest_fish_version() {
-  API_RESPONSE=$(curl -s https://api.github.com/repos/fish-shell/fish-shell/releases/latest)
-
-  # Check if we hit rate limit
-  if echo "$API_RESPONSE" | grep -q "API rate limit exceeded"; then
-    echo "GitHub API rate limit exceeded. Using fallback version $FISH_FALLBACK_VERSION." >&2
-    echo "$FISH_FALLBACK_VERSION"
-  else
-    FISH_VERSION=$(echo "$API_RESPONSE" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
-    # Remove 'fish-' prefix if present
-    FISH_VERSION=${FISH_VERSION#fish-}
-
-    # Check if version was found
-    if [ -z "$FISH_VERSION" ]; then
-      echo "Failed to get latest version from GitHub API, using fallback $FISH_FALLBACK_VERSION." >&2
-      echo "$FISH_FALLBACK_VERSION"
-    else
-      echo "$FISH_VERSION"
-    fi
-  fi
-}
-
-# Function to install or update fish
-install_fish() {
-  # shellcheck disable=SC3043
-  local FISH_VERSION="$1"
-  # shellcheck disable=SC3043
-  local FISH_INSTALL_DIR="$HOME/.local"
-
-  echo "Installing fish shell version $FISH_VERSION..."
-
-  # Add Rust to PATH if available (needed for fish build dependencies)
-  if [ -d "$HOME/.cargo/bin" ]; then
-    echo "Adding Rust to PATH for fish build..."
-    export PATH="$HOME/.cargo/bin:$PATH"
-  fi
-
-  # Create temp directory
-  TEMP_DIR=$(mktemp -d)
-  cd "$TEMP_DIR"
-
-  # Download the source code
-  curl -L "https://github.com/fish-shell/fish-shell/releases/download/${FISH_VERSION}/fish-${FISH_VERSION}.tar.xz" -o "fish.tar.xz"
-
-  # Extract the tarball
-  tar -xJf "fish.tar.xz"
-  cd "fish-${FISH_VERSION}"
-
-  # Make sure the destination directory exists
-  mkdir -p "$FISH_INSTALL_DIR/bin"
-
-  # Configure and build fish using cmake
-  echo "Building fish with CMake..."
-  cmake . -DCMAKE_INSTALL_PREFIX="$FISH_INSTALL_DIR"
-  make -j"$(nproc 2> /dev/null || echo 1)"
-  make install
-
-  # Cleanup
-  cd "$HOME"
-  rm -rf "$TEMP_DIR"
-
-  echo "fish shell installed to $FISH_INSTALL_DIR/bin/fish"
-}
-
 # We always target $HOME/.local/bin/fish so a system-installed fish
 # (e.g. /usr/bin/fish from apt) cannot shadow or be confused with our
-# user-local install. command -v fish would otherwise pick whichever
-# fish is first on PATH, leading to spurious "already installed" skips
-# or rebuilds keyed off the wrong binary.
+# user-local install.
 LOCAL_FISH="$HOME/.local/bin/fish"
 
 if command -v fish > /dev/null 2>&1 && [ "$(command -v fish)" != "$LOCAL_FISH" ]; then
-  echo "Note: a system fish was found at $(command -v fish); installing our own copy to $LOCAL_FISH anyway."
+  echo "Note: a system fish was found at $(command -v fish); bash and zsh start $LOCAL_FISH instead."
 fi
-
-if [ -x "$LOCAL_FISH" ]; then
-  CURRENT_VERSION=$("$LOCAL_FISH" --version | sed -E 's/.*version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-  echo "Fish shell already installed at $LOCAL_FISH (version $CURRENT_VERSION)."
-
-  # Get latest version
-  LATEST_VERSION=$(get_latest_fish_version)
-  echo "Latest fish shell version: $LATEST_VERSION"
-
-  # Compare versions ignoring patch
-  if version_gt "$LATEST_VERSION" "$CURRENT_VERSION"; then
-    echo "Newer version available. Updating fish from $CURRENT_VERSION to $LATEST_VERSION..."
-    install_fish "$LATEST_VERSION"
-  else
-    echo "Local fish version is up to date (major.minor). Skipping rebuild."
-  fi
-else
-  echo "Fish shell is not installed at $LOCAL_FISH. Installing now..."
-  LATEST_VERSION=$(get_latest_fish_version)
-  install_fish "$LATEST_VERSION"
-fi
-
-# Always wrap our local install — never the system fish, even if it is
-# the first fish on PATH.
-FISH_PATH="$LOCAL_FISH"
 
 # Create a wrapper script in ~/.local/bin to launch fish
 WRAPPER_SCRIPT="${HOME}/.local/bin/start-fish"
 mkdir -p "${HOME}/.local/bin"
 
-# Create a wrapper script that launches fish
 cat > "${WRAPPER_SCRIPT}" << EOF
 #!/bin/sh
-exec "${FISH_PATH}" "\$@"
+exec "${LOCAL_FISH}" "\$@"
 EOF
 chmod +x "${WRAPPER_SCRIPT}"
 
@@ -156,4 +37,4 @@ for RC_FILE in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
   fi
 done
 
-echo "Fish shell installation/update complete."
+echo "Fish shell setup complete."
