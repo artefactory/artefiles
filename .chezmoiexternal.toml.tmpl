@@ -1,6 +1,8 @@
 # chezmoi:template:left-delimiter="# [[" right-delimiter="]] #"
 # [[ $modules := includeTemplate "modules" . | fromJson ]] #
-# [[ if eq .chezmoi.os "linux" ]] #
+# [[/* CI passes --override-data '{"ciSkipExternals":true}': --exclude=externals
+#      does not stop chezmoi from downloading the archives, an empty file does. */]] #
+# [[ if and (eq .chezmoi.os "linux") (not (get . "ciSkipExternals")) ]] #
 # External dependencies managed by chezmoi for Linux systems
 # Reference: https://www.chezmoi.io/reference/special-files-and-directories/chezmoiexternal-format/
 

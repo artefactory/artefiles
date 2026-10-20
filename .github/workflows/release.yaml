@@ -27,6 +27,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write # push the tag and create the GitHub release
       pull-requests: read # find the pull request that carried the label

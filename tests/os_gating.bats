@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # Verify .chezmoiscripts/{linux,darwin}/* never leak across OS boundaries.
-# CI runs this on both bats-linux and bats-macos so both directions are
-# covered without needing to fake .chezmoi.os.
+# Run it on macOS and on Linux (./docker-test.sh) to cover both directions
+# without faking .chezmoi.os.
 
 setup() {
   load 'helpers/setup'

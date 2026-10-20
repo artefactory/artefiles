@@ -1,0 +1,42 @@
+name: full install
+
+# A full install, scripts, externals and the default modules' packages included,
+# as a new user gets it with no terminal. It stays out of the pull request and
+# release paths, where it would add 20 to 40 minutes per run: it runs weekly on
+# main and by hand (gh workflow run full-install.yml --ref <branch>).
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: install with the default modules
+        run: sh ./install.sh
+
+      - name: verify the install
+        run: sh .github/scripts/verify-install.sh "${{ github.sha }}"
+
+      - name: the installed tools run
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          fish --version
+          starship --version
+          git --version

@@ -1,97 +1,210 @@
 name: ci
 
+# CI installs artefiles on fresh GitHub runners with install.sh and checks the
+# result. The bats suite under tests/ is for local debugging and does not run
+# in CI.
+#
+# The work is tiered so that most pushes cost little:
+# - a draft pull request, or one stacked on another branch, runs nothing;
+# - a ready pull request on main runs lint and a full install from the
+#   checkout, packages included, on Linux and macOS (about 2 minutes);
+# - the merge queue adds the Quick Start route, once per batch of queued pull
+#   requests; it runs no scripts and downloads no externals, which the full
+#   install already covers;
+# - ci-ok sums up every tier and is the one check the merge queue requires.
+
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
   workflow_dispatch:
 
+# A new push to a pull request cancels its running checks; a queue run never is.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
+  # Only pull requests are filtered by path; the queue and manual runs test everything.
   changes:
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
-      shell: ${{ steps.filter.outputs.shell }}
-      chezmoi: ${{ steps.filter.outputs.chezmoi }}
-      tests: ${{ steps.filter.outputs.tests }}
+      lint: ${{ steps.filter.outputs.lint }}
+      install: ${{ steps.filter.outputs.install }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           filters: |
-            shell:
+            lint:
               - '**/*.sh'
-              - '**/*.sh.tmpl'
-              - 'install.sh'
-            chezmoi:
+              - '**/*.bash'
+              - '.github/workflows/ci.yml'
+            install:
+              - '*.sh'
               - '.chezmoi*'
-              - '.chezmoiscripts/**'
               - '.chezmoidata/**'
+              - '.chezmoiscripts/**'
               - '.chezmoitemplates/**'
               - 'dot_**'
               - 'private_dot_**'
-            tests:
-              - 'tests/**'
+              - 'Library/**'
               - '.github/workflows/ci.yml'
+              - '.github/scripts/**'
 
   lint:
     needs: changes
-    if: needs.changes.outputs.shell == 'true' || needs.changes.outputs.tests == 'true'
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.lint == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: shellcheck
         run: |
-          # Lint every executable shell script and *.sh / *.bash file in tests.
-          # .tmpl files contain chezmoi template syntax shellcheck can't parse;
-          # exclude them and rely on chezmoi-render + apply tests for coverage.
+          # Lint every *.sh / *.bash file with a shebang. .tmpl files contain
+          # chezmoi template syntax shellcheck can't parse.
           mapfile -t files < <(grep -rIl --include='*.sh' --include='*.bash' '^#!/' . \
             | grep -v -E '\.(tmpl|disabled)$' || true)
           if [ ${#files[@]} -gt 0 ]; then
             shellcheck -x "${files[@]}"
           fi
 
-  bats-linux:
+  install:
     needs: changes
-    if: needs.changes.outputs.chezmoi == 'true' || needs.changes.outputs.tests == 'true'
-    runs-on: ubuntu-latest
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.install == 'true')
+    name: install (${{ matrix.os }}, ${{ matrix.route }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every run installs on both systems; the queue and manual runs add the
+        # Quick Start route.
+        os: [ubuntu-latest, macos-15]
+        # full: install.sh run from a clone, every script and external included,
+        # as a new user gets it. quick-start: the README one-liner, where chezmoi
+        # clones the branch itself (the queue's own branch in the merge queue).
+        route: ${{ fromJSON(github.event_name == 'pull_request' && '["full"]' || '["full", "quick-start"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     env:
-      # .chezmoiexternal.toml.tmpl calls gitHubLatestReleaseAssetURL during
-      # template rendering even with --exclude=externals; without auth the
-      # 60-req/hr unauthenticated limit blows up the linux job.
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # install.sh logs gh in with it and lends it to chezmoi for the GitHub API.
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: install bats
-        run: sudo apt-get update && sudo apt-get install -y bats jq yq
+        with:
+          persist-credentials: false
+
       - name: install chezmoi
+        if: matrix.route == 'quick-start'
         run: |
           # Download to a file: `sh -c "$(curl ...)"` runs an empty script and
           # exits 0 when the download fails, leaving no chezmoi on the runner.
           curl -fsSL --retry 3 --retry-all-errors https://get.chezmoi.io -o "$RUNNER_TEMP/get-chezmoi.sh"
-          sh "$RUNNER_TEMP/get-chezmoi.sh" -b "$HOME/.local/bin"
-          "$HOME/.local/bin/chezmoi" --version
-      - name: run bats
+          sh "$RUNNER_TEMP/get-chezmoi.sh" -b "$RUNNER_TEMP/chezmoi"
+          "$RUNNER_TEMP/chezmoi/chezmoi" --version
+
+      - name: never run scripts or download externals
+        if: matrix.route == 'quick-start'
+        run: |
+          # No chezmoi setting skips scripts on apply or update, so a chezmoi
+          # first on PATH adds the exclusion to the commands that run them. An
+          # excluded external is still downloaded, so every command also sets
+          # ciSkipExternals, which leaves .chezmoiexternal.toml.tmpl empty.
+          mkdir -p "$RUNNER_TEMP/bin"
+          cat > "$RUNNER_TEMP/bin/chezmoi" << EOF
+          #!/bin/sh
+          case "\$1" in
+            apply | update) exec "$RUNNER_TEMP/chezmoi/chezmoi" --override-data '{"ciSkipExternals":true}' "\$@" --exclude=scripts ;;
+          esac
+          exec "$RUNNER_TEMP/chezmoi/chezmoi" --override-data '{"ciSkipExternals":true}' "\$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/bin/chezmoi"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: install from the checkout
+        if: matrix.route == 'full'
+        run: sh ./install.sh
+
+      - name: install with the Quick Start one-liner
+        if: matrix.route == 'quick-start'
+        env:
+          ARTEFILES_VERSION: ${{ github.ref_name }}
+        # The README pipes install.sh from curl into `sh -c`; reading the
+        # checked-out copy runs the same code without a download.
+        run: sh -c "$(cat install.sh)"
+
+      - name: verify the install
+        run: sh .github/scripts/verify-install.sh "${{ github.sha }}"
+
+      - name: the installed tools run
+        if: matrix.route == 'full'
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          bats tests/
+          fish --version
+          starship --version
+          git --version
 
-  bats-macos:
-    needs: changes
-    if: needs.changes.outputs.chezmoi == 'true' || needs.changes.outputs.tests == 'true'
-    runs-on: macos-15
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The Quick Start route runs no scripts, so their templates are rendered
+      # here: a dry run renders every script it would run and fails on a
+      # template error. The real chezmoi, not the wrapper, which would exclude them.
+      - name: render every script without running it
+        if: matrix.route == 'quick-start'
+        run: '"$RUNNER_TEMP/chezmoi/chezmoi" apply --dry-run --override-data ''{"ciSkipExternals":true}'''
+
+      # The installed macOS .gitconfig sends GitHub over SSH, so updates on a Mac
+      # need a GitHub SSH key (a README prerequisite). A runner has none, so this
+      # checks the route chezmoi update takes, not the pull itself.
+      - name: on macOS, chezmoi update pulls over SSH
+        if: runner.os == 'macOS'
+        run: |
+          url=$(git -C "$(chezmoi source-path)" ls-remote --get-url origin)
+          echo "chezmoi update pulls from ${url}"
+          case "$url" in ssh://git@github.com/* | git@github.com:*) ;; *) exit 1 ;; esac
+
+      - name: chezmoi update
+        if: matrix.route == 'quick-start'
+        # The installed macOS .gitconfig sends GitHub URLs over SSH, and a runner
+        # has no SSH key: the pull ignores that file and uses HTTPS.
+        env:
+          GIT_CONFIG_GLOBAL: /dev/null
+        run: chezmoi update
+
+      # Last: it re-runs init with another destination.
+      - name: install into a folder that does not exist yet
+        if: matrix.route == 'full'
+        run: |
+          dest="$RUNNER_TEMP/new/home"
+          sh ./install.sh --destination "$dest"
+          for target in .config/fish/config.fish .config/starship.toml .gitconfig; do
+            test -s "${dest}/${target}" || {
+              echo "${dest}/${target} was not written" >&2
+              exit 1
+            }
+          done
+
+  # The single required check: green when every job above passed or was skipped
+  # by its tier, red when one failed or was cancelled.
+  ci-ok:
+    if: always()
+    needs: [changes, lint, install]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: install bats and chezmoi
-        run: brew install bats-core chezmoi jq yq shellcheck
-      - name: run bats
-        run: bats tests/
+      - name: every check passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          case " $RESULTS " in *" failure "* | *" cancelled "*) exit 1 ;; esac

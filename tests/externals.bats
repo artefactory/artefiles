@@ -143,3 +143,24 @@ tomllib.loads(sys.stdin.read())
     esac
   done
 }
+
+# CI sets ciSkipExternals: --exclude=externals still downloads every archive.
+@test "ciSkipExternals leaves the Linux externals empty" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" "{\"modules\":$(all_modules)}"
+  linux="$BATS_TEST_TMPDIR/ext-linux.tmpl"
+  sed 's/eq .chezmoi.os "linux"/true/' "$REPO_ROOT/.chezmoiexternal.toml.tmpl" > "$linux"
+  render() {
+    XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template "$@" \
+      --config "$H/.config/chezmoi/chezmoi.toml" --source "$REPO_ROOT" --destination "$H" \
+      --left-delimiter='# [[' --right-delimiter=']] #' < "$linux"
+  }
+  run render
+  [ "$status" -eq 0 ]
+  printf '%s\n' "$output" | grep -qF '[".local/bin/fish"]'
+  # The same data key --override-data sets (chezmoi 2.66 and later).
+  sed -i.bak 's/^\[data\]$/[data]\nciSkipExternals = true/' "$H/.config/chezmoi/chezmoi.toml"
+  run render
+  [ "$status" -eq 0 ]
+  if printf '%s\n' "$output" | grep -q '^\['; then return 1; fi
+}
