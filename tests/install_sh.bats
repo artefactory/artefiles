@@ -28,7 +28,7 @@ setup() {
   cd "$BATS_TEST_TMPDIR"
   run sh -c "$(cat "$REPO_ROOT/install.sh")" sh --destination "$BATS_TEST_TMPDIR/h" --dry-run
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Running 'chezmoi init --apply artefactory/artefiles"* ]]
+  [[ "$output" == *"Running 'chezmoi init artefactory/artefiles"* ]]
   [[ "$output" != *"--source="* ]]
 }
 
@@ -37,5 +37,5 @@ setup() {
   cd "$BATS_TEST_TMPDIR"
   run "$REPO_ROOT/install.sh" --destination "$BATS_TEST_TMPDIR/h" --dry-run
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Running 'chezmoi init --apply --source=${root} "* ]]
+  [[ "$output" == *"Running 'chezmoi init --source=${root} "* ]]
 }

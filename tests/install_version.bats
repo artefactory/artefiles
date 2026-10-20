@@ -38,7 +38,7 @@ run_install() {
 @test "the latest release is installed by default" {
   run_install GH_FAKE_TAG=v2026.10.0
   [ "$status" -eq 0 ]
-  grep -qx 'chezmoi init --apply --branch=v2026.10.0 artefactory/artefiles --destination='"$H"'/dest' "$CALLS"
+  grep -qx 'chezmoi init --branch=v2026.10.0 artefactory/artefiles --destination='"$H"'/dest' "$CALLS"
 }
 
 @test "ARTEFILES_VERSION picks the tag and gh is not asked for the latest" {
@@ -58,7 +58,7 @@ run_install() {
   run_install
   [ "$status" -eq 0 ]
   [[ "$output" == *"Could not find the latest release"* ]]
-  grep -qx 'chezmoi init --apply artefactory/artefiles --destination='"$H"'/dest' "$CALLS"
+  grep -qx 'chezmoi init artefactory/artefiles --destination='"$H"'/dest' "$CALLS"
 }
 
 @test "a value git could read as an option is refused before anything runs" {

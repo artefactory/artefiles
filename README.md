@@ -16,11 +16,12 @@ A ready-to-use terminal setup for macOS and Linux: Fish, Starship, modern CLI to
 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 ```
 
-The [script](install.sh) does four things:
-1. Installs `gh` and signs you in to GitHub.
-2. Installs chezmoi and shows a checklist of optional modules.
-3. Applies everything.
-4. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#post-installation-steps) has the commands.
+The [script](install.sh) does five things:
+1. Checks your machine (system, tools, write access, network) and lists anything to fix before it changes anything.
+2. Installs `gh` and signs you in to GitHub.
+3. Installs chezmoi and shows a checklist of optional modules.
+4. Applies everything.
+5. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#post-installation-steps) has the commands.
 
 Then open a new terminal (type `fish` if you declined the shell change) and run `dotfiles_doctor` to check the install.
 
@@ -28,7 +29,7 @@ Then open a new terminal (type `fish` if you declined the shell change) and run 
 
 ```bash
 # Another release, or a branch such as main (the default is the latest release)
-ARTEFILES_VERSION=v2026.10.1 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+ARTEFILES_VERSION=main sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 
 # No browser (CI, a remote machine): sign in with a token
 GH_TOKEN=<token> sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"

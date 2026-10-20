@@ -119,7 +119,7 @@ first_choice() {
     --promptString "Email (default: sandboxer@example.com, press enter to accept)=sandboxer@example.com" \
     --promptMultichoice "Select optional modules=$(first_choice)"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Running 'chezmoi init --apply"* ]]
+  [[ "$output" == *"Running 'chezmoi init "* ]]
   [[ "$output" == *'modules = ["editor"]'* ]]
   [ ! -s "$BATS_TEST_TMPDIR/real-tools.calls" ]
   if grep -q 'PUT\|auth login' "$BATS_TEST_TMPDIR/gh.calls"; then return 1; fi
@@ -173,12 +173,18 @@ leftovers() {
       sh "$SCRIPT" --modules editor --command 'sleep 30' > /dev/null 2>&1 &
     pid=$!
     # Wait for the sandbox to exist, then interrupt the shell and its child.
-    for _ in $(seq 1 100); do [ -n "$(leftovers)" ] && break; sleep 0.1; done
+    for _ in $(seq 1 100); do
+      [ -n "$(leftovers)" ] && break
+      sleep 0.1
+    done
     sleep 1
     pkill -"$sig" -P "$pid" || true
     kill -"$sig" "$pid" 2> /dev/null || true
     wait "$pid" 2> /dev/null || true
-    [ -z "$(leftovers)" ] || { echo "left behind after $sig: $(leftovers)" >&2; return 1; }
+    [ -z "$(leftovers)" ] || {
+      echo "left behind after $sig: $(leftovers)" >&2
+      return 1
+    }
   done
 }
 
@@ -239,4 +245,14 @@ leftovers() {
 @test "the cheatsheet says what the sandbox does not exercise and how to clean up" {
   grep -qiE 'curl.*stub|stubbed.*curl|missing-command|not installed' "$REPO_ROOT/CHEATSHEET.md"
   grep -qF -- '--clean' "$REPO_ROOT/CHEATSHEET.md"
+}
+
+@test "the sandbox lets install.sh's header probe through and still stubs downloads" {
+  run env -u CI -u CODESPACES HOME="$REAL_HOME" XDG_CONFIG_HOME="$REAL_HOME/.config" \
+    TMPDIR="$BATS_TEST_TMPDIR" PATH="$PATH" \
+    sh "$SCRIPT" --modules editor --command \
+    'curl -fsSI file:///etc/hosts > /dev/null && echo PROBE=ok; curl -fsSL -o x file:///etc/hosts || echo DOWNLOAD=stubbed'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"PROBE=ok"* ]]
+  [[ "$output" == *"DOWNLOAD=stubbed"* ]]
 }

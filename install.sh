@@ -4,6 +4,18 @@
 # -u: exit on unset variables
 set -eu
 
+# Where artefiles and the tools it bootstraps come from.
+REPO="artefactory/artefiles"
+GITHUB_HOME="https://github.com"
+HOMEBREW_INSTALLER="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+CHEZMOI_INSTALLER="https://chezmoi.io/get"
+GH_LATEST_RELEASE="https://api.github.com/repos/cli/cli/releases/latest"
+GH_DOWNLOADS="https://github.com/cli/cli/releases/download"
+# Scopes the GitHub login asks for; gh and git need them on private repositories.
+GH_SCOPES="repo,read:org,gist"
+# Seconds the network check waits for each answer.
+NETWORK_TIMEOUT=10
+
 dry_run=false
 destination=""
 
@@ -34,19 +46,13 @@ done
 # installing something else. Prints nothing when the default branch is meant.
 resolve_ref() {
   if [ -n "${ARTEFILES_VERSION:-}" ]; then
-    # The value reaches git as an argument: refuse anything git could read as an option.
-    case "$ARTEFILES_VERSION" in
-      -* | *[!A-Za-z0-9._/-]*)
-        echo "ARTEFILES_VERSION='${ARTEFILES_VERSION}' is not a valid tag or branch name." >&2
-        return 1
-        ;;
-    esac
+    # The preflight has already refused a value git could read as an option.
     printf '%s\n' "$ARTEFILES_VERSION"
     return 0
   fi
   # A dry run never calls GitHub.
   [ "$dry_run" = "true" ] && return 0
-  if tag="$(gh release view --repo artefactory/artefiles --json tagName --jq .tagName 2> /dev/null)" && [ -n "$tag" ]; then
+  if tag="$(gh release view --repo "$REPO" --json tagName --jq .tagName 2> /dev/null)" && [ -n "$tag" ]; then
     printf '%s\n' "$tag"
   else
     echo "Could not find the latest release; installing the default branch instead." >&2
@@ -56,9 +62,9 @@ resolve_ref() {
 # Clone the repo at $ref (the default branch when empty) into $1.
 clone_repo() {
   if [ -n "$ref" ]; then
-    gh repo clone artefactory/artefiles "$1" -- --branch "$ref"
+    gh repo clone "$REPO" "$1" -- --branch "$ref"
   else
-    gh repo clone artefactory/artefiles "$1"
+    gh repo clone "$REPO" "$1"
   fi
 }
 
@@ -86,7 +92,7 @@ checkout_ref() {
       return 1
     fi
   else
-    echo "${ref} is not a tag or branch of artefactory/artefiles." >&2
+    echo "${ref} is not a tag or branch of ${REPO}." >&2
     return 1
   fi
   dir="$1"
@@ -129,7 +135,7 @@ install_homebrew() {
   fi
   echo "Installing Homebrew..." >&2
   [ "$dry_run" = "true" ] && return 0
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER")"
 }
 
 # Install GitHub CLI first if not already installed
@@ -146,7 +152,7 @@ install_github_cli() {
     fi
 
     # Get latest version
-    latest_version=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    latest_version=$(curl -s "$GH_LATEST_RELEASE" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 
     # Download and install for current architecture
     arch=$(uname -m)
@@ -165,7 +171,7 @@ install_github_cli() {
       os="macOS"
     fi
 
-    download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_${os}_${arch_name}.tar.gz"
+    download_url="${GH_DOWNLOADS}/v${latest_version}/gh_${latest_version}_${os}_${arch_name}.tar.gz"
     tmp_dir=$(mktemp -d)
     curl -sL "${download_url}" | tar xz -C "${tmp_dir}"
     cp "${tmp_dir}"/gh_*/bin/gh "${bin_dir}/"
@@ -206,20 +212,17 @@ ensure_github_auth() {
   if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
     echo "Starting interactive GitHub authentication..." >&2
 
-    # Default required scopes for full functionality
-    SCOPES="repo,read:org,gist"
-
     # Attempt browser-based authentication with SSH for git operations
     # This is preferred as it's more secure and supports 2FA
     if gh auth login \
       --git-protocol ssh \
-      --scopes "${SCOPES}" \
+      --scopes "$GH_SCOPES" \
       --web \
       ||
       # Fallback to HTTPS if SSH fails
       gh auth login \
         --git-protocol https \
-        --scopes "${SCOPES}" \
+        --scopes "$GH_SCOPES" \
         --web; then
       echo "GitHub CLI authentication successful" >&2
       return 0
@@ -261,6 +264,14 @@ start_sudo_keepalive() {
   [ "$(uname)" = "Darwin" ] && command -v sudo > /dev/null 2>&1 || return 0
   echo "Some steps need administrator rights: enter your password once if asked." >&2
   if ! sudo -v; then
+    if ! command -v brew > /dev/null 2>&1; then
+      cat >&2 << 'MSG'
+Homebrew needs administrator rights to install, and sudo was refused. Your
+account may not be allowed to use sudo (a managed Mac can remove it). Ask your
+IT team to restore administrator rights, then run the install again.
+MSG
+      exit 1
+    fi
     cat >&2 << 'MSG'
 Your account may not be allowed to use sudo (a managed Mac can remove it).
 Homebrew and casks such as ghostty will fail without it. Ask your IT team to
@@ -281,6 +292,87 @@ trap stop_sudo_keepalive EXIT
 trap 'stop_sudo_keepalive; exit 130' INT
 trap 'stop_sudo_keepalive; exit 143' TERM
 trap 'stop_sudo_keepalive; exit 129' HUP
+
+# POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
+script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
+
+# The module checklist runs only at a terminal, outside a dry run, and never over
+# an existing chezmoi config (see below).
+chezmoi_config="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi/chezmoi.toml"
+checklist=false
+if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_config" ]; then
+  checklist=true
+fi
+
+# Preflight: every check the install needs, run before anything is installed or
+# written. The checks only read; every failure is collected and printed
+# together, so one run lists everything to fix.
+preflight_failures=""
+fail_check() {
+  preflight_failures="${preflight_failures}  - $1
+"
+}
+stop_on_failures() {
+  [ -n "$preflight_failures" ] || return 0
+  printf 'artefiles cannot be installed yet:\n%sFix these, then run the install again.\n' "$preflight_failures" >&2
+  exit 1
+}
+
+# True when $1 answers over HTTPS.
+reachable() {
+  curl -fsSI --max-time "$NETWORK_TIMEOUT" -o /dev/null "$1"
+}
+
+# The network probe needs someone at a terminal and never runs in a dry run.
+preflight() {
+  os="$(uname)"
+  case "$os" in
+    Darwin | Linux) ;;
+    *) fail_check "${os} is not supported: artefiles installs on macOS and Linux." ;;
+  esac
+  arch="$(uname -m)"
+  case "$arch" in
+    x86_64 | amd64 | aarch64 | arm64) ;;
+    *) fail_check "${arch} processors are not supported: artefiles needs x86_64 or arm64." ;;
+  esac
+
+  has_curl=true
+  if ! command -v curl > /dev/null 2>&1; then
+    has_curl=false
+    fail_check "artefiles needs curl to download its tools: install curl."
+  fi
+
+  [ -w "$HOME" ] || fail_check "cannot write to ${HOME}: the install writes your configuration there."
+  if [ -e "${HOME}/.local/bin" ] && [ ! -w "${HOME}/.local/bin" ]; then
+    fail_check "cannot write to ${HOME}/.local/bin: the install puts tools there."
+  fi
+
+  # The value reaches git as an argument: refuse anything git could read as an
+  # option. A checkout installs itself and ignores the value.
+  if [ -n "${ARTEFILES_VERSION:-}" ] && [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+    case "$ARTEFILES_VERSION" in
+      -* | *[!A-Za-z0-9._/-]*)
+        fail_check "ARTEFILES_VERSION='${ARTEFILES_VERSION}' is not a valid tag or branch name."
+        ;;
+    esac
+  fi
+
+  # Only the checklist path runs git itself (gh repo clone, checkout_ref);
+  # chezmoi falls back to its own git.
+  if [ "$checklist" = "true" ] && [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ] && ! command -v git > /dev/null 2>&1; then
+    fail_check "artefiles needs git to fetch its files: install git."
+  fi
+
+  if [ "$has_curl" = "true" ] && [ "$dry_run" = "false" ] && [ "$interactive" = "true" ]; then
+    reachable "$GITHUB_HOME" || fail_check "cannot reach ${GITHUB_HOME}: check the network connection or proxy."
+    if [ "$os" = "Darwin" ] && ! command -v brew > /dev/null 2>&1; then
+      reachable "$HOMEBREW_INSTALLER" \
+        || fail_check "cannot reach the Homebrew installer on https://raw.githubusercontent.com: check the network connection or proxy."
+    fi
+  fi
+}
+preflight
+stop_on_failures
 
 # Install Homebrew first on macOS so chezmoi scripts inherit brew on PATH
 start_sudo_keepalive
@@ -303,10 +395,25 @@ if [ "$(uname)" = "Darwin" ]; then
   fi
 fi
 
+# The install itself needs none of the login's scopes; they serve gh and git on
+# private repositories later, so a missing one only warns. gh lists scopes only
+# for classic and OAuth tokens, so fine-grained and CI job tokens are not checked;
+# with several accounts the first listed one is read.
+warn_missing_scopes() {
+  scopes="$(gh auth status 2>&1 | sed -n "s/.*Token scopes: //p" | head -n 1)"
+  [ -n "$scopes" ] || return 0
+  missing=""
+  case "$scopes" in *"'repo'"*) ;; *) missing="${missing} repo" ;; esac
+  case "$scopes" in *"'read:org'"* | *"'write:org'"* | *"'admin:org'"*) ;; *) missing="${missing} read:org" ;; esac
+  case "$scopes" in *"'gist'"*) ;; *) missing="${missing} gist" ;; esac
+  [ -z "$missing" ] || echo "Warning: the GitHub login lacks the scopes${missing}; gh and git may fail on private repositories. To add them: gh auth refresh --scopes ${GH_SCOPES}" >&2
+}
+
 # GitHub CLI setup (skipped in dry-run)
 if [ "$dry_run" = "false" ]; then
   install_github_cli
   ensure_github_auth
+  warn_missing_scopes
 fi
 
 # Install chezmoi if not already installed (skipped in dry-run)
@@ -315,23 +422,13 @@ if [ "$dry_run" = "false" ]; then
     bin_dir="$(set_bin_dir)"
     chezmoi="${bin_dir}/chezmoi"
     echo "Installing chezmoi to '${chezmoi}'" >&2
-    if command -v curl > /dev/null; then
-      chezmoi_install_script="$(curl -fsSL https://chezmoi.io/get)"
-    elif command -v wget > /dev/null; then
-      chezmoi_install_script="$(wget -qO- https://chezmoi.io/get)"
-    else
-      echo "To install chezmoi, you must have curl or wget installed." >&2
-      exit 1
-    fi
+    chezmoi_install_script="$(curl -fsSL "$CHEZMOI_INSTALLER")"
     sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"
     unset chezmoi_install_script bin_dir
   fi
 else
   chezmoi="chezmoi"
 fi
-
-# POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
-script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
 # A checkout installs itself; only the Quick Start and the manual path fetch a version.
 ref=""
@@ -345,8 +442,7 @@ fi
 # Module checklist: chezmoi's own prompt does not show what is selected, so ask
 # here and store the answer; chezmoi init then reuses it without prompting. Only
 # at a terminal, never in CI, and never over an existing chezmoi config.
-chezmoi_config="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi/chezmoi.toml"
-if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_config" ]; then
+if [ "$checklist" = "true" ]; then
   # The Quick Start has no checkout: clone with gh so the checklist is available.
   if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
     clone_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
@@ -354,7 +450,11 @@ if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_c
       # A clone from an earlier install is reused; bring it to the requested version.
       [ -z "$ref" ] || checkout_ref "$clone_dir" >&2 || exit 1
       script_dir="$clone_dir"
-    elif [ ! -e "$clone_dir" ] && clone_repo "$clone_dir" >&2; then
+    elif [ ! -e "$clone_dir" ]; then
+      clone_repo "$clone_dir" >&2 || {
+        echo "Could not clone ${REPO} into ${clone_dir}." >&2
+        exit 1
+      }
       script_dir="$clone_dir"
     fi
   fi
@@ -379,17 +479,42 @@ fi
 # Run as `sh -c "$(curl ...)"` there is no script file: $0 is "sh" and script_dir
 # is the directory holding sh, not a checkout. Only a checkout may be the
 # chezmoi source; otherwise let chezmoi clone the repo.
+# chezmoi init writes the config first, so its template checks run before any file
+# is written; chezmoi apply then writes the files. The source directory is kept
+# in the config; the destination is not, so both steps get it.
 if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
-  set -- init --apply "--source=${script_dir}"
+  set -- init "--source=${script_dir}"
 else
-  set -- init --apply
+  set -- init
   [ -z "$ref" ] || set -- "$@" "--branch=${ref}"
-  set -- "$@" artefactory/artefiles
+  set -- "$@" "$REPO"
 fi
-[ -n "${destination}" ] && set -- "$@" "--destination=${destination}"
-[ "$dry_run" = "true" ] && set -- "$@" "--dry-run"
+apply_destination=""
+if [ -n "${destination}" ]; then
+  set -- "$@" "--destination=${destination}"
+  apply_destination="--destination=${destination}"
+fi
+
+# Before chezmoi init: everything it is given must be usable. A version that a
+# clone or checkout_ref has not already found must exist on GitHub, since chezmoi
+# would otherwise fail on its own clone. Skipped in a dry run, which installs
+# nothing to check.
+preflight_init() {
+  [ "$dry_run" = "false" ] || return 0
+  "$chezmoi" --version > /dev/null 2>&1 || fail_check "chezmoi does not run (${chezmoi}): reinstall it or remove it so the install fetches it."
+  if [ -n "$ref" ] && [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+    gh api "repos/${REPO}/commits/${ref}" --silent > /dev/null 2>&1 \
+      || fail_check "${ref} is not a tag or branch of ${REPO}."
+  fi
+  if [ -n "$destination" ] && [ -e "$destination" ] && [ ! -w "$destination" ]; then
+    fail_check "cannot write to ${destination}: the files are written there."
+  fi
+}
+preflight_init
+stop_on_failures
 
 echo "Running 'chezmoi $*'" >&2
+echo "Running 'chezmoi apply${apply_destination:+ }${apply_destination}'" >&2
 [ "$dry_run" = "true" ] && exit 0
 
 # chezmoi looks up the latest GitHub releases through the GitHub API, which
@@ -406,6 +531,11 @@ if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITHUB_ACCESS_TOKEN:-}" ] && [ -z "${CH
 fi
 
 "$chezmoi" "$@"
+if [ -n "$apply_destination" ]; then
+  "$chezmoi" apply "$apply_destination"
+else
+  "$chezmoi" apply
+fi
 
 # Last step, only reached once chezmoi succeeded (set -e): the login shell
 # change needs sudo and an attentive user, so nothing may depend on it or run

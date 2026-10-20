@@ -57,11 +57,17 @@ answers() {
   local pos=1 keys="n" row
   for name in "$@"; do
     row=$(idx "$name")
-    while [ "$pos" -lt "$row" ]; do keys+=$'\033[B'; pos=$((pos + 1)); done
+    while [ "$pos" -lt "$row" ]; do
+      keys+=$'\033[B'
+      pos=$((pos + 1))
+    done
     keys+=" "
   done
   last=$(($(prompt_module_names | wc -l) + 1))
-  while [ "$pos" -lt "$last" ]; do keys+=$'\033[B'; pos=$((pos + 1)); done
+  while [ "$pos" -lt "$last" ]; do
+    keys+=$'\033[B'
+    pos=$((pos + 1))
+  done
   printf '%s\ny\n' "$keys" > "$ANSWERS"
 }
 
@@ -71,7 +77,7 @@ answers() {
   [ "$status" -eq 0 ]
   [ -f "$SEEN" ]
   grep -qF 'modules = ["editor","atuin"]' "$SEEN"
-  grep -q '^init --apply --source=' "$CALLS"
+  grep -q '^init --source=' "$CALLS"
 }
 
 @test "an existing chezmoi config skips the checklist" {
@@ -88,7 +94,7 @@ answers() {
   [ "$status" -eq 0 ]
   [[ "$output" != *"Select the optional modules"* ]]
   [ ! -f "$SEEN" ]
-  grep -q '^init --apply' "$CALLS"
+  grep -q '^init ' "$CALLS"
 }
 
 @test "CI never gets the checklist" {
@@ -120,13 +126,13 @@ answers() {
   run_quick_start ARTEFILES_SELECT_TTY="$ANSWERS"
   [ "$status" -eq 0 ]
   grep -q "^gh repo clone artefactory/artefiles $H/.local/share/chezmoi" "$CALLS"
-  grep -q "^init --apply --source=$H/.local/share/chezmoi" "$CALLS"
+  grep -q "^init --source=$H/.local/share/chezmoi" "$CALLS"
   grep -qF 'modules = ["cmux"]' "$SEEN"
 }
 
 @test "the Quick Start path without a terminal keeps asking chezmoi to clone" {
   run_quick_start
   [ "$status" -eq 0 ]
-  grep -q '^init --apply artefactory/artefiles' "$CALLS"
+  grep -q '^init artefactory/artefiles' "$CALLS"
   if grep -q '^gh repo clone' "$CALLS"; then return 1; fi
 }
