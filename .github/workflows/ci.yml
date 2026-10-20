@@ -156,6 +156,15 @@ jobs:
           starship --version
           git --version
 
+      # The health check users run after an install: it returns 1 on a missing
+      # tool of a selected module, a missing managed config, a forbidden tool
+      # or a chezmoi doctor check that failed or found an error.
+      - name: dotfiles_doctor finds no problem
+        if: matrix.route == 'full'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          fish -c dotfiles_doctor
+
       # The Quick Start route runs no scripts, so their templates are rendered
       # here: a dry run renders every script it would run and fails on a
       # template error. The real chezmoi, not the wrapper, which would exclude them.
