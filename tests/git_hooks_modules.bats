@@ -6,7 +6,7 @@
 setup() {
   load 'helpers/setup'
 
-  TMPL=.chezmoiscripts/run_onchange_zzzzz_install-git-hooks.sh.tmpl
+  TMPL=.chezmoiscripts/run_onchange_after_zzzzz_install-git-hooks.sh.tmpl
   SCRIPT_TARGET=.chezmoiscripts/zzzzz_install-git-hooks.sh
   STUBS="$BATS_TEST_TMPDIR/stubs"
   CALLS="$BATS_TEST_TMPDIR/calls"
@@ -61,7 +61,7 @@ gen_calls() { grep -cE '^(prek util init-template-dir|pre-commit init-templatedi
 
 @test "packages.yaml defines both modules and python_dev no longer installs pre-commit" {
   yq -e '.packages.darwin.modules | (has("pre_commit") and has("prek"))' "$REPO_ROOT/.chezmoidata/packages.yaml"
-  ! grep -n 'pre-commit' "$REPO_ROOT/.chezmoiscripts/run_onchange_zzzzz_install-python-tools.sh"
+  ! grep -n 'pre-commit' "$REPO_ROOT/.chezmoiscripts/run_onchange_after_zzzzz_install-python-tools.sh"
 }
 
 @test "the init prompt offers both modules" {

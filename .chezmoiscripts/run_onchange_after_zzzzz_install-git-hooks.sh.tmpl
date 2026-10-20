@@ -3,7 +3,7 @@
 # Installs the git hook manager chosen with the pre_commit or prek module and
 # generates the global git template hooks (~/.git_template/hooks) with it, so
 # every `git init` and clone gets them. prek wins if both modules are selected.
-# Runs last (zzzzz prefix) to ensure uv is available.
+# An after_ script: it runs once the externals, uv among them, are in place.
 #
 # Selected tool: # [[ ternary "prek" "pre-commit" (has "prek" .modules) ]] #
 

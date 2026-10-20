@@ -125,3 +125,21 @@ tomllib.loads(sys.stdin.read())
 
   if printf '%s\n' "$rendered" | grep -qF '".local/bin/rg"'; then return 1; fi
 }
+
+# chezmoi runs a script that is neither before_ nor after_ among the files, in
+# the order of its target name, and .chezmoiscripts/ sorts before .local/: such
+# a script runs before the externals in ~/.local/bin are downloaded.
+@test "every script that needs a tool from the externals is an after_ script" {
+  needs=$(grep -lE 'command -v "?(uv|bat|fnm)"?|uv is required' \
+    $(fd -H -t f . "$REPO_ROOT/.chezmoiscripts" -E darwin))
+  [ -n "$needs" ]
+  for f in $needs; do
+    case "$(basename "$f")" in
+      run_after_* | run_onchange_after_* | run_once_after_*) ;;
+      *)
+        echo "$f runs before the externals" >&2
+        return 1
+        ;;
+    esac
+  done
+}
