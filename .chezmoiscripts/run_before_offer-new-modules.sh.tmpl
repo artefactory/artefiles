@@ -1,0 +1,85 @@
+{{- /* The modules of this release, those this user was shown, and the rest.
+       Nothing renders when every module was shown, so the script exists (and
+       `chezmoi verify` reports it) only while an offer is pending. */ -}}
+{{- $names := list -}}
+{{- range regexFindAll "(?m)^# \\[\\[ \\$choices = append \\$choices \"[a-z_]+ \\|" (include ".chezmoi.toml.tmpl") -1 -}}
+{{-   $names = append $names (regexReplaceAll "^.*\"([a-z_]+) \\|$" . "${1}") -}}
+{{- end -}}
+{{- $offered := $names -}}
+{{- if hasKey . "modulesOffered" -}}
+{{-   $offered = .modulesOffered -}}
+{{- else if hasKey . "modules" -}}
+{{-   $offered = includeTemplate "modulesOfferedBefore" . | fromJson -}}
+{{- end -}}
+{{- $unseen := list -}}
+{{- range $names -}}
+{{-   if not (has . $offered) }}{{ $unseen = append $unseen . }}{{ end -}}
+{{- end -}}
+{{- if $unseen -}}
+#!/bin/sh
+# Offers the modules a release added since this user last chose: the checklist
+# starts from the stored modules and marks the new ones. The answer and the
+# modules shown are saved in chezmoi's config. chezmoi holds its state lock for
+# the whole apply, so the modules chosen install on the next `chezmoi apply`;
+# a warning block says so.
+# Without a terminal nothing changes and the offer waits for the next apply.
+
+set -eu
+
+source_dir={{ .chezmoi.sourceDir | quote }}
+config="${CHEZMOI_CONFIG_FILE:?}"
+modules='{{ includeTemplate "modules" . }}'
+version={{ includeTemplate "modulesVersion" . | int }}
+unseen=$(printf '%s\n' {{ $unseen | join " " }})
+all='{{ $names | toJson }}'
+
+# json_lines JSON — the names of a JSON array of strings, one per line.
+json_lines() { printf '%s' "$1" | tr -d '[]" ' | tr ',' '\n' | sed '/^$/d'; }
+
+tty_dev="${ARTEFILES_SELECT_TTY:-/dev/tty}"
+if ! (: < "$tty_dev") 2> /dev/null; then
+  echo "New modules: $(printf '%s\n' "$unseen" | paste -sd, - | sed 's/,/, /g'). They are offered on the next chezmoi apply at a terminal."
+  exit 0
+fi
+
+status=0
+selection=$(ARTEFILES_SELECTED="$(json_lines "$modules" | paste -sd, -)" \
+  ARTEFILES_NEW="$(printf '%s\n' "$unseen" | paste -sd, -)" \
+  sh "${source_dir}/select-modules.sh") || status=$?
+case "$status" in
+  0) ;;
+  1) selection="$modules" ;;
+  *) exit 0 ;;
+esac
+
+tmp="${config}.tmp"
+# The list is saved migrated, so it carries the current modulesVersion.
+awk -v modules="$selection" -v offered="$all" -v version="$version" '
+  /^[[:space:]]*(modulesOffered|modulesVersion)[[:space:]]*=/ { next }
+  /^[[:space:]]*modules[[:space:]]*=/ {
+    match($0, /^[[:space:]]*/)
+    indent = substr($0, 1, RLENGTH)
+    print indent "modulesVersion = " version
+    print indent "modules = " modules
+    print indent "modulesOffered = " offered
+    next
+  }
+  { print }
+' "$config" > "$tmp"
+mv "$tmp" "$config"
+
+added=$(json_lines "$selection" | grep -vxF "$(json_lines "$modules")" || true)
+if [ -n "$added" ]; then
+  list=$(printf '%s\n' "$added" | paste -sd, - | sed 's/,/, /g')
+  # stderr, so the block stays visible when chezmoi's output is piped.
+  {
+    echo ""
+    echo "!!! ============================================================ !!!"
+    echo "!!!  NOT INSTALLED YET: ${list}"
+    echo "!!!  Your choice is saved. This run cannot install it."
+    echo "!!!  When it finishes, run:  chezmoi apply"
+    echo "!!! ============================================================ !!!"
+    echo ""
+  } >&2
+fi
+{{ end -}}

@@ -1,0 +1,6 @@
+{{- /*
+The modules a config saved before modulesOffered existed was shown: the module
+set of modulesVersion 2. Fixed on purpose, so a module added by any later
+release is still offered to such a config.
+*/ -}}
+["editor","shell_tools","cli_extras","rust","ghostty","cmux","git_advanced","atuin","review","python_dev","pre_commit","prek","gcloud","containers","terraform","opentofu"]

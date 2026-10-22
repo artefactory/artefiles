@@ -80,6 +80,22 @@ credentialHelper = "!gh auth git-credential"
 # [[ end ]] #
 modulesVersion = # [[ $modulesVersion ]] #
 modules = # [[ $modules | toJson ]] #
+# The modules this user has been shown, so an update offers only the ones a
+# later release added (.chezmoiscripts/run_before_offer-new-modules.sh.tmpl).
+# A first prompt, or `chezmoi init --prompt`, shows them all; a config saved before this key existed was
+# shown the set in .chezmoitemplates/modulesOfferedBefore.
+# [[ $allNames := list ]] #
+# [[ range $choices ]] #
+# [[ $allNames = append $allNames (index (splitList " | " .) 0) ]] #
+# [[ end ]] #
+# [[ $offered := $allNames ]] #
+# [[ if has "--prompt" .chezmoi.args ]] #
+# [[ else if hasKey . "modulesOffered" ]] #
+# [[ $offered = .modulesOffered ]] #
+# [[ else if hasKey . "modules" ]] #
+# [[ $offered = includeTemplate "modulesOfferedBefore" . | fromJson ]] #
+# [[ end ]] #
+modulesOffered = # [[ $offered | toJson ]] #
 
 # A release install leaves the clone on a detached tag, where chezmoi's default
 # `git pull --rebase` fails. The command runs in the clone and uses its own

@@ -16,6 +16,9 @@
 # 2 without output when there is no terminal to read, and 1 when the input ends
 # or the user cancels before the selection is confirmed.
 #
+# ARTEFILES_SELECTED, a comma-separated list of names, replaces the default
+# selection (empty selects nothing); ARTEFILES_NEW marks those rows as new.
+# Both serve the offer of new modules on update.
 # ARTEFILES_SELECT_TTY only exists so tests can feed the keystrokes.
 
 set -eu
@@ -39,7 +42,11 @@ defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$template" 
 [ -n "$choices" ] || exit 1
 count=$(printf '%s\n' "$choices" | wc -l | tr -d ' ')
 
+if [ -n "${ARTEFILES_SELECTED+set}" ]; then
+  defaults="$ARTEFILES_SELECTED"
+fi
 selected=",${defaults:+${defaults},}"
+new=",${ARTEFILES_NEW:-},"
 notice=""
 cur=1
 saved_tty=""
@@ -109,7 +116,8 @@ render() {
       help="${line#* | }"
       if [ "$i" -eq "$cur" ]; then pointer=">"; else pointer=" "; fi
       if is_selected "$name"; then mark="[x]"; else mark="[ ]"; fi
-      printf '%s %s %-13s %s\n' "$pointer" "$mark" "$name" "$help"
+      case "$new" in *",$name,"*) tag=" (new)" ;; *) tag="" ;; esac
+      printf '%s %s %-13s %s%s\n' "$pointer" "$mark" "$name" "$help" "$tag"
     done
     if [ "$cur" -eq "$((count + 1))" ]; then pointer=">"; else pointer=" "; fi
     printf '%s %s\n' "$pointer" "[ Submit ] validate these choices and continue"
