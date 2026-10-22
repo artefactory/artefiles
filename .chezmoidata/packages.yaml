@@ -74,6 +74,7 @@ packages:
           - 'git-cliff'
           - 'git-lfs'
           - 'git-extras'
+          - 'lazygit'
         casks: []
       atuin:
         brews:
@@ -92,10 +93,25 @@ packages:
         brews: []
         casks:
           - 'gcloud-cli'
+      kubernetes:
+        brews:
+          - 'kubernetes-cli'
+          - 'k9s'
+        casks: []
+      data:
+        brews:
+          - 'duckdb'
+        casks: []
+      azure:
+        brews:
+          - 'azure-cli'
+        casks: []
       containers:
         brews:
           - 'colima'
           - 'docker'
+          - 'docker-buildx'
+          - 'lazydocker'
         casks: []
       terraform:
         taps:

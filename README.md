@@ -69,18 +69,21 @@ All modules (`[x]` marks the ones selected by default; without a terminal, chezm
 | `rust` | Rust toolchain (rustup, cargo) to build Rust tools | — |
 | `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | `cmux` |
 | `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | `ghostty` |
-| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras | — |
+| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, lazygit (TUI) | — |
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | — |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
+| `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
 | `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | — |
-| `containers` | Containers on macOS: Colima (runtime) and the docker CLI | — |
+| `azure` | Azure CLI: the az command to manage Microsoft Azure resources | — |
+| `containers` | Containers on macOS: Colima (runtime), the docker CLI with buildx, and lazydocker | — |
+| `kubernetes` | Kubernetes: kubectl, and k9s to browse and manage clusters in the terminal | — |
 | `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
 | `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 
-After installing: `atuin register` (or `atuin login`) turns on history sync, and `gcloud init` sets up Google Cloud. More commands and shortcuts are in the [cheatsheet](CHEATSHEET.md).
+After installing: `atuin register` (or `atuin login`) turns on history sync, `gcloud init` sets up Google Cloud, and `az login` signs in to Azure. More commands and shortcuts are in the [cheatsheet](CHEATSHEET.md).
 
 ## Using chezmoi
 

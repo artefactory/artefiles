@@ -82,6 +82,33 @@
   path = "git-lfs"
 # [[ end ]] #
 
+# [[ if has "git_advanced" $modules ]] #
+# lazygit - Terminal UI for git
+[".local/bin/lazygit"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "jesseduffield/lazygit" (printf "lazygit_*_linux_%s.tar.gz" (eq .chezmoi.arch "amd64" | ternary "x86_64" "arm64")) | quote ]] #
+  executable = true
+  path = "lazygit"
+# [[ end ]] #
+
+# [[ if has "kubernetes" $modules ]] #
+# k9s - Terminal UI for Kubernetes clusters; kubectl comes from install-kubectl.sh
+[".local/bin/k9s"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "derailed/k9s" (printf "k9s_Linux_%s.tar.gz" $fzfArch) | quote ]] #
+  executable = true
+  path = "k9s"
+# [[ end ]] #
+
+# [[ if has "data" $modules ]] #
+# DuckDB - In-process SQL database, queries CSV and Parquet files directly
+[".local/bin/duckdb"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "duckdb/duckdb" (printf "duckdb-cli-linux-%s.tar.gz" $fzfArch) | quote ]] #
+  executable = true
+  path = "duckdb"
+# [[ end ]] #
+
 # [[ if or (has "ghostty" $modules) (has "terminal" $modules) ]] #
 # zellij - A terminal workspace with batteries included
 [".local/bin/zellij"]

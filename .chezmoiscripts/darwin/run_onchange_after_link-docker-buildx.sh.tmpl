@@ -1,0 +1,13 @@
+{{- $modules := includeTemplate "modules" . | fromJson -}}
+{{- if has "containers" $modules -}}
+#!/bin/sh
+
+# The docker CLI finds plugins in ~/.docker/cli-plugins; Homebrew installs
+# buildx elsewhere, so `docker buildx` needs this link.
+
+set -eu
+
+plugin="$(brew --prefix)/opt/docker-buildx/bin/docker-buildx"
+mkdir -p "${HOME}/.docker/cli-plugins"
+ln -sfn "$plugin" "${HOME}/.docker/cli-plugins/docker-buildx"
+{{ end -}}

@@ -224,6 +224,17 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     echo "## Cloud"
     __check_tool_with_configs gcloud "" $managed_files
     # [[- end ]] #
+    # [[- if has "kubernetes" $modules ]] #
+    __check_tool_with_configs kubectl "" $managed_files
+    __check_tool_with_configs k9s "" $managed_files
+    # [[- end ]] #
+    # [[- if has "data" $modules ]] #
+    __check_tool_with_configs duckdb "" $managed_files
+    __check_tool_with_configs harlequin "" $managed_files
+    # [[- end ]] #
+    # [[- if has "azure" $modules ]] #
+    __check_tool_with_configs az "" $managed_files
+    # [[- end ]] #
     # [[- if has "terraform" $modules ]] #
     __check_tool_with_configs terraform "" $managed_files
     # [[- end ]] #
