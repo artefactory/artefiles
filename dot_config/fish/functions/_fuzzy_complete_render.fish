@@ -1,6 +1,15 @@
+# _fuzzy_complete_render [CMDLINE] — the `complete -C CMDLINE` candidates as
+# fzf rows. Without CMDLINE, the candidate lines are read from stdin.
 function _fuzzy_complete_render --description 'Render complete -C candidates as fzf rows: candidate + dimmed description'
-    set -l cmd_line $argv[1]
-    set -l comps (complete -C $cmd_line)
+    set -l comps
+    if set -q argv[1]
+        set comps (complete -C $argv[1])
+    else
+        # A command substitution does not read the function's stdin.
+        while read -l line
+            set -a comps $line
+        end
+    end
 
     if test (count $comps) -eq 0
         return 0
