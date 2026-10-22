@@ -21,7 +21,7 @@ The [script](install.sh) does five things:
 2. Installs `gh` and signs you in to GitHub.
 3. Installs chezmoi and shows a checklist of optional modules.
 4. Saves the files it would change in a dated backup folder (under `.local/state/artefiles` in your home), then applies everything. `install.sh --restore <folder>` undoes the install from that folder.
-5. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#post-installation-steps) has the commands. With an `@artefact.com` email, it also says when your GitHub account is not yet in the artefactory organisation.
+5. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#default-shell) has the commands. With an `@artefact.com` email, it also says when your GitHub account is not yet in the artefactory organisation.
 
 Then open a new terminal (type `fish` if you declined the shell change) and run `dotfiles_doctor` to check the install.
 
@@ -117,4 +117,6 @@ chezmoi keeps a copy of every config in a source directory (`chezmoi source-path
 
 ## More
 
-[CHEATSHEET.md](CHEATSHEET.md) has the commands and shortcuts, running bash snippets in Fish, the sandbox (`./sandbox.sh`), the tests and how to remove everything. MIT licence.
+[CHEATSHEET.md](CHEATSHEET.md) has the chezmoi commands, a guide per module, the sandbox (`./sandbox.sh`), the tests and how to remove everything. MIT licence.
+
+Claude Code can help you install, update, debug and use these tools in any project once the artefiles skill is installed: `gh skill install artefactory/artefiles .claude/skills/artefiles/SKILL.md --allow-hidden-dirs --agent claude-code --scope user`.

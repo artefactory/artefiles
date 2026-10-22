@@ -45,8 +45,10 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   fail=0
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
+    # .claude/ is never installed (chezmoi skips source entries starting with
+    # a dot), and its skill quotes template syntax as documentation.
     case "$rel" in
-      .git/* | .workspaces/* | tests/*) continue ;;
+      .git/* | .workspaces/* | tests/* | .claude/*) continue ;;
     esac
     if grep -q 'chezmoi:template:' "$f" 2> /dev/null; then
       echo "$rel: contains chezmoi:template directive but is not a .tmpl file" >&2
@@ -73,7 +75,7 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
     case "$rel" in
-      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .chezmoiignore | .chezmoiremove | .chezmoitemplates/*) continue ;;
+      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .claude/* | .chezmoiignore | .chezmoiremove | .chezmoitemplates/*) continue ;;
     esac
     # Skip binary-encoded files
     file --mime-encoding "$f" 2> /dev/null | grep -q binary && continue
