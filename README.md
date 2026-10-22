@@ -21,7 +21,7 @@ The [script](install.sh) does five things:
 2. Installs `gh` and signs you in to GitHub.
 3. Installs chezmoi and shows a checklist of optional modules.
 4. Saves the files it would change in a dated backup folder (under `.local/state/artefiles` in your home), then applies everything. `install.sh --restore <folder>` undoes the install from that folder.
-5. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#post-installation-steps) has the commands.
+5. Offers to make Fish your default shell and to star this repo. If you decline the shell change, the [cheatsheet](CHEATSHEET.md#post-installation-steps) has the commands. With an `@artefact.com` email, it also says when your GitHub account is not yet in the artefactory organisation.
 
 Then open a new terminal (type `fish` if you declined the shell change) and run `dotfiles_doctor` to check the install.
 

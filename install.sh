@@ -718,3 +718,29 @@ fi
 if [ -n "${source_dir:-}" ] && [ -f "${source_dir}/offer-star.sh" ]; then
   sh "${source_dir}/offer-star.sh" || true
 fi
+
+# An @artefact.com user whose GitHub account is not yet in the artefactory
+# organisation finds out when a clone fails, so say it once, as the last message
+# of a successful install. It only reads: when the membership cannot be read
+# (no gh, no network, a 401 or 403), nothing is shown.
+warn_artefactory_membership() {
+  [ "$interactive" = "true" ] || return 0
+  email="$("$chezmoi" execute-template '{{ .email }}' 2> /dev/null)" || return 0
+  case "$email" in *@artefact.com) ;; *) return 0 ;; esac
+  command -v gh > /dev/null 2>&1 || return 0
+  # -i prints the HTTP status line first; gh exits non-zero on a 404.
+  answer="$(gh api -i user/memberships/orgs/artefactory 2> /dev/null || :)"
+  code="$(printf '%s\n' "$answer" | head -n 1 | awk '{print $2}')"
+  case "$code" in
+    200)
+      if printf '%s\n' "$answer" | grep -q '"state": *"pending"'; then
+        echo "Warning: an invitation to the artefactory organisation is waiting for your GitHub account; accept it at https://github.com/orgs/artefactory/invitation" >&2
+      fi
+      ;;
+    404)
+      echo "Warning: your GitHub account is not yet in the artefactory organisation. Some repositories will not be reachable until you join. Ask your team how to join." >&2
+      ;;
+  esac
+  return 0
+}
+warn_artefactory_membership
