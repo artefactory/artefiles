@@ -101,3 +101,15 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
   [ "$status" -eq 0 ]
   stored_modules | jq -e --arg m "$(prompt_module_names | sed -n 2p)" '. == [$m]'
 }
+
+@test "chezmoi init --prompt asks again over a stored selection, as the README says" {
+  init_with '["editor"]'
+  run env PATH="$fake_bin:$PATH" XDG_CONFIG_HOME="$H/.config" HOME="$H" \
+    chezmoi init --prompt --config "$H/.config/chezmoi/chezmoi.toml" \
+    --source "$REPO_ROOT" --destination "$H" \
+    --promptString "Email (default: u@example.com, press enter to accept)=u@example.com" \
+    --promptMultichoice "Select optional modules=$(prompt_choices | grep '^atuin | ')" < /dev/null
+  [ "$status" -eq 0 ]
+  stored_modules | jq -e '. == ["atuin"]'
+  grep -qxF '| Change modules | `chezmoi init --prompt && chezmoi apply` |' "$REPO_ROOT/README.md"
+}

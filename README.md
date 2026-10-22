@@ -96,7 +96,7 @@ chezmoi keeps a copy of every config in a source directory (`chezmoi source-path
 | Apply changes | `chezmoi apply` |
 | Update from the repo | `chezmoi update` |
 | Reset one file | `chezmoi apply --force <path>` |
-| Change modules | `chezmoi init && chezmoi apply` |
+| Change modules | `chezmoi init --prompt && chezmoi apply` |
 
 ## Make it yours
 
