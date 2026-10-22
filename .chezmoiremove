@@ -1,0 +1,33 @@
+{{- /*
+Targets artefiles no longer installs, removed from existing installs by
+chezmoi apply. Each one maps to a line of the text artefiles (or fish's
+migration) wrote there: a file is removed only while it still holds that
+line, so a file the user wrote at the same path is kept. An empty marker
+removes the file whatever it holds.
+*/ -}}
+{{- $retired := dict
+      ".config/direnv/direnvrc" "# Support for uv (Python environment manager)"
+      ".config/fish/conf.d/direnv.fish" "# Shadows homebrew's vendor_conf.d/direnv.fish"
+      ".config/fish/functions/__cached_init.fish" "function __cached_init"
+      ".cache/fish/init-direnv.fish" ""
+      ".cache/fish/init-fzf.fish" ""
+      ".cache/fish/init-atuin.fish" ""
+      ".cache/fish/init-atuin-completions.fish" ""
+      ".config/fish/theme_preference" ""
+      ".config/fish/conf.d/fish_frozen_theme.fish" "# This file was created by fish when upgrading to version 4.3, to migrate"
+      ".config/fish/conf.d/fish_frozen_key_bindings.fish" "# set --global fish_key_bindings"
+}}
+{{- /* fish_frozen_key_bindings.fish comments its set line out only when the
+       bindings were fish's defaults; a vi-mode one is kept. */ -}}
+{{- /* Only a regular file its owner can read is opened: include fails on a
+       directory or an unreadable file, and a failing template aborts the
+       whole chezmoi apply. A symlink is left alone; artefiles never made one. */ -}}
+{{- range $target, $marker := $retired }}
+{{-   $path := joinPath ($.chezmoi.destDir | toString) $target }}
+{{-   $info := lstat $path }}
+{{-   if and $info (eq $info.type "file") (eq (mod (div $info.perm 256) 2) 1) }}
+{{-     if contains $marker (include $path) }}
+{{ $target }}
+{{-     end }}
+{{-   end }}
+{{- end }}

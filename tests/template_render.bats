@@ -65,14 +65,15 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   # verbatim. Catches the #95 nvim regression where init.lua.tmpl was
   # demoted to init.lua but kept its `-- [[ if eq .chezmoi.os ... ]] --`
   # blocks.
-  # .chezmoiignore is exempt: chezmoi always template-renders it regardless
-  # of extension, so its directives are never "leftover". Files in
+  # .chezmoiignore and .chezmoiremove are exempt: chezmoi always
+  # template-renders them regardless of extension, so their directives are
+  # never "leftover". Files in
   # .chezmoitemplates are exempt for the same reason: they are templates by location.
   fail=0
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
     case "$rel" in
-      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .chezmoiignore | .chezmoitemplates/*) continue ;;
+      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .chezmoiignore | .chezmoiremove | .chezmoitemplates/*) continue ;;
     esac
     # Skip binary-encoded files
     file --mime-encoding "$f" 2> /dev/null | grep -q binary && continue
