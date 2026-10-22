@@ -26,7 +26,6 @@ This cheatsheet provides quick reference for common commands and workflows. For 
   │   ├── aliases.fish # Shell aliases and functions
   │   └── functions/   # Custom fish functions
   ├── nvim/            # Editor configuration
-  ├── direnv/          # Environment management
   ├── bat/             # Syntax highlighting
   └── starship.toml    # Prompt configuration
 
@@ -228,11 +227,22 @@ Host myserver
 | Task | Command |
 |------|---------|
 | Create new virtual environment | `uv venv` |
-| Create project with automatic env | `mkdir project && cd project && echo 'layout uv' > .envrc && direnv allow` |
+| Create project with automatic env | `mkdir project && cd project && uv init && uv lock && echo 'layout uv --inexact' > .envrc && direnv allow` |
 | Install packages | `uv pip install package1 package2` |
 | Install from requirements | `uv pip install -r requirements.txt` |
 | Run script in isolated env | `uv run python script.py` |
 | Launch Jupyter | `jupyter lab` |
+
+`layout uv` is direnv's built-in (direnv 2.38 or later). It needs a `pyproject.toml` and a `uv.lock`, and runs `uv sync --frozen` whenever `pyproject.toml`, `uv.lock` or `.python-version` changes. Without `--inexact` the sync is exact: it uninstalls every package the lockfile does not list, extras and `--all-packages` installs included.
+
+A project nested in another one (a jj workspace under `<repo>/.workspaces/<name>`, say) needs its own `.envrc`, or direnv loads the parent's and activates the parent's venv:
+
+```sh
+source_up
+[[ -n $VIRTUAL_ENV ]] && PATH_rm "$VIRTUAL_ENV/bin"
+unset UV_PROJECT_ENVIRONMENT
+layout uv --inexact
+```
 
 ## System Health & Diagnostics
 
