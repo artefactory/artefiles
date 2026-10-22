@@ -539,7 +539,10 @@ if [ "$checklist" = "true" ]; then
         mkdir -p "$(dirname "$chezmoi_config")"
         # The version marks the list as made for the current module set (see .chezmoi.toml.tmpl).
         version="$(cat "${script_dir}/.chezmoitemplates/modulesVersion")"
-        printf '[data]\n  modulesVersion = %s\n  modules = %s\n' "$version" "$selection" > "$chezmoi_config"
+        # Every module was shown, so an update offers only those added later.
+        # shellcheck disable=SC2016 # the pattern matches a literal `$choices`
+        offered="[$(sed -nE 's/^# \[\[ \$choices = append \$choices "([a-z_]+) \|.*/"\1"/p' "${script_dir}/.chezmoi.toml.tmpl" | paste -sd, -)]"
+        printf '[data]\n  modulesVersion = %s\n  modules = %s\n  modulesOffered = %s\n' "$version" "$selection" "$offered" > "$chezmoi_config"
         ;;
       1)
         echo "Installation cancelled." >&2

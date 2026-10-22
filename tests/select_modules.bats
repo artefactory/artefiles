@@ -227,3 +227,22 @@ defaults() {
   expected=$(for m in $(prompt_module_names); do if defaults | grep -qx "$m"; then printf '"%s",' "$m"; fi; done)
   grep -qxF "modules = [${expected%,}]" "$H/.config/chezmoi/chezmoi.toml"
 }
+
+@test "ARTEFILES_SELECTED replaces the default selection, and an empty value selects nothing" {
+  keep_defaults; submit; raw $'\n'
+  printf '%s' "$KEYS" > "$ANSWERS"
+  run sh -c "ARTEFILES_SELECTED=atuin,editor ARTEFILES_SELECT_TTY='$ANSWERS' sh '$SCRIPT' 2>/dev/null"
+  [ "$status" -eq 0 ]
+  [ "$output" = '["editor","atuin"]' ]
+  run sh -c "ARTEFILES_SELECTED= ARTEFILES_SELECT_TTY='$ANSWERS' sh '$SCRIPT' 2>/dev/null"
+  [ "$status" -eq 0 ]
+  [ "$output" = '[]' ]
+}
+
+@test "ARTEFILES_NEW marks those rows as new" {
+  KEYS="q"
+  printf '%s' "$KEYS" > "$ANSWERS"
+  run sh -c "ARTEFILES_NEW=atuin ARTEFILES_SELECT_TTY='$ANSWERS' sh '$SCRIPT' 2>'$BATS_TEST_TMPDIR/ui'"
+  grep -E '^  \[[ x]\] atuin .*\(new\)$' "$BATS_TEST_TMPDIR/ui"
+  [ "$(grep -c '(new)$' "$BATS_TEST_TMPDIR/ui")" -eq 1 ]
+}
