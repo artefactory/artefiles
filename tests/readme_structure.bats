@@ -42,7 +42,7 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
 
 @test "Using chezmoi documents the day-to-day commands" {
   body=$(section "Using chezmoi")
-  for cmd in 'chezmoi init && chezmoi apply' 'chezmoi status' 'chezmoi diff' 'chezmoi edit' 'chezmoi apply' 'chezmoi update'; do
+  for cmd in 'chezmoi init --prompt && chezmoi apply' 'chezmoi status' 'chezmoi diff' 'chezmoi edit' 'chezmoi apply' 'chezmoi update'; do
     printf '%s\n' "$body" | grep -qF "$cmd" || { echo "missing: $cmd" >&2; return 1; }
   done
 }
