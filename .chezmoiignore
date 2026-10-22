@@ -1,5 +1,7 @@
 {{- $modules := includeTemplate "modules" . | fromJson -}}
 .github/
+docs/
+tests/
 install.sh
 offer-default-shell.sh
 offer-star.sh

@@ -55,3 +55,15 @@ setup() {
     return 1
   fi
 }
+
+# A repository file that is not a config must never land in the home
+# directory. Every target chezmoi manages starts with a dot, except
+# Library/ (VS Code's settings on macOS).
+@test "chezmoi installs no repository file outside the dot directories" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  run chezmoi_managed "$H"
+  [ "$status" -eq 0 ]
+  stray=$(printf '%s\n' "$output" | grep -v '^\.' | cut -d/ -f1 | sort -u | grep -vx 'Library' || true)
+  [ -z "$stray" ] || { echo "installed outside the dot directories: $stray"; false; }
+}
