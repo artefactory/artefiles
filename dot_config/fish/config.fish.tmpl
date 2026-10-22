@@ -176,7 +176,7 @@ end
 # FZF configuration with custom key bindings
 if type -q fzf
     set -x FZF_DISABLE_KEYBINDINGS 1
-    __cached_init fzf fzf --fish
+    fzf --fish | source
     # Drop FZF's own alt-c cd widget; Alt+Shift+C below is the directory jump.
     bind -e alt-c 2>/dev/null
     if bind -M insert >/dev/null 2>&1
@@ -208,8 +208,8 @@ if type -q atuin
     set -gx ATUIN_NOBIND true
     # --disable-up-arrow: keep fish's native up/down prefix search on the arrow
     # keys, instead of Atuin's own history TUI.
-    __cached_init atuin atuin init fish --disable-up-arrow
-    __cached_init atuin-completions atuin gen-completions --shell fish
+    atuin init fish --disable-up-arrow | source
+    atuin gen-completions --shell fish | source
 end
 
 # Atuin history rendered through fzf instead of atuin's own TUI, when both
