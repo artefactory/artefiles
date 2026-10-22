@@ -55,6 +55,9 @@ Library/Application Support/Code/User/settings.json
 {{ if not (has "python_dev" $modules) }}
 .chezmoiscripts/zzzzz_install-python-tools.sh
 {{ end }}
+{{ if not (has "data" $modules) }}
+.chezmoiscripts/zzzzz_install-harlequin.sh
+{{ end }}
 {{ if not (or (has "pre_commit" $modules) (has "prek" $modules)) }}
 .chezmoiscripts/zzzzz_install-git-hooks.sh
 {{ end }}
@@ -69,6 +72,12 @@ Library/Application Support/Code/User/settings.json
 {{ if eq .chezmoi.os "linux" }}
 {{   if not (has "gcloud" $modules) }}
 .chezmoiscripts/linux/install-gcloud.sh
+{{   end }}
+{{   if not (has "kubernetes" $modules) }}
+.chezmoiscripts/linux/install-kubectl.sh
+{{   end }}
+{{   if not (has "azure" $modules) }}
+.chezmoiscripts/linux/install-azure-cli.sh
 {{   end }}
 {{   if not (has "git_advanced" $modules) }}
 .chezmoiscripts/linux/install-git-extras.sh

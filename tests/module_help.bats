@@ -32,7 +32,7 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
 }
 
 @test "every module offered has a help and the others are not offered" {
-  [ "$(prompt_module_names | wc -l)" -eq 16 ]
+  [ "$(prompt_module_names | wc -l)" -eq 19 ]
   [ "$(prompt_choices | wc -l)" -eq "$(prompt_module_names | wc -l)" ]
   [ "$(prompt_module_names | sort | uniq -d | wc -l)" -eq 0 ]
 }
