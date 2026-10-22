@@ -1,47 +1,20 @@
 # Artefiles Cheatsheet
 
-This cheatsheet provides quick reference for common commands and workflows. For detailed documentation, see the [README.md](README.md).
-
-## Table of Contents
-
-- [Environment Setup](#environment-setup)
-- [Chezmoi](#chezmoi)
-- [Core Tools](#core-tools)
-- [Terminal & Shell](#terminal--shell)
-- [Git & Version Control](#git--version-control)
-- [Remote Server Operations](#remote-server-operations)
-- [Python Development](#python-development)
-- [System Health & Diagnostics](#system-health--diagnostics)
-- [Ghostty Terminal](#ghostty-terminal)
-- [Testing & Development](#testing--development)
-
-## Environment Setup
-
-### Configuration Structure
-
-```
-~/.config/
-  ├── fish/            # Shell configuration
-  │   ├── config.fish  # Main shell configuration
-  │   ├── aliases.fish # Shell aliases and functions
-  │   └── functions/   # Custom fish functions
-  ├── nvim/            # Editor configuration
-  ├── bat/             # Syntax highlighting
-  └── starship.toml    # Prompt configuration
-
-~/.config/ghostty/config # Terminal configuration
-~/.gitconfig          # Git configuration
-```
+Quick reference for chezmoi and for testing artefiles. How to use each tool,
+module by module, is in the [artefiles skill](.claude/skills/artefiles/SKILL.md)
+references below; Claude Code reads the same files.
 
 ## Chezmoi
 
 | Task | Command |
 |------|---------|
-| Status | `chezmoi status` |
+| Status | `chezmoi status --exclude=scripts,externals` |
 | Diff | `chezmoi diff` |
 | Edit a file | `chezmoi edit ~/.config/fish/config.fish` |
 | Apply changes | `chezmoi apply` |
 | Update from repo | `chezmoi update` |
+| Change modules | `chezmoi init --prompt && chezmoi apply` |
+| Health check | `dotfiles_doctor` |
 
 ### Remove All Chezmoi-Managed Files (Danger)
 
@@ -56,281 +29,44 @@ chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
 chezmoi purge --force
 ```
 
-### Core Tools
+## Default shell
 
-| Tool | Description | Usage |
-|------|-------------|-------|
-| [Fish Shell](https://fishshell.com/) | Modern shell | Intelligent autosuggestions and syntax highlighting |
-| [Starship](https://starship.rs/) | Shell prompt | Fast, informative prompt with Git integration |
-| [Neovim](https://neovim.io/) | Text editor | Modern Vim with better defaults |
-| [bat](https://github.com/sharkdp/bat) | Cat replacement | Syntax highlighting for file viewing |
-| [eza](https://github.com/eza-community/eza) | ls replacement | Improved file listing with Git integration |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | cd replacement | Smart directory navigation |
-| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder | Interactive filtering for files and history |
-| [uv](https://github.com/astral-sh/uv) | Python package manager | Fast package installation and environment management |
-| [direnv](https://direnv.net/) | Environment manager | Per-directory environment variables |
-| [atuin](https://github.com/atuinsh/atuin) | Shell history | Searchable, syncable shell history |
+If you declined the installer's offer to make fish your default shell:
 
-### Post-Installation Steps
-
-1. Default shell (if you declined the installer's offer):
-   ```bash
-   # macOS
-   command -v fish | sudo tee -a /etc/shells
-   chsh -s "$(command -v fish)"
-   # Linux
-   chsh -s "$(command -v fish)"
-   ```
-   Log out and back in, and fully quit and reopen your IDE, for the change to show.
-
-2. Shell History Sync (atuin):
-   ```bash
-   atuin register     # Create new account
-   atuin login        # Login to existing account
-   atuin import auto  # Import existing shell history
-   ```
-
-3. Git Configuration:
-   - Edit configuration: `chezmoi edit ~/.gitconfig`
-   - Set commit signing: `git config --global commit.gpgsign true`
-   - Configure user info: `git config --global user.name "Your Name"`
-
-4. Cloud Tools:
-   - Google Cloud SDK: `gcloud init` and `gcloud auth login`
-   - Set default project: `gcloud config set project PROJECT_ID`
-   - Install components: `gcloud components install kubectl`
-
-## Terminal & Shell
-
-| Task | Command |
-|------|---------|
-| List files with details | `ll` (alias for `eza -lh --group-directories-first`) |
-| View file with syntax highlighting | `cat file.py` (uses `bat`) |
-| Change directory with history | `cd` (uses `zoxide` for smart navigation) |
-| Find files by name | `fd pattern` |
-| Fuzzy find files | `fzf` |
-| Tab completion picker | `Tab` opens an fzf picker over every fish completion (commands, flags, flag values); `Tab`/`Shift-Tab` cycle, typing re-filters live, `Esc` cancels, `Enter` inserts |
-| Search shell history via fzf | `Ctrl-R` / `Alt-R` (this directory) / `Alt-F` (global) — requires `atuin` module |
-
-Atuin history is rendered through fzf and bound to Ctrl+R/Alt+R/Alt+F and up-arrow (requires the `atuin` module and `perl`, present by default on macOS and mainstream Linux distros).
-
-### Running bash snippets in Fish
-
-Fish is not bash, but recent releases accept part of its syntax. Checked on fish 4.9.2 (`fish --version`; older releases accept less):
-
-Works in Fish as is: `$(...)` (since 3.4), `a && b || c`, `FOO=1 cmd`, `export FOO=3`, `{ a; b }` (since 4.1), `cmd1 |& cmd2`.
-
-Still fails: `if ...; then ...; fi`, `for x in ...; do ...; done`, `VAR=$(cmd)`, `$((1 + 2))`, `f() { ...; }` and sourcing a bash file. For these, the [replay.fish](https://github.com/jorgebucaran/replay.fish) plugin (installed through `fish_plugins`, pure Fish) runs a snippet in bash and copies the variables, `PATH` changes and aliases it made into your Fish session:
-- `replay 'export PATH="$HOME/.local/bin:$PATH"'`: add a folder to `PATH`
-- `replay 'if [ -f "$HOME/.env" ]; then set -a; source "$HOME/.env"; set +a; fi'`: load a `.env` file
-- `replay 'VERSION=$(date +%Y.%m); export VERSION'`: bash-only assignment syntax
-- `replay 'eval "$(some-tool env)"'`: the pattern many tools document for bash
-- `bash script.sh`, or any script with a `#!/bin/bash` shebang: runs in bash with no plugin needed
-
-Bash functions are not copied, so a tool that exists only as a bash function (nvm, for example) is not usable in Fish through `replay`. Python virtualenvs ship a Fish script, so use `source .venv/bin/activate.fish` instead.
-
-## Git & Version Control
-
-| Task | Command |
-|------|---------|
-| Status | `gs` (alias for `git status`) |
-| Add files | `ga` (alias for `git add`) |
-| Commit | `gc` (alias for `git commit`) |
-| Push | `gp` (alias for `git push`) |
-| Pull | `gl` (alias for `git pull`) |
-| Visual diff | `git diff` (uses `difft` or `nbdime` for notebooks) |
-| Pretty log | `glog` |
-| Create PR | `ghpr` (alias for `gh pr create`) |
-| View PR | `ghprv` (alias for `gh pr view`) |
-| List PRs | `ghprl` (alias for `gh pr list`) |
-
-### Code Review (tuicr, `review` module)
-
-`review <Tab>` opens the fzf picker over these subcommands with descriptions;
-any unrecognized subcommand passes through to `tuicr` directly.
-
-| Command | Reviews |
-|---------|---------|
-| `review` | Uncommitted working-tree changes |
-| `review file <path>` | One file or directory |
-| `review branch [base]` | This branch/chain against `main` (or `base`) |
-| `review commit [rev]` | The last commit (or `rev`) |
-| `review pr <n>` | A GitHub PR |
-| `review list` | Persisted review sessions |
-| `review comments` | Comments stored in a session |
-
-
-### Git Shortcuts
-
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `g` | `git` | Git shorthand |
-| `gs` | `git status` | Repository status |
-| `ga` | `git add` | Stage changes |
-| `gc` | `git commit` | Commit changes |
-| `gp` | `git push` | Push commits |
-| `gl` | `git pull` | Pull changes |
-| `gd` | `git diff` | Show changes |
-| `gco` | `git checkout` | Switch branches |
-| `gb` | `git branch` | Manage branches |
-| `glog` | Pretty git log | Colored graph log |
-
-## Remote Server Operations
-
-### Remote Command Execution
-
-| Feature | Description | Example |
-|---------|-------------|---------|
-| Basic execution | Run command on remote server | `remote_exec server "ls -la"` |
-| Tab completion | Complete from SSH config | `remote_exec set<TAB>` |
-| Host aliases | Use SSH config aliases | `remote_exec dev` |
-| Command completion | Complete from remote PATH | `remote_exec server pyth<TAB>` |
-| Terminal handling | Proper TTY allocation | `remote_exec server "htop"` |
-| Multi-word commands | Quote complex commands | `remote_exec server "ps aux | grep python"` |
-
-Completion Features:
-- SSH host completion from ~/.ssh/config
-- Username and hostname completion
-- Remote command completion from PATH
-- Argument completion for common commands
-
-### SSH Configuration
-
-| Task | Config Location | Example |
-|------|----------------|---------|
-| Add server | `~/.ssh/config` | Edit the file directly (not managed by chezmoi) |
-| Update known hosts | `~/.ssh/known_hosts` | Automatic during first connection |
-| Test connection | Use remote_exec | `remote_exec server "echo test"` |
-
-SSH Configuration Template:
-```
-Host myserver
-    HostName myserver.example.com
-    User myusername
-    ForwardAgent yes
-    ServerAliveInterval 60
+```bash
+# macOS
+command -v fish | sudo tee -a /etc/shells
+chsh -s "$(command -v fish)"
+# Linux
+chsh -s "$(command -v fish)"
 ```
 
-### Common Remote Workflows
+Log out and back in, and fully quit and reopen your IDE, for the change to show.
 
-| Task | Command | Notes |
-|------|---------|-------|
-| Check server status | `remote_exec server "uptime"` | Shows load average |
-| Monitor processes | `remote_exec server "htop"` | Interactive process viewer |
-| Check disk space | `remote_exec server "df -h"` | Human-readable sizes |
-| View logs | `remote_exec server "tail -f /var/log/syslog"` | Live log monitoring |
-| Install package | `remote_exec server "uv pip install package"` | Uses uv on remote |
-| Run background job | `remote_exec server "nohup command &"` | Continues after disconnect |
+## Tools by module
 
-## Python Development
-
-| Task | Command |
-|------|---------|
-| Create new virtual environment | `uv venv` |
-| Create project with automatic env | `mkdir project && cd project && uv init && uv lock && echo 'layout uv --inexact' > .envrc && direnv allow` |
-| Install packages | `uv pip install package1 package2` |
-| Install from requirements | `uv pip install -r requirements.txt` |
-| Run script in isolated env | `uv run python script.py` |
-| Launch Jupyter | `jupyter lab` |
-
-`layout uv` is direnv's built-in (direnv 2.38 or later). It needs a `pyproject.toml` and a `uv.lock`, and runs `uv sync --frozen` whenever `pyproject.toml`, `uv.lock` or `.python-version` changes. Without `--inexact` the sync is exact: it uninstalls every package the lockfile does not list, extras and `--all-packages` installs included.
-
-A project nested in another one (a jj workspace under `<repo>/.workspaces/<name>`, say) needs its own `.envrc`, or direnv loads the parent's and activates the parent's venv:
-
-```sh
-source_up
-[[ -n $VIRTUAL_ENV ]] && PATH_rm "$VIRTUAL_ENV/bin"
-unset UV_PROJECT_ENVIRONMENT
-layout uv --inexact
-```
-
-## System Health & Diagnostics
-
-### Health Check Commands
-
-The `dotfiles_doctor` command performs comprehensive environment checks:
-
-1. Tool Status Checks:
-   | Category | Tools Checked |
-   |----------|---------------|
-   | Core | chezmoi, fish, starship, ghostty, direnv |
-   | Editors | neovim |
-   | CLI Tools | bat, eza, fd, fzf, zoxide, atuin |
-   | Git Tools | git, git-lfs, github-cli, difftastic, git-cliff, git-extras |
-   | Development | gcloud, uv |
-   | Platform | brew (macOS only) |
-
-2. Font Status:
-   | Check | Description |
-   |-------|-------------|
-   | Font Installation | Verifies Nerd Font presence |
-   | Font Cache | Updates font cache (Linux) |
-   | Directory Access | Checks font directories |
-
-3. Environment Status:
-   | Check | Success Criteria |
-   |-------|-----------------|
-| Terminal Integration | Ghostty detection |
-   | Git Configuration | user.name and user.email set |
-   | GitHub Auth | CLI authentication active |
-   | Shell History | Atuin sync enabled |
-
-4. Version Information:
-   - Shows installed version for each tool
-   - Handles different version formats
-   - Indicates missing tools
-
-Output Format:
-```
-RESULT     CHECK                      MESSAGE
-ok         tool-name                  version-info
-warning    missing-tool               not found
-info       optional-feature           status
-```
-
-### Tool-Specific Health Checks
-
-| Tool | Health Check | Fix Command |
-|------|-------------|-------------|
-| Fish Shell | `fish --version` | Re-run installer |
-| Neovim | `nvim --version` | Re-run installer |
-| Git | `git config --list` | Edit ~/.gitconfig |
-| Python (uv) | `uv --version` | Re-run installer |
-| Direnv | Test .envrc loading | Check direnv hook in config.fish |
-
-### Font Management
-
-| Task | Command | Description |
-|------|---------|-------------|
-| Install font | `install_nerd_font <font-name>` | Install Nerd Font automatically |
-| Check installation | `is_nerd_font_installed <font-name>` | Test if font is installed |
-| List available fonts | `install_nerd_font` (no arguments) | Show usage and font info |
-| Show fonts | `fc-list` (Linux) or `system_profiler SPFontsDataType` (macOS) | List installed fonts |
-
-Common Font Names:
-- `FiraCode` - Default coding font
-- `JetBrainsMono` - Clear, distinctive font
-- `Hack` - Clean monospace font
-- `SourceCodePro` - Adobe's coding font
-- `Monaspace` - GitHub's new font family
-
-Features:
-- Automatic version detection
-- OS-specific installation paths
-- Fallback version support
-- Progress indicators
-- Font cache updating (Linux)
-
-## Ghostty Terminal
-
-### Configuration
-
-| Task | Command | Description |
-|------|---------|-------------|
-| Edit config | `chezmoi edit ~/.config/ghostty/config` | Update Ghostty settings |
-| Apply config | `chezmoi apply` | Apply the updated config |
-
-Note: restart Ghostty after changes if the config does not reload automatically.
+| Module | Tools | Guide |
+|---|---|---|
+| every install | fish, starship, git, gh, mergiraf, uv, fnm | [core](.claude/skills/artefiles/references/core.md) |
+| `editor` | Neovim: modal terminal editor with the team configuration (nvim) | [editor](.claude/skills/artefiles/references/editor.md) |
+| `shell_tools` | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd) | [shell_tools](.claude/skills/artefiles/references/shell_tools.md) |
+| `cli_extras` | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2 | [cli_extras](.claude/skills/artefiles/references/cli_extras.md) |
+| `rust` | Rust toolchain (rustup, cargo) to build Rust tools | [rust](.claude/skills/artefiles/references/rust.md) |
+| `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | [ghostty](.claude/skills/artefiles/references/ghostty.md) |
+| `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | [cmux](.claude/skills/artefiles/references/cmux.md) |
+| `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, lazygit (TUI) | [git_advanced](.claude/skills/artefiles/references/git_advanced.md) |
+| `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | [atuin](.claude/skills/artefiles/references/atuin.md) |
+| `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | [review](.claude/skills/artefiles/references/review.md) |
+| `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | [python_dev](.claude/skills/artefiles/references/python_dev.md) |
+| `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
+| `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |
+| `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | [prek](.claude/skills/artefiles/references/prek.md) |
+| `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | [gcloud](.claude/skills/artefiles/references/gcloud.md) |
+| `azure` | Azure CLI: the az command to manage Microsoft Azure resources | [azure](.claude/skills/artefiles/references/azure.md) |
+| `containers` | Containers on macOS: Colima (runtime), the docker CLI with buildx, and lazydocker | [containers](.claude/skills/artefiles/references/containers.md) |
+| `kubernetes` | Kubernetes: kubectl, and k9s to browse and manage clusters in the terminal | [kubernetes](.claude/skills/artefiles/references/kubernetes.md) |
+| `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | [terraform](.claude/skills/artefiles/references/terraform.md) |
+| `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | [opentofu](.claude/skills/artefiles/references/opentofu.md) |
 
 ## Testing & Development
 

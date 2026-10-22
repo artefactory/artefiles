@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 # Fish accepts only part of bash's syntax, so the setup installs the replay.fish
-# plugin to replay a bash snippet's environment changes, and the cheatsheet says what
+# plugin to replay a bash snippet's environment changes, and the core guide says what
 # works natively and what needs it.
 
 setup() {
   load 'helpers/setup'
-  DOCS="$REPO_ROOT/CHEATSHEET.md"
+  DOCS="$REPO_ROOT/.claude/skills/artefiles/references/core.md"
 }
 
 # section TITLE — the body of the "### TITLE" section, up to the next heading.
@@ -18,13 +18,13 @@ section() {
   if grep -rqi 'bass' "$REPO_ROOT/dot_config/fish/fish_plugins" "$REPO_ROOT/dot_config/fish/config.fish.tmpl" "$DOCS"; then return 1; fi
 }
 
-@test "the cheatsheet documents running bash snippets from fish" {
+@test "the core guide documents running bash snippets from fish" {
   body=$(section "Running bash snippets in Fish")
   [ -n "$body" ]
   printf '%s\n' "$body" | grep -qF 'replay.fish'
 }
 
-@test "the cheatsheet says what works natively, what fails and what replay covers" {
+@test "the core guide says what works natively, what fails and what replay covers" {
   body=$(section "Running bash snippets in Fish")
   for word in 'fish 4.9.2' '$(...)' '&&' '{ a; b }' 'if ...; then' 'for x in' 'VAR=$(cmd)' "replay 'export PATH" "replay 'if [ -f" "replay 'VERSION=" "replay 'eval" 'bash script.sh' 'shebang' 'Bash functions are not copied'; do
     printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }

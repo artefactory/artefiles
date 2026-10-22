@@ -32,8 +32,8 @@ setup() {
     printf '[project]\nname = "p%s"\nversion = "0"\nrequires-python = ">=3.9"\n' "$RANDOM" > "$d/pyproject.toml"
   done
   echo 'layout uv --inexact' > "$R/.envrc"
-  # The nested .envrc of CHEATSHEET.md, from source_up to layout uv.
-  sed -n '/^source_up$/,/^layout uv --inexact$/p' "$REPO_ROOT/CHEATSHEET.md" > "$W/.envrc"
+  # The nested .envrc the skill writes (envrc-uv.sh --nested).
+  sh "$REPO_ROOT/.claude/skills/artefiles/scripts/envrc-uv.sh" --nested > "$W/.envrc"
   [ -s "$W/.envrc" ]
   e() {
     env -i HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_DATA_HOME="$H/.local/share" \
