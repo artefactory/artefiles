@@ -18,6 +18,7 @@ NETWORK_TIMEOUT=10
 
 dry_run=false
 destination=""
+restore=""
 
 # Parse --dry-run / --destination before any other work
 while [ $# -gt 0 ]; do
@@ -33,6 +34,10 @@ while [ $# -gt 0 ]; do
     --destination=*)
       destination="${1#*=}"
       shift
+      ;;
+    --restore)
+      restore="${2:?--restore requires a backup folder}"
+      shift 2
       ;;
     *)
       break
@@ -246,6 +251,66 @@ elif [ -n "${ARTEFILES_SELECT_TTY:-}" ]; then
 elif [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
   interactive=true
 fi
+
+# install.sh --restore FOLDER: undo an install from the backup folder the
+# install printed. Lists what it will do and asks first; without a terminal it
+# changes nothing. chezmoi purge deletes the source folder too, so it only runs
+# when the source is the clone the install made; a checkout of the user's own
+# is kept and only chezmoi's config and state are removed.
+restore_backup() {
+  dest="${destination:-$HOME}"
+  if [ ! -f "${restore}/created.txt" ]; then
+    echo "${restore} is not an artefiles backup folder (it has no created.txt); nothing was changed." >&2
+    exit 1
+  fi
+  config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi"
+  clone_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
+  source_dir="$(chezmoi source-path 2> /dev/null || :)"
+  echo "Restoring the backup in ${restore} into ${dest}:" >&2
+  echo "  copy back:" >&2
+  (cd "${restore}/files" 2> /dev/null && find . ! -type d | sed 's|^\./|    |') >&2
+  echo "  delete what the install created:" >&2
+  sed 's|^|    |' "${restore}/created.txt" >&2
+  if [ -n "$source_dir" ] && [ "$source_dir" = "$clone_dir" ]; then
+    echo "  remove chezmoi's config, state and its clone of artefiles (chezmoi purge --force)" >&2
+  else
+    echo "  remove chezmoi's config and state in ${config_dir}${source_dir:+; ${source_dir} is kept}" >&2
+  fi
+  echo "Software the install added (Homebrew packages, fish, the tools in ~/.local) is not removed; CHEATSHEET.md lists how to remove it." >&2
+  if [ "$interactive" != "true" ]; then
+    echo "--restore asks before changing anything and needs a terminal; nothing was changed." >&2
+    exit 1
+  fi
+  printf 'Restore? [y/N] ' >&2
+  answer=""
+  read -r answer < "${ARTEFILES_TTY:-/dev/tty}" || :
+  case "$answer" in
+    y | Y | yes | YES) ;;
+    *)
+      echo "Nothing was changed." >&2
+      exit 1
+      ;;
+  esac
+  [ ! -d "${restore}/files" ] || cp -Rp "${restore}/files/." "${dest}/"
+  # Deepest paths first, so a folder is empty by the time it is reached; a
+  # folder that holds anything else stays.
+  sort -r "${restore}/created.txt" | while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    if [ -d "${dest}/${path}" ] && [ ! -L "${dest}/${path}" ]; then
+      rmdir "${dest}/${path}" 2> /dev/null || :
+    else
+      rm -f "${dest}/${path}"
+    fi
+  done
+  if [ -n "$source_dir" ] && [ "$source_dir" = "$clone_dir" ]; then
+    chezmoi purge --force
+  else
+    rm -rf "$config_dir"
+  fi
+  echo "Restored. Open a new terminal." >&2
+  exit 0
+}
+[ -z "$restore" ] || restore_backup
 
 # Homebrew's installer and some casks need sudo. With no ticket each asks on its
 # own, often behind scrolling output so the install looks stuck. Ask once, up
@@ -584,6 +649,8 @@ Your earlier files are saved in ${1}. To undo the install:
   2. delete the files the install created, listed in ${1}/created.txt,
      and those folders once they are empty
   3. remove chezmoi's config, state and source: chezmoi purge --force
+     (it deletes $("$chezmoi" source-path 2> /dev/null || echo "the source folder") too)
+Or run: sh "$("$chezmoi" source-path 2> /dev/null || echo .)/install.sh" --restore "${1}"
 Software the install added (Homebrew packages, fish, the tools in ~/.local) is
 not removed by these steps; CHEATSHEET.md lists how to remove it.
 MSG
