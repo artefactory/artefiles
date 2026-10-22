@@ -540,13 +540,66 @@ if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITHUB_ACCESS_TOKEN:-}" ] && [ -z "${CH
   unset gh_token
 fi
 
+# A first apply overwrites the files the user already has without asking. Before
+# it, every existing file it would change or delete is copied into a dated
+# folder, next to created.txt (what it would create) and chezmoi's state, so the
+# install can be undone. Scripts and externals install software, which a copy
+# cannot restore, so they are left out. Prints the folder, or nothing when the
+# apply would change nothing (a rerun of an installed version).
+backup_before_apply() {
+  dest="${destination:-$HOME}"
+  changes="$("$chezmoi" status --exclude=scripts,externals ${apply_destination:+"$apply_destination"})" || {
+    echo "Could not list the files the install would change, so nothing was written." >&2
+    return 1
+  }
+  [ -n "$changes" ] || return 0
+  backup="${XDG_STATE_HOME:-${HOME}/.local/state}/artefiles/backup-$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "${backup}/files"
+  : > "${backup}/created.txt"
+  # `chezmoi status` prints two status columns, a space and the path relative to
+  # the destination; the second column is what the apply would do.
+  printf '%s\n' "$changes" | while IFS= read -r line; do
+    action="$(printf '%s' "$line" | cut -c2)"
+    path="$(printf '%s' "$line" | cut -c4-)"
+    case "$action" in
+      A) printf '%s\n' "$path" >> "${backup}/created.txt" ;;
+      M | D)
+        if [ -f "${dest}/${path}" ] || [ -L "${dest}/${path}" ]; then
+          mkdir -p "$(dirname "${backup}/files/${path}")"
+          cp -Pp "${dest}/${path}" "${backup}/files/${path}"
+        fi
+        ;;
+    esac
+  done
+  "$chezmoi" state dump > "${backup}/state.json" 2> /dev/null || :
+  printf '%s\n' "$backup"
+}
+
+# How to undo the install from the backup folder $1.
+print_restore_steps() {
+  dest="${destination:-$HOME}"
+  cat >&2 << MSG
+Your earlier files are saved in ${1}. To undo the install:
+  1. copy them back: cp -Rp "${1}/files/." "${dest}/"
+  2. delete the files the install created, listed in ${1}/created.txt,
+     and those folders once they are empty
+  3. remove chezmoi's config, state and source: chezmoi purge --force
+Software the install added (Homebrew packages, fish, the tools in ~/.local) is
+not removed by these steps; CHEATSHEET.md lists how to remove it.
+MSG
+}
+
 [ -z "$destination" ] || mkdir -p "$destination"
 "$chezmoi" "$@"
+backup="$(backup_before_apply)" || exit 1
+apply_status=0
 if [ -n "$apply_destination" ]; then
-  "$chezmoi" apply "$apply_destination"
+  "$chezmoi" apply "$apply_destination" || apply_status=$?
 else
-  "$chezmoi" apply
+  "$chezmoi" apply || apply_status=$?
 fi
+[ -z "$backup" ] || print_restore_steps "$backup"
+[ "$apply_status" -eq 0 ] || exit "$apply_status"
 
 # Last step, only reached once chezmoi succeeded (set -e): the login shell
 # change needs sudo and an attentive user, so nothing may depend on it or run
