@@ -155,8 +155,13 @@ if type -q zoxide
     end
 end
 
-# Direnv is initialised in conf.d/direnv.fish, which shadows homebrew's
-# eager vendor hook - https://direnv.net
+# Direnv - https://direnv.net
+# Homebrew's vendor_conf.d/direnv.fish has already loaded the hook on macOS;
+# the Linux binary in ~/.local/bin ships none. The hook must exist before the
+# first prompt: a fish_prompt handler added while that event fires misses it.
+if type -q direnv; and not functions -q __direnv_export_eval
+    direnv hook fish | source
+end
 
 # Chezmoi dotfile manager - https://chezmoi.io
 if type -q chezmoi
