@@ -4,13 +4,19 @@ set -eu
 
 # Install git-extras on Linux in user space without root
 
-echo "Installing git-extras..."
+# Get the latest release version
+echo "Checking for the latest git-extras release..."
+LATEST_VERSION=$(curl -s https://api.github.com/repos/tj/git-extras/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+echo "Latest git-extras version: $LATEST_VERSION"
 
-# Check if git-extras is already installed
-if command -v git-extras > /dev/null 2>&1; then
-  echo "git-extras is already installed."
+# An installed copy at that version needs no download.
+if command -v git-extras > /dev/null 2>&1 \
+  && [ "$(git-extras --version 2> /dev/null)" = "${LATEST_VERSION#v}" ]; then
+  echo "git-extras ${LATEST_VERSION#v} is already installed."
   exit 0
 fi
+
+echo "Installing git-extras..."
 
 # Make sure ~/.local/bin exists
 mkdir -p "${HOME}/.local/bin"
@@ -18,11 +24,6 @@ mkdir -p "${HOME}/.local/bin"
 # Create a temporary directory for the installation
 TMP_DIR=$(mktemp -d)
 cd "${TMP_DIR}"
-
-# Get the latest release version
-echo "Checking for the latest git-extras release..."
-LATEST_VERSION=$(curl -s https://api.github.com/repos/tj/git-extras/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-echo "Latest git-extras version: $LATEST_VERSION"
 
 # Download the source tarball
 DOWNLOAD_URL="https://github.com/tj/git-extras/archive/refs/tags/${LATEST_VERSION}.tar.gz"
