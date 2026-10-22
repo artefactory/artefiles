@@ -16,6 +16,9 @@ if [ -d "${HOME}/.local/google-cloud-sdk" ]; then
     # Create a symlink to make it available in PATH
     mkdir -p "${HOME}/.local/bin"
     ln -sf "${HOME}/.local/google-cloud-sdk/bin/gcloud" "${HOME}/.local/bin/gcloud"
+    # Compares the installed components with the latest release and downloads
+    # only when they differ.
+    "${HOME}/.local/google-cloud-sdk/bin/gcloud" components update --quiet
   fi
   exit 0
 fi

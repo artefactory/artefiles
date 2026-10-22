@@ -192,7 +192,7 @@ nothing_changed() {
   apply=$(grep -n '^chezmoi apply' "$CALLS" | cut -d: -f1)
   [ -n "$init" ] && [ -n "$apply" ] && [ "$init" -lt "$apply" ]
   if grep -q '^chezmoi init.*--apply' "$CALLS"; then return 1; fi
-  grep -qx "chezmoi apply --destination=$H/dest" "$CALLS"
+  grep -qx "chezmoi apply --keep-going --destination=$H/dest" "$CALLS"
 }
 
 @test "a dry run names both chezmoi steps" {

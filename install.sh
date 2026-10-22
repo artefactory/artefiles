@@ -81,6 +81,14 @@ clone_repo() {
 # clone, when $ref does not exist, the local branch has commits of its own, or the
 # working tree has changes that block the checkout.
 checkout_ref() {
+  # A tag the clone already has and is on needs no fetch: a rerun at the same
+  # version changes nothing. A branch is fetched first, since its tip is only
+  # known after the fetch.
+  if here="$(git -C "$1" rev-parse --verify --quiet HEAD)" \
+    && [ "$(git -C "$1" rev-parse --verify --quiet "refs/tags/${ref}^{commit}")" = "$here" ]; then
+    echo "already at ${ref}" >&2
+    return 0
+  fi
   git -C "$1" fetch --quiet --force --tags origin '+refs/heads/*:refs/remotes/origin/*' || {
     echo "Could not fetch ${ref} into ${1}." >&2
     return 1
@@ -541,6 +549,18 @@ if [ "$checklist" = "true" ]; then
   fi
 fi
 
+# A rerun over an existing config skips the checklist above, but chezmoi init
+# ignores --branch once the source is cloned and re-renders the config from the
+# clone as it is. So a version named with ARTEFILES_VERSION moves the existing
+# clone first.
+if [ "$checklist" = "false" ] && [ "$dry_run" = "false" ] && [ -n "${ARTEFILES_VERSION:-}" ] \
+  && [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
+  existing="$("$chezmoi" source-path 2> /dev/null || echo "${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi")"
+  if [ -d "${existing}/.git" ]; then
+    checkout_ref "$existing" >&2 || exit 1
+  fi
+fi
+
 # Run as `sh -c "$(curl ...)"` there is no script file: $0 is "sh" and script_dir
 # is the directory holding sh, not a checkout. Only a checkout may be the
 # chezmoi source; otherwise let chezmoi clone the repo.
@@ -589,7 +609,7 @@ preflight_init
 stop_on_failures
 
 echo "Running 'chezmoi $*'" >&2
-echo "Running 'chezmoi apply${apply_destination:+ }${apply_destination}'" >&2
+echo "Running 'chezmoi apply --keep-going${apply_destination:+ }${apply_destination}'" >&2
 [ "$dry_run" = "true" ] && exit 0
 
 # chezmoi looks up the latest GitHub releases through the GitHub API, which
@@ -659,14 +679,33 @@ MSG
 [ -z "$destination" ] || mkdir -p "$destination"
 "$chezmoi" "$@"
 backup="$(backup_before_apply)" || exit 1
-apply_status=0
-if [ -n "$apply_destination" ]; then
-  "$chezmoi" apply "$apply_destination" || apply_status=$?
-else
-  "$chezmoi" apply || apply_status=$?
-fi
+# --keep-going runs every step after a failure. chezmoi records a script only
+# once it exits 0, so the next apply runs the failed ones and skips the rest.
+# Its errors still reach the terminal; a copy is kept to name the failed steps.
+apply_log="$(mktemp)"
+{
+  {
+    status=0
+    "$chezmoi" apply --keep-going ${apply_destination:+"$apply_destination"} || status=$?
+    echo "$status" > "${apply_log}.status"
+  } 2>&1 1>&3 3>&- | tee "$apply_log" >&2
+} 3>&1
+apply_status="$(cat "${apply_log}.status")"
 [ -z "$backup" ] || print_restore_steps "$backup"
-[ "$apply_status" -eq 0 ] || exit "$apply_status"
+if [ "$apply_status" -ne 0 ]; then
+  # chezmoi reports a failed script as "chezmoi: <script>: exit status <n>".
+  failed="$(sed -n 's/^chezmoi: \(.*\): exit status [0-9]*$/\1/p' "$apply_log")"
+  rm -f "$apply_log" "${apply_log}.status"
+  if [ -n "$failed" ]; then
+    echo "$(printf '%s\n' "$failed" | wc -l | tr -d ' ') install step(s) failed:" >&2
+    printf '%s\n' "$failed" | sed 's/^/  - /' >&2
+    echo "Every other step finished and is recorded. To retry only the failed ones: chezmoi apply --keep-going" >&2
+  else
+    echo "The install stopped on the error above. To retry: chezmoi apply --keep-going" >&2
+  fi
+  exit "$apply_status"
+fi
+rm -f "$apply_log" "${apply_log}.status"
 
 # Last step, only reached once chezmoi succeeded (set -e): the login shell
 # change needs sudo and an attentive user, so nothing may depend on it or run

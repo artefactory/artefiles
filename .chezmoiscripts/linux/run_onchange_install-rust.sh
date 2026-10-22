@@ -16,8 +16,13 @@ install_rust() {
 
 # Check if rustup is installed
 if command -v rustup > /dev/null 2>&1; then
-  echo "Rust is already installed. Updating..."
-  rustup update
+  # rustup check lists each toolchain as "Up to date" or "Update available".
+  if rustup check 2> /dev/null | grep -q 'Update available'; then
+    echo "Rust is already installed. Updating..."
+    rustup update
+  else
+    echo "Rust is already installed and up to date."
+  fi
 else
   # Check if rust is installed through another method
   if command -v rustc > /dev/null 2>&1; then
