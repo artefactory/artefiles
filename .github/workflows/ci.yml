@@ -4,13 +4,15 @@ name: ci
 # result. The bats suite under tests/ is for local debugging and does not run
 # in CI.
 #
-# The work is tiered so that most pushes cost little:
+# The work is tiered so that most pushes cost little. GitHub bills every job
+# rounded up to the next minute and a macOS minute as ten Linux minutes, so
+# pushes run few, Linux-only jobs:
 # - a draft pull request, or one stacked on another branch, runs nothing;
 # - a ready pull request on main runs lint and a full install from the
-#   checkout, packages included, on Linux and macOS (about 2 minutes);
-# - the merge queue adds the Quick Start route, once per batch of queued pull
-#   requests; it runs no scripts and downloads no externals, which the full
-#   install already covers;
+#   checkout, packages included, on Linux (about 2 minutes);
+# - the merge queue adds macOS and the Quick Start route, once per batch of
+#   queued pull requests; the Quick Start route runs no scripts and downloads
+#   no externals, which the full install already covers;
 # - ci-ok sums up every tier and is the one check the merge queue requires.
 
 on:
@@ -30,12 +32,13 @@ permissions:
 
 jobs:
   # Only pull requests are filtered by path; the queue and manual runs test everything.
+  # Lint shares this job: a job of its own would bill a whole extra minute.
   changes:
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    name: changes and lint
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      lint: ${{ steps.filter.outputs.lint }}
       install: ${{ steps.filter.outputs.install }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -43,6 +46,7 @@ jobs:
           persist-credentials: false
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
+        if: github.event_name == 'pull_request'
         with:
           filters: |
             lint:
@@ -60,18 +64,8 @@ jobs:
               - 'Library/**'
               - '.github/workflows/ci.yml'
               - '.github/scripts/**'
-
-  lint:
-    needs: changes
-    if: >-
-      !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.lint == 'true')
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
       - name: shellcheck
+        if: github.event_name != 'pull_request' || steps.filter.outputs.lint == 'true'
         run: |
           # Lint every *.sh / *.bash file with a shebang. .tmpl files contain
           # chezmoi template syntax shellcheck can't parse.
@@ -89,9 +83,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Every run installs on both systems; the queue and manual runs add the
-        # Quick Start route.
-        os: [ubuntu-latest, macos-15]
+        # Pull requests install on Linux; the queue and manual runs add macOS
+        # and the Quick Start route.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest", "macos-15"]') }}
         # full: install.sh run from a clone, every script and external included,
         # as a new user gets it. quick-start: the README one-liner, where chezmoi
         # clones the branch itself (the queue's own branch in the merge queue).
@@ -132,6 +126,16 @@ jobs:
           EOF
           chmod +x "$RUNNER_TEMP/bin/chezmoi"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # The Linux image links its own miniconda's conda into /usr/bin. Deleting
+      # that miniconda takes about 40 seconds and checks nothing a user's machine
+      # needs, so only the link goes and the conda remover finds nothing.
+      - name: hide the runner's conda
+        if: runner.os == 'Linux' && matrix.route == 'full'
+        run: |
+          conda_cmd=$(command -v conda || true)
+          if [ -n "$conda_cmd" ]; then sudo rm -f "$conda_cmd"; fi
+          if command -v conda; then exit 1; fi
 
       - name: install from the checkout
         if: matrix.route == 'full'
@@ -190,9 +194,10 @@ jobs:
           GIT_CONFIG_GLOBAL: /dev/null
         run: chezmoi update
 
-      # Last: it re-runs init with another destination.
+      # Last: it re-runs init with another destination. The destination
+      # handling is the same on both systems, so macOS minutes are not spent on it.
       - name: install into a folder that does not exist yet
-        if: matrix.route == 'full'
+        if: matrix.route == 'full' && runner.os == 'Linux'
         run: |
           dest="$RUNNER_TEMP/new/home"
           sh ./install.sh --destination "$dest"
@@ -207,7 +212,7 @@ jobs:
   # by its tier, red when one failed or was cancelled.
   ci-ok:
     if: always()
-    needs: [changes, lint, install]
+    needs: [changes, install]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
