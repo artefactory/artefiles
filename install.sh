@@ -353,12 +353,19 @@ MSG
     return 0
   fi
   # $$ is the install's pid even in the subshell, so the loop ends with it.
+  # Killing the subshell leaves a running sleep behind, so the TERM trap kills
+  # it too. The loop holds none of the install's output: whoever reads it (a
+  # pipe, a command substitution) would otherwise wait for the sleep to end.
   (
+    sleep_pid=""
+    trap 'kill "$sleep_pid" 2> /dev/null; exit 0' TERM
     while kill -0 "$$" 2> /dev/null; do
-      sleep "${ARTEFILES_SUDO_REFRESH:-50}"
+      sleep "${ARTEFILES_SUDO_REFRESH:-50}" &
+      sleep_pid=$!
+      wait "$sleep_pid"
       sudo -n -v 2> /dev/null || exit 0
     done
-  ) &
+  ) < /dev/null > /dev/null 2>&1 &
   sudo_keepalive_pid=$!
 }
 trap stop_sudo_keepalive EXIT

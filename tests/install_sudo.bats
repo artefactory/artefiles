@@ -78,6 +78,15 @@ sudo_calls() { grep -c '^sudo ' "$CALLS" || true; }
   [ "$(sudo_calls)" = "$before" ]
 }
 
+# bats `run` reads the install's output until every writer closes it, so a
+# refresh loop still sleeping on that output holds the caller for a whole interval.
+@test "the install returns at once, not after the refresh interval" {
+  start=$SECONDS
+  run_install ARTEFILES_SUDO_REFRESH=30
+  [ "$status" -eq 0 ]
+  [ $((SECONDS - start)) -lt 10 ]
+}
+
 @test "the refresh stops when chezmoi fails" {
   run_install CHEZMOI_SECONDS=1 CHEZMOI_STATUS=1
   [ "$status" -ne 0 ]
