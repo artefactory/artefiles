@@ -8,6 +8,8 @@
 
 # [[ $rustArch := (eq .chezmoi.arch "amd64" | ternary "x86_64" "aarch64") ]] #
 # [[ $fzfArch := (eq .chezmoi.arch "amd64" | ternary "amd64" "arm64") ]] #
+# [[/* Empty on an arch runme publishes no Linux build for, which skips it. */]] #
+# [[ $runmeArch := get (dict "amd64" "x86_64" "arm64" "arm64") .chezmoi.arch ]] #
 
 # fish - the default shell; the release's static build, so nothing is compiled.
 # run_onchange_z-install-fish.sh starts it from bash and zsh.
@@ -16,6 +18,16 @@
   url = # [[ gitHubLatestReleaseAssetURL "fish-shell/fish-shell" (printf "fish-*-linux-%s.tar.xz" $rustArch) | quote ]] #
   executable = true
   path = "fish"
+
+# [[ if and (has "runme" $modules) $runmeArch ]] #
+# runme - runs the named shell blocks of README.md and CHEATSHEET.md.
+# Its arm64 asset is named "arm64", not the "aarch64" of $rustArch.
+[".local/bin/runme"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "runmedev/runme" (printf "runme_linux_%s.tar.gz" $runmeArch) | quote ]] #
+  executable = true
+  path = "runme"
+# [[ end ]] #
 
 # [[ if has "editor" $modules ]] #
 # Neovim AppImage

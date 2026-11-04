@@ -17,12 +17,15 @@ all_modules() { all_modules_json; }
 # template is guarded by `eq .chezmoi.os "linux"` and renders empty elsewhere,
 # so that guard is replaced to exercise the Linux branch on any OS. Without
 # --init so that .chezmoidata (the pinned versions) is loaded, as in an apply.
+# An optional $2 stands in for .chezmoi.arch, to render for another host.
 render_externals() {
   local h="$1" err="$BATS_TEST_TMPDIR/render.err"
+  local subs=(-e 's/eq \.chezmoi\.os "linux"/true/')
+  [ -z "${2:-}" ] || subs+=(-e "s/\.chezmoi\.arch/\"$2\"/g")
   if ! rendered=$(XDG_CONFIG_HOME="$h/.config" HOME="$h" chezmoi execute-template \
     --config "$h/.config/chezmoi/chezmoi.toml" \
     --source "$REPO_ROOT" --destination "$h" \
-    < <(sed 's/eq \.chezmoi\.os "linux"/true/' "$REPO_ROOT/.chezmoiexternal.toml.tmpl") 2> "$err"); then
+    < <(sed "${subs[@]}" "$REPO_ROOT/.chezmoiexternal.toml.tmpl") 2> "$err"); then
     cat "$err" >&2
     return 1
   fi
@@ -103,6 +106,42 @@ tomllib.loads(sys.stdin.read())
   else
     [[ "$fnm_url" == *"/fnm-arm64.zip"* ]]
   fi
+}
+
+# runme names its arm64 asset "arm64", not the "aarch64" of $rustArch.
+@test "runme is installed on linux with the runme module, from its release asset for the host arch" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":["runme"]}'
+
+  render_externals "$H"
+
+  runme_url=$(printf '%s\n' "$rendered" | grep -A2 -F '[".local/bin/runme"]' | grep '^  url = ')
+  [[ "$runme_url" == *"github.com/runmedev/runme/releases/download/"* ]]
+  case "$(chezmoi execute-template '{{ .chezmoi.arch }}')" in
+    amd64) [[ "$runme_url" == *"/runme_linux_x86_64.tar.gz"* ]] ;;
+    arm64) [[ "$runme_url" == *"/runme_linux_arm64.tar.gz"* ]] ;;
+    *) [ -z "$runme_url" ] ;;
+  esac
+}
+
+# runme publishes Linux builds for x86_64 and arm64 only; another arch must get
+# no entry rather than the arm64 binary.
+@test "runme is skipped on a linux arch it publishes no build for" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":["runme"]}'
+
+  render_externals "$H" riscv64
+
+  [[ "$rendered" != *'[".local/bin/runme"]'* ]]
+}
+
+@test "runme is not installed without the runme module" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+
+  render_externals "$H"
+
+  [[ "$rendered" != *'[".local/bin/runme"]'* ]]
 }
 
 @test "ripgrep is installed with the shell_tools module, from its static musl archive" {

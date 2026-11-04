@@ -102,6 +102,10 @@ packages:
         brews:
           - 'duckdb'
         casks: []
+      runme:
+        brews:
+          - 'runme'
+        casks: []
       azure:
         brews:
           - 'azure-cli'
