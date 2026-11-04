@@ -12,7 +12,7 @@ A ready-to-use terminal setup for macOS and Linux: Fish, Starship, modern CLI to
 
 ## Install
 
-```bash
+```bash {"name":"install","excludeFromRunAll":"true"}
 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 ```
 
@@ -27,7 +27,7 @@ Then open a new terminal (type `fish` if you declined the shell change) and run 
 
 **Variants**
 
-```bash
+```bash {"ignore":"true"}
 # Another release, or a branch such as main (the default is the latest release)
 ARTEFILES_VERSION=main sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 
@@ -41,7 +41,7 @@ In Codespaces, set this repo as your [dotfiles repository](https://github.com/se
 
 Install Homebrew (macOS) and `gh`, and log `gh` in first. This route has no checklist: chezmoi's own prompt asks for the modules. Then:
 
-```bash
+```bash {"name":"chezmoi-init-direct","excludeFromRunAll":"true"}
 sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin init --apply \
   --branch "$(gh release view --repo artefactory/artefiles --json tagName --jq .tagName)" artefactory/artefiles
 ```
@@ -74,6 +74,7 @@ All modules (`[x]` marks the ones selected by default; without a terminal, chezm
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | — |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
+| `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
 | `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | — |
@@ -89,24 +90,55 @@ After installing: `atuin register` (or `atuin login`) turns on history sync, `gc
 
 chezmoi keeps a copy of every config in a source directory (`chezmoi source-path` prints it); `chezmoi apply` writes those files into your home directory.
 
-| Task | Command |
-|------|---------|
-| See pending changes | `chezmoi status` / `chezmoi diff` |
-| Edit a file | `chezmoi edit <path>` |
-| Apply changes | `chezmoi apply` |
-| Update from the repo | `chezmoi update` |
-| Reset one file | `chezmoi apply --force <path>` |
-| Change modules | `chezmoi init --prompt && chezmoi apply` |
+Copy a block into your terminal, changing the value after `export` if you need to. Or, with the optional `runme` module, run it by name, `runme run chezmoi-check`: [Runme](CHEATSHEET.md#run-these-steps-with-runme) shows each value for you to confirm before it runs.
+
+**Check** what would change (`chezmoi-check`, read-only):
+
+```sh {"name":"chezmoi-check","interactive":"false","tag":"check"}
+chezmoi status
+chezmoi diff --no-pager
+```
+
+**Edit** a config in your editor, review it, then apply it (`chezmoi-edit`):
+
+```sh {"name":"chezmoi-edit","excludeFromRunAll":"true"}
+export FILE="$HOME/.config/fish/config.fish"
+chezmoi edit "$FILE"
+chezmoi diff --no-pager "$FILE"
+chezmoi apply -v "$FILE"
+```
+
+**Update** from the repo: pull the latest changes, then apply them (`chezmoi-update`):
+
+```sh {"name":"chezmoi-update","excludeFromRunAll":"true"}
+chezmoi update -v
+```
+
+**Change modules**: answer the checklist again, then apply (`chezmoi-modules`):
+
+```sh {"name":"chezmoi-modules","excludeFromRunAll":"true"}
+chezmoi init --prompt && chezmoi apply
+```
+
+To track a new file, merge edits made outside chezmoi, preview an update or reset one file, see the [cheatsheet](CHEATSHEET.md#chezmoi-workflows).
 
 ## Make it yours
 
 1. **Fork** this repo. On a new machine, clone your fork and run `./install.sh` inside it, or run `chezmoi init --apply <you>/artefiles`. Already installed? Point the existing source at your fork: `git -C "$(chezmoi source-path)" remote set-url origin <your fork URL>`.
 2. **Edit** a config: `chezmoi edit ~/.config/fish/config.fish`, check it with `chezmoi diff`, apply it with `chezmoi apply`.
-3. **Publish:** `chezmoi cd`, commit, push. Your other machines get it with `chezmoi update`.
+3. **Publish:** commit and push from the source directory. Your other machines get it with `chezmoi update`.
+   ```bash {"name":"publish-changes","excludeFromRunAll":"true"}
+   export MESSAGE="Update my dotfiles"
+   cd "$(chezmoi source-path)"
+   git add -A
+   git commit -m "$MESSAGE"
+   git push
+   ```
 4. **Follow upstream:** merges use [mergiraf](https://mergiraf.org/), which merges config files by structure.
-   ```bash
-   chezmoi cd
-   git remote add upstream https://github.com/artefactory/artefiles.git   # once
+   ```bash {"name":"follow-upstream","excludeFromRunAll":"true"}
+   cd "$(chezmoi source-path)"
+   git remote get-url upstream > /dev/null 2>&1 \
+     || git remote add upstream https://github.com/artefactory/artefiles.git
    git pull upstream main
    chezmoi apply
    ```
@@ -118,5 +150,7 @@ chezmoi keeps a copy of every config in a source directory (`chezmoi source-path
 ## More
 
 [CHEATSHEET.md](CHEATSHEET.md) has the chezmoi commands, a guide per module, the sandbox (`./sandbox.sh`), the tests and how to remove everything. MIT licence.
+
+Every shell block of this README and the cheatsheet works when pasted. With the optional `runme` module, [Runme](https://docs.runme.dev) also runs them by name from the source directory ([how](CHEATSHEET.md#run-these-steps-with-runme)).
 
 Claude Code can help you install, update, debug and use these tools in any project once the artefiles skill is installed: `gh skill install artefactory/artefiles .claude/skills/artefiles/SKILL.md --allow-hidden-dirs --agent claude-code --scope user`.

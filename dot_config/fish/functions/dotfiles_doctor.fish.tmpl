@@ -232,6 +232,9 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     __check_tool_with_configs duckdb "" $managed_files
     __check_tool_with_configs harlequin "" $managed_files
     # [[- end ]] #
+    # [[- if has "runme" $modules ]] #
+    __check_tool_with_configs runme "" $managed_files
+    # [[- end ]] #
     # [[- if has "azure" $modules ]] #
     __check_tool_with_configs az "" $managed_files
     # [[- end ]] #
