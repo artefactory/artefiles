@@ -198,7 +198,12 @@ install_github_cli() {
 # Ensure GitHub CLI authentication, exit if authentication fails
 ensure_github_auth() {
   # Check if already authenticated
-  if gh auth status > /dev/null 2>&1; then
+  # `gh api rate_limit` tests only the token gh uses for github.com (GH_TOKEN,
+  # else the active account): a bad token gets a 401. `gh auth status` fails when
+  # any stored account on any host has a problem, even one the install never
+  # uses. Not `gh api user`: GitHub refuses /user to the GitHub Actions token
+  # (403 "Resource not accessible by integration").
+  if gh api --hostname github.com rate_limit > /dev/null 2>&1; then
     echo "GitHub CLI already authenticated" >&2
     return 0
   fi
@@ -210,7 +215,7 @@ ensure_github_auth() {
     echo "Using token from environment variables" >&2
     # Verify token works
     temp_error_file=$(mktemp)
-    if ! gh auth status 2> "$temp_error_file" > /dev/null; then
+    if ! gh api --hostname github.com rate_limit 2> "$temp_error_file" > /dev/null; then
       err_msg=$(cat "$temp_error_file" 2> /dev/null || echo "Unknown authentication error")
       echo "ERROR: Invalid GitHub token provided in environment variables" >&2
       echo "ERROR: Details: $err_msg" >&2
@@ -228,12 +233,14 @@ ensure_github_auth() {
     # Attempt browser-based authentication with SSH for git operations
     # This is preferred as it's more secure and supports 2FA
     if gh auth login \
+      --hostname github.com \
       --git-protocol ssh \
       --scopes "$GH_SCOPES" \
       --web \
       ||
       # Fallback to HTTPS if SSH fails
       gh auth login \
+        --hostname github.com \
         --git-protocol https \
         --scopes "$GH_SCOPES" \
         --web; then

@@ -213,7 +213,7 @@ cat > "${stubs}/gh" << STUB
 #!/bin/sh
 log() { echo "gh \$*" >> "${actions_log}"; }
 case "\$*" in
-  "auth status"*)
+  "auth status"* | "api --hostname github.com rate_limit")
     [ "${token_available}" = "true" ] || [ -f "${stubs}/logged-in" ] ;;
   "auth login"*)
     log "\$@"
