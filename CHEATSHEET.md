@@ -79,6 +79,16 @@ chsh -s "$(command -v fish)"
 
 Log out and back in, and fully quit and reopen your IDE, for the change to show.
 
+### VS Code Remote-SSH with fish as the login shell
+
+Fish as the login shell works with VS Code Remote-SSH and Dev Containers. On the server, `config.fish` skips the prompt, key bindings, direnv, fzf and atuin while VS Code reads the environment (`VSCODE_RESOLVING_ENVIRONMENT`), so its 10-second probe stays fast. To check a server, run `vscode_remote_check` there over SSH: it times that probe and fails when a startup file is slow or waits for input.
+
+If Remote-SSH still fails to connect to a fish host, run this on the machine that runs VS Code, then reload the VS Code window:
+```sh {"name":"vscode-remote-fix","excludeFromRunAll":"true"}
+vscode_remote_fix
+```
+It sets `"remote.SSH.useLocalServer": false` in your VS Code user settings, since the default local server fails to connect to some fish hosts. Pass a path to fix another `settings.json` (VS Code Insiders, VSCodium). Nothing sets it by default: without the local server each VS Code window opens its own SSH connection (one more password or 2FA prompt per window). Settings Sync carries the setting to every machine on your account; to keep it on this machine only, add `"settingsSync.ignoredSettings": ["remote.SSH.useLocalServer"]` to its settings.
+
 ## Run these steps with runme
 
 Runme is optional: every shell block of the README and of this file also works when pasted into a terminal. The blocks are [Runme](https://docs.runme.dev) cells: a code block with a JSON annotation after the language, which GitHub does not show. A value set with `export` is shown for you to confirm or change before the cell runs. The `runme` module installs it (`chezmoi init --prompt && chezmoi apply` to add a module). Run it from the source directory (`chezmoi cd`), since Runme reads the Markdown files of the current project:
@@ -108,6 +118,8 @@ If Runme stops with `malformed refspec`, your git config holds a fetch rule it c
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | [atuin](.claude/skills/artefiles/references/atuin.md) |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | [review](.claude/skills/artefiles/references/review.md) |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | [python_dev](.claude/skills/artefiles/references/python_dev.md) |
+| `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | [vscode](.claude/skills/artefiles/references/vscode.md) |
+| `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | [code_cli](.claude/skills/artefiles/references/code_cli.md) |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | [runme](.claude/skills/artefiles/references/runme.md) |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |

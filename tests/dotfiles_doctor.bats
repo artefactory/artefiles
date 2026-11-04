@@ -11,7 +11,7 @@ setup() {
   SRC="$BATS_TEST_TMPDIR/src"
   mkdir -p "$BIN" "$SRC"
   git -C "$SRC" init -q -b main
-  git -C "$SRC" -c core.hooksPath=/dev/null -c user.email=t@e -c user.name=t commit -q --allow-empty -m init
+  git -C "$SRC" -c core.hooksPath=/dev/null -c commit.gpgsign=false -c user.email=t@e -c user.name=t commit -q --allow-empty -m init
   DOCTOR_OUT="$BATS_TEST_TMPDIR/doctor.out"
   printf 'ok        version       v2.73.2\n' > "$DOCTOR_OUT"
   # The chezmoi stub answers the subcommands dotfiles_doctor calls.
@@ -44,8 +44,26 @@ tools() {
 run_doctor() {
   seed_chezmoi_config "$H" "{\"modules\":$1}"
   chezmoi_render "$H" dot_config/fish/functions/dotfiles_doctor.fish.tmpl > "$BATS_TEST_TMPDIR/dd.fish"
-  run env -i HOME="$H" PATH="$BIN:/usr/bin:/bin" STATUS_FAIL="${STATUS_FAIL:-}" MANAGED_FAIL="${MANAGED_FAIL:-}" "$(command -v fish)" --no-config \
-    -c "source $BATS_TEST_TMPDIR/dd.fish; dotfiles_doctor"
+  run doctor_fish
+}
+
+# doctor_fish — run the rendered doctor. SHELL is the login shell VS Code
+# probes, empty unless a test sets T_SHELL. 3>&- keeps a probe's lingering
+# child from holding bats' output open; it must not wrap `run` itself, which
+# reports on that descriptor.
+doctor_fish() {
+  env -i HOME="$H" PATH="$BIN:/usr/bin:/bin" STATUS_FAIL="${STATUS_FAIL:-}" MANAGED_FAIL="${MANAGED_FAIL:-}" \
+    SHELL="${T_SHELL:-}" VSCODE_REMOTE_CHECK_TIMEOUT=2 "$(command -v fish)" --no-config \
+    -c "source $REPO_ROOT/dot_config/fish/functions/vscode_remote_check.fish; source $BATS_TEST_TMPDIR/dd.fish; dotfiles_doctor" 3>&-
+}
+
+# login_fish BODY — a fake fish login shell that runs BODY, then answers VS
+# Code's probe; T_SHELL points at it.
+login_fish() {
+  mkdir -p "$BATS_TEST_TMPDIR/login"
+  T_SHELL="$BATS_TEST_TMPDIR/login/fish"
+  printf '#!/bin/sh\n%s\n[ "$VSCODE_RESOLVING_ENVIRONMENT" = 1 ] && eval "$2"\n' "$1" > "$T_SHELL"
+  chmod +x "$T_SHELL"
 }
 
 CORE=(fish starship git gh fnm mergiraf uv hostname)
@@ -113,4 +131,30 @@ CORE=(fish starship git gh fnm mergiraf uv hostname)
   MANAGED_FAIL=1 run_doctor '[]'
   [ "$status" -eq 1 ]
   [[ "$output" == *"✗ chezmoi managed failed, configs not checked: chezmoi: managed broke"* ]]
+}
+
+@test "with vscode and fish as login shell, a fast VS Code environment probe passes" {
+  tools "${CORE[@]}" code
+  login_fish ':'
+  run_doctor '["vscode"]'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"✓ VS Code environment probe"* ]]
+}
+
+@test "with vscode and fish as login shell, a probe past the limit is a problem" {
+  tools "${CORE[@]}" code
+  login_fish 'sleep 4'
+  run_doctor '["vscode"]'
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"✗ VS Code environment probe"*"vscode_remote_check"* ]]
+}
+
+@test "the VS Code probe is not run when the login shell is not fish, or without vscode" {
+  tools "${CORE[@]}" code
+  run_doctor '["vscode"]'
+  [[ "$output" != *"environment probe"* ]]
+  login_fish 'sleep 4'
+  run_doctor '[]'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"environment probe"* ]]
 }

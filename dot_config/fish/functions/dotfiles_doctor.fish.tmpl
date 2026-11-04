@@ -205,6 +205,44 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     echo "## Editor"
     __check_tool_with_configs nvim ".config/nvim/init.lua" $managed_files
     # [[- end ]] #
+    # [[- $codeCliArch := has .chezmoi.arch (list "amd64" "arm64" "arm") ]] #
+    # [[- $codeCli := and (has "code_cli" $modules) (eq .chezmoi.os "linux") $codeCliArch ]] #
+    # [[- if or (has "vscode" $modules) $codeCli ]] #
+
+    echo ""
+    echo "## VS Code"
+    # [[- end ]] #
+    # [[- if has "vscode" $modules ]] #
+    # [[- if eq .chezmoi.os "linux" ]] #
+    # The Linux install skips the desktop app without a graphical session or in
+    # a Codespace (linux/run_install-vscode.sh, same test), so a missing code
+    # there is expected.
+    if not command -v code >/dev/null 2>&1; and begin
+            test -n "$CODESPACES"; or test -z "$DISPLAY$WAYLAND_DISPLAY"
+        end
+        __dd_warning "code: not installed; no graphical session here, so the desktop app is skipped (code_cli gives code-cli tunnel)"
+    else
+        __check_tool_with_configs code "" $managed_files
+    end
+    # [[- else ]] #
+    __check_tool_with_configs code "" $managed_files
+    # [[- end ]] #
+    # [[- end ]] #
+    # [[- if $codeCli ]] #
+    __check_tool_with_configs code-cli "" $managed_files
+    # [[- end ]] #
+    # [[- if or (has "vscode" $modules) $codeCli ]] #
+    # VS Code (Remote-SSH, Dev Containers, tunnels) reads the environment
+    # through the login shell and gives up after 10 seconds.
+    if string match -q '*/fish' -- "$SHELL"; and functions -q vscode_remote_check
+        set -l probe (vscode_remote_check --probe)
+        if test $status -eq 0
+            echo "  ✓ VS Code environment probe: $probe"
+        else
+            __dd_problem "VS Code environment probe: $probe (run vscode_remote_check)"
+        end
+    end
+    # [[- end ]] #
     # [[- if has "atuin" $modules ]] #
 
     echo ""
