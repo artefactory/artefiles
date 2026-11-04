@@ -59,7 +59,7 @@ Every install gives you the **Fish** shell (suggestions as you type) with the **
 
 **Keys:** `Tab` opens an fzf picker over every completion. `Ctrl+R` searches [Atuin](https://atuin.sh/) history, synced across machines (`atuin` module). `review` opens a terminal UI to review a diff, a branch or a pull request (`review` module). `git diff` uses difftastic (`git_advanced` module).
 
-All modules (`[x]` marks the ones selected by default; without a terminal, chezmoi's own prompt lists them):
+All modules (without a terminal, chezmoi's own prompt lists them):
 
 | Module | Description | Alternative to |
 |--------|-------------|----------------|
@@ -73,6 +73,8 @@ All modules (`[x]` marks the ones selected by default; without a terminal, chezm
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | — |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
+| `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | — |
+| `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | — |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
@@ -83,6 +85,8 @@ All modules (`[x]` marks the ones selected by default; without a terminal, chezm
 | `kubernetes` | Kubernetes: kubectl, and k9s to browse and manage clusters in the terminal | — |
 | `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
 | `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
+
+Selected by default: `editor`, `shell_tools`, `cli_extras`, `rust`, `git_advanced`, `atuin`, `python_dev`, `vscode`, `code_cli`, `gcloud`.
 
 After installing: `atuin register` (or `atuin login`) turns on history sync, `gcloud init` sets up Google Cloud, and `az login` signs in to Azure. More commands and shortcuts are in the [cheatsheet](CHEATSHEET.md).
 

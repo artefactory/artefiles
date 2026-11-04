@@ -1,0 +1,75 @@
+#!/bin/sh
+# vscode_remote_fix [SETTINGS_JSON] — run on the machine that runs VS Code.
+# Sets "remote.SSH.useLocalServer": false in its user settings.json, so that
+# Remote-SSH connects to a host whose login shell is fish (with the local
+# server on, the connection fails there). Nothing sets it by default: without
+# the local server each VS Code window opens its own SSH connection.
+#
+# SETTINGS_JSON defaults to the VS Code user settings of this OS (pass another
+# path for VS Code Insiders or VSCodium). A missing file is created. The file
+# is JSONC (comments, trailing commas), so a JSON tool would reject or strip
+# it: a key set to true is switched in place, and a missing key goes on its own
+# line right after the first `{`. Running it again changes nothing.
+# Exits 1 when the file cannot be read or written.
+
+set -u
+
+key='"remote.SSH.useLocalServer"'
+
+if [ $# -gt 0 ]; then
+  settings=$1
+elif [ "$(uname -s)" = Darwin ]; then
+  settings="$HOME/Library/Application Support/Code/User/settings.json"
+else
+  settings="$HOME/.config/Code/User/settings.json"
+fi
+
+fail() {
+  echo "vscode_remote_fix: $1; add $key: false to $settings by hand." >&2
+  exit 1
+}
+
+if [ ! -f "$settings" ]; then
+  if ! { mkdir -p "$(dirname "$settings")" && printf '{\n  %s: false\n}\n' "$key" > "$settings"; }; then
+    fail "could not create the file"
+  fi
+  echo "Created $settings with $key: false. Reload the VS Code window to use it."
+  exit 0
+fi
+
+# Commented-out lines do not count as setting the key.
+present=$(grep -vE '^[[:space:]]*(//|/\*|\*)' "$settings" | grep -E "\"remote\\.SSH\\.useLocalServer\"[[:space:]]*:" || true)
+if [ -n "$present" ] && ! printf '%s\n' "$present" | grep -qE ':[[:space:]]*true'; then
+  echo "$key is already false in $settings."
+  exit 0
+fi
+
+tmp=$(mktemp "${TMPDIR:-/tmp}/vscode-settings.XXXXXX") || fail "no temporary file"
+trap 'rm -f "$tmp"' EXIT
+
+if [ -n "$present" ]; then
+  # Switch the uncommented key from true to false, leaving the rest of the line.
+  awk '
+    $0 !~ /^[[:space:]]*(\/\/|\/\*|\*)/ && /"remote\.SSH\.useLocalServer"[[:space:]]*:[[:space:]]*true/ {
+      sub(/"remote\.SSH\.useLocalServer"[[:space:]]*:[[:space:]]*true/, "\"remote.SSH.useLocalServer\": false")
+    }
+    { print }
+  ' "$settings" > "$tmp" || fail "could not read the file"
+else
+  awk -v line="  $key: false," '
+    !done && $0 !~ /^[[:space:]]*(\/\/|\/\*|\*)/ && (i = index($0, "{")) {
+      print substr($0, 1, i)
+      print line
+      rest = substr($0, i + 1)
+      if (rest ~ /[^[:space:]]/) print rest
+      done = 1
+      next
+    }
+    { print }
+    END { exit !done }
+  ' "$settings" > "$tmp" || fail "found no { to add the key after"
+fi
+
+# cat > keeps the file's permissions and a symlinked settings.json intact.
+cat "$tmp" > "$settings" 2> /dev/null || fail "could not write the file"
+echo "Set $key: false in $settings. Reload the VS Code window to use it."

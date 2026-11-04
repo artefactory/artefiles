@@ -79,6 +79,9 @@ Library/Application Support/Code/User/settings.json
 {{   if not (has "azure" $modules) }}
 .chezmoiscripts/linux/install-azure-cli.sh
 {{   end }}
+{{   if not (has "vscode" $modules) }}
+.chezmoiscripts/linux/install-vscode.sh
+{{   end }}
 {{   if not (has "git_advanced" $modules) }}
 .chezmoiscripts/linux/install-git-extras.sh
 {{   end }}

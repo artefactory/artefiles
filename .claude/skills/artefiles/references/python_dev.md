@@ -4,5 +4,6 @@
   (`nbdime config-git --global --enable` is run once). `nbdiff-web a.ipynb b.ipynb`
   opens a browser diff.
 - VS Code extensions: Python, Pylance and Ruff, plus the Catppuccin theme and
-  direnv extensions every install gets, when `code` is on PATH.
+  direnv extensions every install gets, when `code` is on PATH: from the
+  `vscode` module or any other install. Without one they are skipped.
 - Python itself comes from uv (core): see core.md.

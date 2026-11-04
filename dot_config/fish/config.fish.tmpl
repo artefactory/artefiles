@@ -6,6 +6,16 @@
 # Fish shell configuration for Linux development environment
 # [[ end -]] #
 
+# VS Code reads the environment by running the login shell as `$SHELL -ilc`
+# with VSCODE_RESOLVING_ENVIRONMENT set, and gives up after 10 seconds. That
+# shell is interactive, so `status is-interactive` does not skip the prompt and
+# key-binding setup there: interactive_init does, and everything that sets a
+# variable or PATH still runs.
+set -l interactive_init true
+if set -q VSCODE_RESOLVING_ENVIRONMENT
+    set interactive_init false
+end
+
 ###########################################
 # PATH CONFIGURATION - ORDER MATTERS
 ###########################################
@@ -159,7 +169,7 @@ end
 # Homebrew's vendor_conf.d/direnv.fish has already loaded the hook on macOS;
 # the Linux binary in ~/.local/bin ships none. The hook must exist before the
 # first prompt: a fish_prompt handler added while that event fires misses it.
-if type -q direnv; and not functions -q __direnv_export_eval
+if $interactive_init; and type -q direnv; and not functions -q __direnv_export_eval
     direnv hook fish | source
 end
 
@@ -174,7 +184,7 @@ if type -q chezmoi
 end
 
 # FZF configuration with custom key bindings
-if type -q fzf
+if $interactive_init; and type -q fzf
     set -x FZF_DISABLE_KEYBINDINGS 1
     fzf --fish | source
     # Drop FZF's own alt-c cd widget; Alt+Shift+C below is the directory jump.
@@ -194,7 +204,7 @@ end
 
 # [[ if has "atuin" .modules -]] #
 # Atuin shell history with search - https://atuin.sh
-if type -q atuin
+if $interactive_init; and type -q atuin
     # atuin's init spawns `atuin uuid` for the session id; uuidgen produces the
     # same 32 hex chars for a fraction of the cost, so seed the two variables
     # the init checks before sourcing it.
@@ -214,7 +224,7 @@ end
 
 # Atuin history rendered through fzf instead of atuin's own TUI, when both
 # tools are present.
-if status is-interactive; and type -q fzf; and type -q atuin
+if $interactive_init; and status is-interactive; and type -q fzf; and type -q atuin
     bind ctrl-r '__atuin_fzf_search directory'
     bind alt-r '__atuin_fzf_search directory'
     bind alt-f '__atuin_fzf_search global'
@@ -261,7 +271,7 @@ set fish_greeting
 
 # Theme: fish's built-in Catppuccin Mocha. A theme chosen in
 # local.config.fish (sourced last) wins.
-if status is-interactive
+if $interactive_init; and status is-interactive
     fish_config theme choose catppuccin-mocha
 end
 
