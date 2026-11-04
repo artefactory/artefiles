@@ -17,7 +17,7 @@ setup() {
 
   stub sudo 'if [ "$1" = "-v" ]; then exit "${SUDO_V_STATUS:-0}"; fi'
   stub chezmoi 'case "$1" in source-path) exit 1 ;; --version) exit "${CHEZMOI_VERSION_STATUS:-0}" ;; esac'
-  stub gh 'case "$*" in "auth status") printf "%s\n" "${GH_STATUS_OUT:-}" ;; api*) exit "${GH_API_STATUS:-0}" ;; "repo clone"*) exit "${GH_CLONE_STATUS:-0}" ;; esac'
+  stub gh 'case "$*" in "auth status") printf "%s\n" "${GH_STATUS_OUT:-}" ;; "api --hostname github.com rate_limit") exit 0 ;; api*) exit "${GH_API_STATUS:-0}" ;; "repo clone"*) exit "${GH_CLONE_STATUS:-0}" ;; esac'
   stub brew 'case "$1" in --prefix) echo "'"$BATS_TEST_TMPDIR"'/brew" ;; esac'
   stub curl 'exit "${CURL_STATUS:-0}"'
   stub uname 'if [ "${1:-}" = "-m" ]; then echo "${FAKE_ARCH:-arm64}"; else echo "${FAKE_OS:-Darwin}"; fi'
