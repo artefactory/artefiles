@@ -36,6 +36,8 @@ credentialHelper = "!gh auth git-credential"
 # [[ $choices = append $choices "atuin | Atuin: searchable shell history, synced across machines (Ctrl+R)" ]] #
 # [[ $choices = append $choices "review | tuicr: terminal UI to review a diff, a branch or a pull request (review command)" ]] #
 # [[ $choices = append $choices "python_dev | Python tools: nbdime (notebook diffs), VS Code extensions" ]] #
+# [[ $choices = append $choices "vscode | VS Code: the Microsoft desktop editor (code), with the team settings and extensions" ]] #
+# [[ $choices = append $choices "code_cli | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel)" ]] #
 # [[ $choices = append $choices "data | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal)" ]] #
 # [[ $choices = append $choices "pre_commit | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one" ]] #
 # [[ $choices = append $choices "prek | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one" ]] #
@@ -49,7 +51,7 @@ credentialHelper = "!gh auth git-credential"
 # Tools every install gets, shown above the checklist.
 # [[ $required := "fish, git, gh, starship, mergiraf, uv and fnm" ]] #
 # Modules the install checklist starts with already selected.
-# [[ $defaults := list "editor" "shell_tools" "cli_extras" "rust" "git_advanced" "atuin" "python_dev" "gcloud" ]] #
+# [[ $defaults := list "editor" "shell_tools" "cli_extras" "rust" "git_advanced" "atuin" "python_dev" "vscode" "code_cli" "gcloud" ]] #
 # [[ $pairs := list (list "ghostty" "cmux") (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
 # The bare `chezmoi init` prompt starts with the same modules checked; the default must be the full choice text.
 # [[ $preselected := list ]] #

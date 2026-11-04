@@ -83,6 +83,13 @@ packages:
       python_dev:
         brews: []
         casks: []
+      vscode:
+        brews: []
+        casks:
+          - 'visual-studio-code'
+      code_cli:
+        brews: []
+        casks: []
       pre_commit:
         brews: []
         casks: []

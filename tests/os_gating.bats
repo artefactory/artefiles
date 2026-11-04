@@ -40,10 +40,10 @@ setup() {
     [ -f "$f" ] || continue
     rel=${f#"$REPO_ROOT"/}
     base=$(basename "${rel%.tmpl}")
-    # chezmoi managed strips run_<once|onchange>_ and the optional
+    # chezmoi managed strips run_ (with its once_ or onchange_) and the optional
     # before_/after_ ordering modifier from script target paths.
     target=$(dirname "$rel")/$(printf '%s\n' "$base" \
-      | sed -E 's/^run_(once|onchange)_//' \
+      | sed -E 's/^run_((once|onchange)_)?//' \
       | sed -E 's/^(before|after)_//')
     if ! printf '%s\n' "$managed" | grep -qxF "$target"; then
       echo "$own script not in managed list with all modules on: $rel (expected target $target)" >&2

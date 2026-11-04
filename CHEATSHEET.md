@@ -58,6 +58,8 @@ Log out and back in, and fully quit and reopen your IDE, for the change to show.
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | [atuin](.claude/skills/artefiles/references/atuin.md) |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | [review](.claude/skills/artefiles/references/review.md) |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | [python_dev](.claude/skills/artefiles/references/python_dev.md) |
+| `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | [vscode](.claude/skills/artefiles/references/vscode.md) |
+| `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | [code_cli](.claude/skills/artefiles/references/code_cli.md) |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | [prek](.claude/skills/artefiles/references/prek.md) |

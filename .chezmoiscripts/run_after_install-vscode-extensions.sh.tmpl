@@ -1,0 +1,47 @@
+#!/bin/sh
+# Installs the recommended VS Code extensions that are missing.
+#
+# A plain run_ script, not run_onchange_: `code` can arrive on a later apply
+# (the vscode module skips the install without a display or sudo and retries
+# on the next apply; the user may install VS Code by hand), and a run_onchange_
+# script that found no `code` would be recorded as done and never run again.
+# Each apply asks `code` for its extensions once and installs only the missing
+# ones. after_: runs after the package and VS Code install scripts.
+
+set -eu
+
+# No `code` is normal on a server; dotfiles_doctor reports it when vscode is
+# selected, so every apply stays quiet here.
+if ! command -v code > /dev/null 2>&1; then
+  exit 0
+fi
+
+if ! installed=$(code --list-extensions 2>&1); then
+  echo "ERROR: 'code --list-extensions' failed: $installed" >&2
+  exit 1
+fi
+
+install_extension() {
+  # Whole-line and case-insensitive: IDs ignore case, and a substring match
+  # would take Catppuccin.catppuccin-vsc-icons for Catppuccin.catppuccin-vsc.
+  if printf '%s\n' "$installed" | grep -qixF "$1"; then
+    return 0
+  fi
+  echo "Installing VS Code extension: $1"
+  if ! code --install-extension "$1"; then
+    echo "ERROR: Failed to install extension '$1'. Check your network connection and re-run 'chezmoi apply'." >&2
+    return 1
+  fi
+}
+
+{{- /* Core plus per-active-module extensions, deduplicated. */ -}}
+{{- $exts := .vscode.extensions | default list -}}
+{{- $modules := .modules | default list -}}
+{{- range $name, $mod := .vscode.modules -}}
+{{-   if has $name $modules -}}
+{{-     $exts = concat $exts (default list $mod.extensions) -}}
+{{-   end -}}
+{{- end }}
+{{- range ($exts | uniq) }}
+install_extension {{ . | quote }}
+{{- end }}

@@ -31,7 +31,7 @@ stored() { sed -n "s/^ *$1 = //p" "$CONFIG"; }
 UP=$'\033[A'
 DOWN=$'\033[B'
 
-@test "a config saved before modulesOffered is offered azure, kubernetes and data, the stored modules checked" {
+@test "a config saved before modulesOffered is offered azure, kubernetes, data, vscode and code_cli, the stored modules checked" {
   seed '  modules = ["editor","atuin"]'
   # Up wraps to Submit; Enter, then Enter confirms.
   offer "$UP"$'\n\n'
@@ -39,8 +39,8 @@ DOWN=$'\033[B'
   stored modules | jq -e '. == ["editor","atuin"]'
   [[ "$output" != *"NOT INSTALLED YET"* ]]
   stored modulesOffered | jq -e --argjson all "$(all_names)" '. == $all'
-  for m in azure kubernetes data; do grep -qE "\] $m .*\(new\)$" <<< "$output"; done
-  [ -z "$(grep '(new)$' <<< "$output" | grep -vE '\] (azure|kubernetes|data) ')" ]
+  for m in azure kubernetes data vscode code_cli; do grep -qE "\] $m .*\(new\)$" <<< "$output"; done
+  [ -z "$(grep '(new)$' <<< "$output" | grep -vE '\] (azure|kubernetes|data|vscode|code_cli) ')" ]
 }
 
 @test "a module picked in the offer is saved, and the next apply is said to install it" {
@@ -86,7 +86,7 @@ DOWN=$'\033[B'
     sh "$BATS_TEST_TMPDIR/offer.sh"
   [ "$status" -eq 0 ]
   [ "$(cat "$CONFIG")" = "$before" ]
-  for m in azure kubernetes data; do [[ "$output" == *"New modules: "*"$m"* ]]; done
+  for m in azure kubernetes data vscode code_cli; do [[ "$output" == *"New modules: "*"$m"* ]]; done
 }
 
 @test "chezmoi init keeps modulesOffered, and a config from before it gets the earlier module set" {
@@ -100,7 +100,7 @@ DOWN=$'\033[B'
   }
   seed '  modules = ["editor"]'
   init
-  stored modulesOffered | jq -e --argjson all "$(all_names)" '. == ($all - ["azure","kubernetes","data"])'
+  stored modulesOffered | jq -e --argjson all "$(all_names)" '. == ($all - ["azure","kubernetes","data","vscode","code_cli"])'
   seed '  modules = ["editor"]
   modulesOffered = ["editor"]'
   init
