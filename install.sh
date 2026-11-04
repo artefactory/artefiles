@@ -148,7 +148,7 @@ install_homebrew() {
   fi
   echo "Installing Homebrew..." >&2
   [ "$dry_run" = "true" ] && return 0
-  NONINTERACTIVE=1 /bin/bash -c "$(curl --retry 5 --retry-delay 2 -fsSL "$HOMEBREW_INSTALLER")"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl --retry 5 --retry-delay 2 -fsSL "$HOMEBREW_INSTALLER")" 5>&- 6>&-
 }
 
 # Install GitHub CLI first if not already installed
@@ -226,8 +226,9 @@ ensure_github_auth() {
     return 0
   fi
 
-  # Check if we're in an interactive environment
-  if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
+  # Check if we're in an interactive environment. Stderr feeds the install log,
+  # so the terminal is fd 4; the login prompts there.
+  if [ -t 0 ] && [ -t 1 ] && [ -t 4 ]; then
     echo "Starting interactive GitHub authentication..." >&2
 
     # Attempt browser-based authentication with SSH for git operations
@@ -236,14 +237,14 @@ ensure_github_auth() {
       --hostname github.com \
       --git-protocol ssh \
       --scopes "$GH_SCOPES" \
-      --web \
+      --web 2>&4 \
       ||
       # Fallback to HTTPS if SSH fails
       gh auth login \
         --hostname github.com \
         --git-protocol https \
         --scopes "$GH_SCOPES" \
-        --web; then
+        --web 2>&4; then
       echo "GitHub CLI authentication successful" >&2
       return 0
     fi
@@ -372,13 +373,180 @@ MSG
       wait "$sleep_pid"
       sudo -n -v 2> /dev/null || exit 0
     done
-  ) < /dev/null > /dev/null 2>&1 &
+  ) < /dev/null > /dev/null 2>&1 4>&- 5>&- 6>&- &
   sudo_keepalive_pid=$!
 }
-trap stop_sudo_keepalive EXIT
+
+# Every run but a dry run keeps a log of its steps next to the backups, in the
+# state folder: macOS empties /tmp at reboot, and the log is meant for a bug
+# report written later. Stderr goes through tee, so the terminal sees every byte
+# as it comes, prompts without a newline included; the copy for the log passes
+# through redact first. The steps that draw on the terminal or need it on
+# stderr (the module checklist, the GitHub login, a chezmoi init that may
+# prompt) write to fd 4, the terminal, and the log only names them.
+# Only the newest LOG_KEEP logs are kept.
+# The installers and chezmoi run with fds 5 and 6 closed: a process they leave
+# running would otherwise hold the log open and could write to it unredacted.
+LOG_KEEP=10
+exec 4>&2
+log_file=""
+log_pid=""
+log_reported=false
+# Set when the user stopped the install: its log is no bug report.
+stopped_by_user=false
+current_step=""
+
+# The log copy of stderr, without the tokens: the values of the token variables
+# (read from ENVIRON, so they never appear on a command line) and anything
+# shaped like a GitHub token, which covers one the install never saw. Values
+# shorter than 8 characters are not secrets worth hiding every match of.
+redact() {
+  awk '
+    BEGIN {
+      split("GH_TOKEN GITHUB_TOKEN GITHUB_ACCESS_TOKEN CHEZMOI_GITHUB_ACCESS_TOKEN HOMEBREW_GITHUB_API_TOKEN", names, " ")
+      for (i in names) if (length(ENVIRON[names[i]]) >= 8) secrets[++n] = ENVIRON[names[i]]
+    }
+    {
+      line = $0
+      for (i = 1; i <= n; i++) {
+        out = ""
+        while ((p = index(line, secrets[i])) > 0) {
+          out = out substr(line, 1, p - 1) "[redacted]"
+          line = substr(line, p + length(secrets[i]))
+        }
+        line = out line
+      }
+      gsub(/gh[opsur]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+/, "[redacted]", line)
+      print line
+      fflush()
+    }'
+  # Whatever stops awk (a full disk), keep reading: tee would otherwise die on
+  # the closed pipe and take the install's stderr with it.
+  cat > /dev/null
+}
+
+# Route stderr through tee and redact into the log, which stays open on fd 6.
+# fd 5 writes step markers to the log side of tee, never to the terminal. Strict
+# order would need the markers in tee's input, which is also the terminal's, and
+# a filter that kept them off the terminal would hold back prompts until their
+# newline. So a marker can land before the last output of the step it follows;
+# the output itself keeps its order.
+start_logger() {
+  [ -n "$log_file" ] || return 0
+  if ! fifos="$(mktemp -d 2> /dev/null)"; then
+    log_file=""
+    return 0
+  fi
+  if ! mkfifo "${fifos}/out" "${fifos}/copy" 2> /dev/null; then
+    rm -rf "$fifos"
+    log_file=""
+    return 0
+  fi
+  # The readers outlive a hangup, so the install's own HUP trap can still
+  # write the last lines of the log.
+  (
+    trap '' HUP
+    tee "${fifos}/copy" < "${fifos}/out" >&4 2> /dev/null
+  ) &
+  (
+    trap '' HUP
+    redact < "${fifos}/copy" >&6 2> /dev/null
+  ) &
+  log_pid=$!
+  exec 2> "${fifos}/out" 5> "${fifos}/copy"
+}
+
+# Give the terminal back to stderr and let the log drain. A process the install
+# started may still hold stderr open, so the wait is bounded.
+stop_logger() {
+  [ -n "$log_pid" ] || return 0
+  exec 2>&4 5>&-
+  waited=0
+  while kill -0 "$log_pid" 2> /dev/null && [ "$waited" -lt 50 ]; do
+    # A POSIX sleep takes whole seconds only; a failure here would end the
+    # EXIT trap under set -e.
+    if sleep 0.1 2> /dev/null; then
+      waited=$((waited + 1))
+    else
+      sleep 1 2> /dev/null || :
+      waited=$((waited + 10))
+    fi
+  done
+  log_pid=""
+  # Removed only now: tee opens its copy fifo by name after the install has
+  # started writing, so an earlier removal could leave the log empty.
+  rm -rf "$fifos"
+}
+
+log_note() {
+  [ -z "$log_pid" ] || printf '%s %s\n' "$(date +%H:%M:%S)" "$*" >&5
+}
+
+# Name the step that runs next, so a failure can say where it stopped.
+step() {
+  current_step="$1"
+  log_note "== step: $1"
+}
+
+# The name sorts by date, so the glob lists the oldest first.
+prune_logs() {
+  set -- "$log_dir"/install-*.log
+  while [ "$#" -gt "$LOG_KEEP" ]; do
+    rm -f "$1"
+    shift
+  done
+}
+
+# The log is optional: a state folder that cannot be written leaves the install
+# without one.
+start_log() {
+  [ "$dry_run" = "false" ] || return 0
+  command -v awk > /dev/null 2>&1 && command -v tee > /dev/null 2>&1 \
+    && command -v mkfifo > /dev/null 2>&1 && command -v date > /dev/null 2>&1 || return 0
+  log_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/artefiles"
+  log_file="${log_dir}/install-$(date +%Y%m%d-%H%M%S)-$$.log"
+  # Opened once: the filter restarts later, and by then the path may no longer
+  # open, which would kill tee and the install's stderr with it. The subshell
+  # proves the file opens first, because a failed exec ends the shell; `command
+  # exec` would avoid that, but in macOS's sh (bash 3.2) run as `sh -c`, it makes
+  # every later exit loop forever.
+  if ! { mkdir -p "$log_dir" && (umask 077 && : > "$log_file") && exec 6>> "$log_file"; } 2> /dev/null; then
+    log_file=""
+    return 0
+  fi
+  prune_logs
+  printf 'artefiles install on %s (%s %s), version %s\n' "$(date)" "$(uname -s)" "$(uname -m)" \
+    "${ARTEFILES_VERSION:-latest release}" >&6
+  start_logger
+}
+
+on_exit() {
+  rc=$?
+  stop_sudo_keepalive
+  [ -n "$log_file" ] || return 0
+  if [ "$rc" -eq 0 ]; then
+    log_note "== finished"
+  else
+    log_note "== failed (exit ${rc}) during: ${current_step:-the start}"
+  fi
+  stop_logger
+  if [ "$rc" -ne 0 ] && [ "$log_reported" = "false" ]; then
+    case "$rc" in
+      # A signal (hangup, Ctrl-C, kill) stopped the install, not a bug.
+      129 | 130 | 143) stopped_by_user=true ;;
+    esac
+    if [ "$stopped_by_user" = "true" ]; then
+      echo "The log of this install is in ${log_file}." >&2
+    else
+      echo "The log of this install is in ${log_file}; attach it to a bug report." >&2
+    fi
+  fi
+}
+trap on_exit EXIT
 trap 'stop_sudo_keepalive; exit 130' INT
 trap 'stop_sudo_keepalive; exit 143' TERM
 trap 'stop_sudo_keepalive; exit 129' HUP
+start_log
 
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
@@ -458,12 +626,16 @@ preflight() {
     fi
   fi
 }
+step preflight
 preflight
 stop_on_failures
 
 # Install Homebrew first on macOS so chezmoi scripts inherit brew on PATH
+step sudo
 start_sudo_keepalive
-install_homebrew
+# Nothing reads the installers' output, so it goes to the log too.
+step Homebrew
+install_homebrew >&2
 if [ "$(uname)" = "Darwin" ]; then
   # A fresh `install_homebrew` writes brew to /opt/homebrew/bin (Apple
   # Silicon) or /usr/local/bin (Intel) but doesn't update the current
@@ -498,13 +670,16 @@ warn_missing_scopes() {
 
 # GitHub CLI setup (skipped in dry-run)
 if [ "$dry_run" = "false" ]; then
-  install_github_cli
+  step "GitHub CLI"
+  install_github_cli >&2
+  step "GitHub login"
   ensure_github_auth
   warn_missing_scopes
 fi
 
 # Install chezmoi if not already installed (skipped in dry-run)
 if [ "$dry_run" = "false" ]; then
+  step "chezmoi install"
   if ! chezmoi="$(command -v chezmoi)"; then
     bin_dir="$(set_bin_dir)"
     chezmoi="${bin_dir}/chezmoi"
@@ -513,7 +688,7 @@ if [ "$dry_run" = "false" ]; then
     # The installer downloads chezmoi with its own curl, which does not retry: a
     # GitHub server error fails it, so the whole installer runs again.
     attempt=1
-    until sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"; do
+    until sh -c "${chezmoi_install_script}" -- -b "${bin_dir}" >&2 5>&- 6>&-; do
       if [ "$attempt" -ge 3 ]; then
         echo "Could not install chezmoi after 3 tries: check the network connection, then run install.sh again." >&2
         exit 1
@@ -529,6 +704,7 @@ else
 fi
 
 # A checkout installs itself; only the Quick Start and the manual path fetch a version.
+step version
 ref=""
 if [ -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
   [ -z "${ARTEFILES_VERSION:-}" ] || echo "Installing from ${script_dir}; ARTEFILES_VERSION is ignored." >&2
@@ -541,6 +717,7 @@ fi
 # here and store the answer; chezmoi init then reuses it without prompting. Only
 # at a terminal, never in CI, and never over an existing chezmoi config.
 if [ "$checklist" = "true" ]; then
+  step "module checklist"
   # The Quick Start has no checkout: clone with gh so the checklist is available.
   if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ]; then
     clone_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
@@ -558,7 +735,7 @@ if [ "$checklist" = "true" ]; then
   fi
   if [ -f "${script_dir}/select-modules.sh" ]; then
     status=0
-    selection="$(sh "${script_dir}/select-modules.sh")" || status=$?
+    selection="$(sh "${script_dir}/select-modules.sh" 2>&4)" || status=$?
     case "$status" in
       0)
         mkdir -p "$(dirname "$chezmoi_config")"
@@ -571,6 +748,7 @@ if [ "$checklist" = "true" ]; then
         ;;
       1)
         echo "Installation cancelled." >&2
+        stopped_by_user=true
         exit 1
         ;;
     esac
@@ -633,6 +811,7 @@ preflight_init() {
     [ -w "$parent" ] || fail_check "cannot create ${destination}: ${parent} cannot be written."
   fi
 }
+step "chezmoi init"
 preflight_init
 stop_on_failures
 
@@ -649,6 +828,11 @@ if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITHUB_ACCESS_TOKEN:-}" ] && [ -z "${CH
   if [ -n "$gh_token" ]; then
     GITHUB_TOKEN="$gh_token"
     export GITHUB_TOKEN
+    # redact reads the tokens when it starts; restart it so it knows this one.
+    if [ -n "$log_pid" ]; then
+      stop_logger
+      start_logger
+    fi
   fi
   unset gh_token
 fi
@@ -705,25 +889,39 @@ MSG
 }
 
 [ -z "$destination" ] || mkdir -p "$destination"
-"$chezmoi" "$@"
+# chezmoi's module prompt draws on stderr, so when it can appear (a terminal on
+# stdin and a config that does not answer `modules` yet) init keeps the
+# terminal and the log only names the step. The checklist and an earlier
+# install both leave the answer, so init is logged on most runs.
+init_stderr=2
+if [ -t 0 ] && [ -z "$(sed -n '/^[[:space:]]*modules[[:space:]]*=/p' "$chezmoi_config" 2> /dev/null)" ]; then
+  init_stderr=4
+fi
+"$chezmoi" "$@" 2>&"$init_stderr" 5>&- 6>&-
+step backup
 backup="$(backup_before_apply)" || exit 1
+step "chezmoi apply"
 # --keep-going runs every step after a failure. chezmoi records a script only
 # once it exits 0, so the next apply runs the failed ones and skips the rest.
-# Its errors still reach the terminal; a copy is kept to name the failed steps.
+# Its output, stdout included so the log gets it too, reaches the terminal on
+# stderr; a copy is kept to name the failed steps.
 apply_log="$(mktemp)"
 {
-  {
-    status=0
-    "$chezmoi" apply --keep-going ${apply_destination:+"$apply_destination"} || status=$?
-    echo "$status" > "${apply_log}.status"
-  } 2>&1 1>&3 3>&- | tee "$apply_log" >&2
-} 3>&1
+  status=0
+  "$chezmoi" apply --keep-going ${apply_destination:+"$apply_destination"} 2>&1 5>&- 6>&- || status=$?
+  echo "$status" > "${apply_log}.status"
+} | tee "$apply_log" >&2
 apply_status="$(cat "${apply_log}.status")"
 [ -z "$backup" ] || print_restore_steps "$backup"
 if [ "$apply_status" -ne 0 ]; then
   # chezmoi reports a failed script as "chezmoi: <script>: exit status <n>".
   failed="$(sed -n 's/^chezmoi: \(.*\): exit status [0-9]*$/\1/p' "$apply_log")"
   rm -f "$apply_log" "${apply_log}.status"
+  # The path comes before the summary, which stays the last thing printed.
+  if [ -n "$log_file" ]; then
+    echo "The log of this install is in ${log_file}; attach it to a bug report." >&2
+    log_reported=true
+  fi
   if [ -n "$failed" ]; then
     echo "$(printf '%s\n' "$failed" | wc -l | tr -d ' ') install step(s) failed:" >&2
     printf '%s\n' "$failed" | sed 's/^/  - /' >&2
@@ -738,11 +936,13 @@ rm -f "$apply_log" "${apply_log}.status"
 # Last step, only reached once chezmoi succeeded (set -e): the login shell
 # change needs sudo and an attentive user, so nothing may depend on it or run
 # alongside it.
+step "default shell offer"
 if source_dir="$("$chezmoi" source-path 2> /dev/null)" && [ -f "${source_dir}/offer-default-shell.sh" ]; then
   sh "${source_dir}/offer-default-shell.sh" || true
 fi
 
 # Also last-step and optional: starring is only ever offered, never assumed.
+step "star offer"
 if [ -n "${source_dir:-}" ] && [ -f "${source_dir}/offer-star.sh" ]; then
   sh "${source_dir}/offer-star.sh" || true
 fi
@@ -771,4 +971,5 @@ warn_artefactory_membership() {
   esac
   return 0
 }
+step "organisation check"
 warn_artefactory_membership
