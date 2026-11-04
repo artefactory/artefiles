@@ -126,7 +126,11 @@ chsh_calls() { grep -c '^chsh ' "$CALLS" || true; }
 }
 
 @test "install.sh runs the offer after chezmoi, never exec's chezmoi" {
-  if grep -nE '^\s*exec ' "$REPO_ROOT/install.sh"; then return 1; fi
+  # An exec that only moves file descriptors (exec 2>...) replaces nothing:
+  # once its redirections are removed, no exec may name a command.
+  if grep -E '(^|[;&|{(]) *exec( |$)' "$REPO_ROOT/install.sh" \
+    | sed -E 's/.*exec//; s/[0-9]*(<|>|>>)&?-? *("[^"]*"|[^ ;)}]+)//g; s/[;)}].*//' \
+    | grep -n '[^ ]'; then return 1; fi
   chezmoi_line=$(grep -nE '^"\$chezmoi" "\$@"' "$REPO_ROOT/install.sh" | head -1 | cut -d: -f1)
   offer_line=$(grep -n 'offer-default-shell.sh' "$REPO_ROOT/install.sh" | head -1 | cut -d: -f1)
   [ -n "$chezmoi_line" ]
