@@ -55,6 +55,16 @@
   path = "code"
 # [[ end ]] #
 
+# [[ if has "codex" $modules ]] #
+# Codex CLI - OpenAI's coding agent. The static musl build runs on any distro;
+# its archive holds one binary named after the target triple.
+[".local/bin/codex"]
+  type = "archive-file"
+  url = # [[ gitHubLatestReleaseAssetURL "openai/codex" (printf "codex-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
+  executable = true
+  path = # [[ printf "codex-%s-unknown-linux-musl" $rustArch | quote ]] #
+# [[ end ]] #
+
 # [[ if has "shell_tools" $modules ]] #
 # eza - A modern replacement for 'ls'
 [".local/bin/eza"]

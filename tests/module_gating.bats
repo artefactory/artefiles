@@ -110,3 +110,11 @@ _assert_script_gating() {
   [ "$(uname -s)" = Linux ] || skip "linux-only script"
   _assert_script_gating vscode .chezmoiscripts/linux/install-vscode.sh
 }
+
+@test "claude_code module gates its install script, on any OS" {
+  _assert_script_gating claude_code .chezmoiscripts/install-claude-code.sh
+}
+
+@test "pi module gates its install script, on any OS" {
+  _assert_script_gating pi .chezmoiscripts/install-pi.sh
+}

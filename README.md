@@ -76,6 +76,9 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | — |
 | `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | — |
 | `antigravity` | Google Antigravity on macOS 13+: Google's agent-first IDE (desktop app) | — |
+| `claude_code` | Claude Code: Anthropic's coding agent in the terminal (claude), from its self-updating installer | — |
+| `codex` | Codex CLI: OpenAI's coding agent in the terminal (codex) | — |
+| `pi` | pi: a minimal, extensible coding agent in the terminal (pi), from its official installer | — |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
