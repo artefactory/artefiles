@@ -76,6 +76,9 @@ existing_clone() {
   ORIGIN="$BATS_TEST_TMPDIR/origin"
   CLONE="$H/.local/share/chezmoi"
   git init --quiet "$ORIGIN"
+  # The file that marks an artefiles clone.
+  mkdir -p "$ORIGIN/.chezmoitemplates"
+  echo 2 > "$ORIGIN/.chezmoitemplates/modulesVersion"
   for v in v1 v2; do
     echo "$v" > "$ORIGIN/version"
     git -C "$ORIGIN" add -A
