@@ -61,6 +61,12 @@ Library/Application Support/Code/User/settings.json
 {{ if not (or (has "pre_commit" $modules) (has "prek" $modules)) }}
 .chezmoiscripts/zzzzz_install-git-hooks.sh
 {{ end }}
+{{ if not (has "claude_code" $modules) }}
+.chezmoiscripts/install-claude-code.sh
+{{ end }}
+{{ if not (has "pi" $modules) }}
+.chezmoiscripts/install-pi.sh
+{{ end }}
 {{ if not (has "review" $modules) }}
 .config/tuicr/**
 .config/fish/functions/review.fish

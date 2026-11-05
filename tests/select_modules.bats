@@ -82,7 +82,9 @@ run_keys() {
 
 @test "the down arrow wraps from Submit to the first row" {
   reset_keys; to "$(submit_idx)"; raw "$DOWN"; raw q; run_keys
-  printf '%s\n' "$ui" | tail -n 30 | grep -qE "^> \[.\] $(prompt_module_names | head -1) "
+  # Only the last screen: the first one also points at the first row.
+  printf '%s\n' "$ui" | awk '/^Select the optional modules/ { s = "" } { s = s $0 "\n" } END { printf "%s", s }' |
+    grep -qE "^> \[.\] $(prompt_module_names | head -1) "
 }
 
 @test "Enter on a module row toggles it" {

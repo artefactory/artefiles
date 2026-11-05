@@ -203,3 +203,30 @@ tomllib.loads(sys.stdin.read())
   [ "$status" -eq 0 ]
   if printf '%s\n' "$output" | grep -q '^\['; then return 1; fi
 }
+
+# codex_block ARCH MODULES_JSON — the codex entry of the Linux externals,
+# rendered as on a host of ARCH.
+codex_block() {
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/$RANDOM")
+  seed_chezmoi_config "$H" "{\"modules\":$2}"
+  XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
+    --config "$H/.config/chezmoi/chezmoi.toml" --source "$REPO_ROOT" --destination "$H" \
+    < <(sed -e 's/eq \.chezmoi\.os "linux"/true/' -e "s/\\.chezmoi\\.arch/\"$1\"/g" "$REPO_ROOT/.chezmoiexternal.toml.tmpl") \
+    | awk '/^\[/ { on = ($0 == "[\".local/bin/codex\"]") } on'
+}
+
+@test "codex is installed on linux with the codex module, from its static musl release for the host arch" {
+  for pair in "amd64 x86_64" "arm64 aarch64"; do
+    set -- $pair
+    block=$(codex_block "$1" '["codex"]')
+    grep -qxF '  type = "archive-file"' <<< "$block"
+    grep -qE "^  url = \"https://github\.com/openai/codex/releases/download/[^\"]+/codex-$2-unknown-linux-musl\.tar\.gz\"$" <<< "$block"
+    # The archive holds one binary named after the target triple.
+    grep -qxF "  path = \"codex-$2-unknown-linux-musl\"" <<< "$block"
+    grep -qxF '  executable = true' <<< "$block"
+  done
+}
+
+@test "codex is not installed on linux without the codex module" {
+  [ -z "$(codex_block amd64 '[]')" ]
+}
