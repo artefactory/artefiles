@@ -205,7 +205,7 @@ nothing_changed() {
 
 @test "a module conflict in chezmoi init leaves the existing config untouched" {
   cfg="$H/.config/chezmoi/chezmoi.toml"
-  printf '[data]\n  name = "n"\n  email = "e@example.com"\n  modulesVersion = 2\n  modules = ["ghostty", "cmux"]\n' > "$cfg"
+  printf '[data]\n  name = "n"\n  email = "e@example.com"\n  modulesVersion = 2\n  modules = ["pre_commit", "prek"]\n' > "$cfg"
   touch -t 202001010000 "$cfg"
   before=$(cksum < "$cfg")
   stamp=$(ls -l "$cfg")
@@ -213,7 +213,7 @@ nothing_changed() {
   run env HOME="$H" XDG_CONFIG_HOME="$H/.config" PATH="$BIN:$PATH" \
     "$(command -v chezmoi)" init --source "$REPO_ROOT" --config "$cfg" --destination "$H"
   [ "$status" -ne 0 ]
-  [[ "$output" == *"ghostty and cmux are alternatives"* ]]
+  [[ "$output" == *"pre_commit and prek are alternatives"* ]]
   [ "$(cksum < "$cfg")" = "$before" ]
   [ "$(ls -l "$cfg")" = "$stamp" ]
 }

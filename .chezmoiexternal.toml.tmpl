@@ -136,13 +136,12 @@
   path = "duckdb"
 # [[ end ]] #
 
-# [[ if or (has "ghostty" $modules) (has "terminal" $modules) ]] #
-# zellij - A terminal workspace with batteries included
-[".local/bin/zellij"]
-  type = "archive-file"
-  url = # [[ gitHubLatestReleaseAssetURL "zellij-org/zellij" (printf "zellij-%s-unknown-linux-musl.tar.gz" $rustArch) | quote ]] #
+# [[ if has "herdr" $modules ]] #
+# herdr - terminal workspace for coding agents; the release asset is the bare binary.
+[".local/bin/herdr"]
+  type = "file"
+  url = # [[ gitHubLatestReleaseAssetURL "herdrdev/herdr" (printf "herdr-linux-%s" $rustArch) | quote ]] #
   executable = true
-  path = "zellij"
 # [[ end ]] #
 
 # starship - The minimal, blazing-fast, and infinitely customizable prompt for any shell
@@ -152,7 +151,11 @@
   executable = true
   path = "starship"
 
-# [[ if or (has "ghostty" $modules) (has "terminal" $modules) ]] #
+# [[/* A desktop app needs a desktop: the same rule as the VS Code install in
+#      .chezmoiscripts/linux/run_install-vscode.sh. That script checks at run
+#      time; an external can only check here, when the apply renders it. */]] #
+# [[ $display := and (not (env "CODESPACES")) (or (env "DISPLAY") (env "WAYLAND_DISPLAY")) ]] #
+# [[ if and $display (or (has "ghostty" $modules) (has "terminal" $modules)) ]] #
 # ghostty - A fast, feature-rich, and cross-platform terminal emulator
 [".local/bin/ghostty"]
   type = "file"

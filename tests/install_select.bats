@@ -122,12 +122,12 @@ answers() {
 }
 
 @test "the Quick Start path clones the repo with gh so the checklist exists" {
-  answers cmux
+  answers herdr
   run_quick_start ARTEFILES_SELECT_TTY="$ANSWERS"
   [ "$status" -eq 0 ]
   grep -q "^gh repo clone artefactory/artefiles $H/.local/share/chezmoi" "$CALLS"
   grep -q "^init --source=$H/.local/share/chezmoi" "$CALLS"
-  grep -qF 'modules = ["cmux"]' "$SEEN"
+  grep -qF 'modules = ["herdr"]' "$SEEN"
 }
 
 @test "the Quick Start path without a terminal keeps asking chezmoi to clone" {

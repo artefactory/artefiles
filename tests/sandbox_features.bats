@@ -31,7 +31,7 @@ STUB
 }
 
 @test "alternative modules are refused" {
-  run_sandbox --modules ghostty,cmux --command 'true'
+  run_sandbox --modules pre_commit,prek --command 'true'
   [ "$status" -ne 0 ]
   [[ "$output" == *"alternatives"* ]]
 }

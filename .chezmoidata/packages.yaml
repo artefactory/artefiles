@@ -58,16 +58,13 @@ packages:
           - 'tuicr'
         casks: []
       ghostty:
-        brews:
-          - 'zellij'
-        casks:
-          - 'ghostty'
-      cmux:
-        taps:
-          - 'manaflow-ai/cmux'
         brews: []
         casks:
-          - 'manaflow-ai/cmux/cmux'
+          - 'ghostty'
+      herdr:
+        brews:
+          - 'herdr'
+        casks: []
       git_advanced:
         brews:
           - 'difftastic'
