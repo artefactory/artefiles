@@ -5,17 +5,88 @@
 # Recommends Colima as a replacement on macOS, native Docker Engine on Linux.
 # [[ if ne .chezmoi.os "windows" ]] #
 
-set -eu
+set -u
 
-echo "Checking for Docker Desktop installation..."
+# What runs Docker Desktop (the app, its root helpers, the package) must go:
+# while any of it is left the step fails, and chezmoi retries a failed
+# run_once_ script, so rerunning install.sh finishes the job. Leftover data
+# cannot run Docker Desktop, so data that cannot be removed never fails it.
+
+# Highlight only on a terminal: through a pipe or into a log, escape codes
+# would show as noise. The !!! banner stays visible either way.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  BOLD=$(printf '\033[1m')
+  YELLOW=$(printf '\033[1;33m')
+  RED=$(printf '\033[1;31m')
+  RESET=$(printf '\033[0m')
+else
+  BOLD="" YELLOW="" RED="" RESET=""
+fi
+step() { printf '%s==> %s%s\n' "$BOLD" "$*" "$RESET"; }
+note() { printf '%s%s%s\n' "$YELLOW" "$*" "$RESET"; }
+banner() { printf '%s!!! ============================================================ !!!%s\n' "$RED" "$RESET"; }
+
+step "Checking for Docker Desktop installation..."
 
 FOUND_DOCKER_DESKTOP=false
+# Parts that still run Docker Desktop, and data that could not be removed.
+BLOCKING=""
+DATA_LEFT=""
+# Where the question is asked; chezmoi may not pass the terminal as stdin.
+TTY="/dev/tty"
+
+# confirm_data_loss — removing Docker Desktop deletes its containers, images and
+# volumes (a volume may hold a local database). At a terminal, ask once; a "no"
+# fails the step with the commands that save the data, and the next install.sh
+# run asks again. Without a terminal (CI) nobody can answer: go on.
+confirm_data_loss() {
+  if [ -n "${CI:-}" ] || ! (: < "$TTY") 2> /dev/null; then
+    return 0
+  fi
+  {
+    echo ""
+    banner
+    printf '%s!!!  Docker Desktop is forbidden and will be removed now.%s\n' "$RED" "$RESET"
+    echo "!!!  This DELETES its containers, images and volumes."
+    banner
+  } >&2
+  printf '%sRemove Docker Desktop and its data? [y/N] %s' "$BOLD" "$RESET" >&2
+  answer=""
+  read -r answer < "$TTY" || answer=""
+  case "$answer" in
+    [yY] | [yY][eE][sS]) return 0 ;;
+  esac
+  {
+    echo ""
+    banner
+    echo "!!!  Docker Desktop was kept, so this step failed. To save your data first,"
+    echo "!!!  with Docker Desktop running:"
+    echo "!!!  1. Images:   docker save -o ~/docker-images.tar IMAGE..."
+    echo "!!!  2. Volumes:  docker run --rm -v VOLUME:/data -v \"\$HOME\":/backup \\"
+    echo "!!!                 alpine tar czf /backup/VOLUME.tgz -C /data ."
+    echo "!!!     (list them with: docker volume ls)"
+    echo "!!!  3. Run install.sh again and answer y."
+    echo "!!!  After the install, Colima's docker restores them: docker load -i ..."
+    banner
+    echo ""
+  } >&2
+  exit 1
+}
 
 # [[ if eq .chezmoi.os "darwin" ]] #
-# Quit Docker Desktop if running, then remove app and supporting data.
-if [ -d "/Applications/Docker.app" ]; then
+DOCKER_APP="/Applications/Docker.app"
+SYSTEM_LIBRARY="/Library"
+LOCAL_BIN="/usr/local/bin"
+
+# The disk image with the containers, images and volumes lives in the app's
+# container, so ask whenever the app or that container is there.
+if [ -d "$DOCKER_APP" ] || [ -d "$HOME/Library/Containers/com.docker.docker" ]; then
+  confirm_data_loss
+fi
+
+if [ -d "$DOCKER_APP" ]; then
   FOUND_DOCKER_DESKTOP=true
-  echo "Found Docker Desktop at /Applications/Docker.app"
+  step "Found Docker Desktop at $DOCKER_APP: removing it"
 
   if pgrep -x "Docker Desktop" > /dev/null 2>&1 || pgrep -x "Docker" > /dev/null 2>&1; then
     echo "Quitting Docker Desktop..."
@@ -23,10 +94,51 @@ if [ -d "/Applications/Docker.app" ]; then
     sleep 2
   fi
 
-  echo "Removing /Applications/Docker.app (sudo required)..."
-  sudo rm -rf "/Applications/Docker.app"
+  # Docker's own uninstaller (docs.docker.com/desktop/uninstall) is signed into
+  # the app group, so it can delete the Group Container that macOS protects from
+  # every other process, the terminal included.
+  if [ -x "$DOCKER_APP/Contents/MacOS/uninstall" ]; then
+    step "Running Docker's uninstaller..."
+    "$DOCKER_APP/Contents/MacOS/uninstall" < /dev/null \
+      || note "Docker's uninstaller failed; removing the app directly instead. Nothing to do." >&2
+  fi
+
+  if [ -e "$DOCKER_APP" ]; then
+    echo "Removing $DOCKER_APP (sudo required)..."
+    sudo rm -rf "$DOCKER_APP" || BLOCKING="$BLOCKING
+  $DOCKER_APP"
+  fi
 fi
 
+# Docker Desktop's privileged helpers run as root from launchd, even after the
+# app is gone (the same steps as Docker's MDM script and the Homebrew cask).
+for helper in com.docker.vmnetd com.docker.socket; do
+  plist="$SYSTEM_LIBRARY/LaunchDaemons/$helper.plist"
+  tool="$SYSTEM_LIBRARY/PrivilegedHelperTools/$helper"
+  if [ -e "$plist" ] || [ -e "$tool" ]; then
+    FOUND_DOCKER_DESKTOP=true
+    step "Removing Docker Desktop's $helper service (sudo required)..."
+    sudo launchctl bootout system "$plist" > /dev/null 2>&1 || true
+    sudo rm -f "$plist" "$tool" || BLOCKING="$BLOCKING
+  $tool"
+  fi
+done
+
+# Docker Desktop links its CLIs into /usr/local/bin. Only links into the app
+# go: a docker from Homebrew points elsewhere and stays.
+for link in "$LOCAL_BIN"/*; do
+  [ -L "$link" ] || continue
+  case "$(readlink "$link")" in
+    "$DOCKER_APP"/*)
+      echo "Removing $link..."
+      sudo rm -f "$link" || true
+      ;;
+  esac
+done
+
+# Since macOS 15 the Group Container is protected by SIP: only Docker's own
+# signed tools may delete it, so after the app is gone `rm` gets "Operation
+# not permitted", even as the owner and under sudo. It is data only.
 for path in \
   "$HOME/Library/Group Containers/group.com.docker" \
   "$HOME/Library/Containers/com.docker.docker" \
@@ -41,22 +153,30 @@ for path in \
   if [ -e "$path" ]; then
     FOUND_DOCKER_DESKTOP=true
     echo "Removing $path..."
-    rm -rf "$path"
+    rm -rf "$path" 2> /dev/null || DATA_LEFT="$DATA_LEFT
+  $path"
   fi
 done
 # [[ end ]] #
 
 # [[ if eq .chezmoi.os "linux" ]] #
-# Linux Docker Desktop ships as the docker-desktop package.
+# Linux Docker Desktop ships as the docker-desktop package; its VM, with the
+# containers, images and volumes, lives under ~/.docker/desktop.
+if command -v docker-desktop > /dev/null 2>&1 || [ -d "$HOME/.docker/desktop" ]; then
+  confirm_data_loss
+fi
+
 if command -v docker-desktop > /dev/null 2>&1; then
   FOUND_DOCKER_DESKTOP=true
-  echo "Found docker-desktop in PATH"
+  step "Found docker-desktop in PATH: removing it"
   if command -v apt-get > /dev/null 2>&1 && dpkg -s docker-desktop > /dev/null 2>&1; then
     echo "Removing docker-desktop via apt (sudo required)..."
-    sudo apt-get remove -y docker-desktop || true
+    sudo apt-get remove -y docker-desktop || BLOCKING="$BLOCKING
+  the docker-desktop package"
   elif command -v dnf > /dev/null 2>&1 && rpm -q docker-desktop > /dev/null 2>&1; then
     echo "Removing docker-desktop via dnf (sudo required)..."
-    sudo dnf remove -y docker-desktop || true
+    sudo dnf remove -y docker-desktop || BLOCKING="$BLOCKING
+  the docker-desktop package"
   fi
 fi
 
@@ -66,19 +186,56 @@ for path in \
   if [ -e "$path" ]; then
     FOUND_DOCKER_DESKTOP=true
     echo "Removing $path..."
-    rm -rf "$path"
+    rm -rf "$path" 2> /dev/null || DATA_LEFT="$DATA_LEFT
+  $path"
   fi
 done
 # [[ end ]] #
 
-if [ "$FOUND_DOCKER_DESKTOP" = true ]; then
-  echo "Docker Desktop removal complete."
+if [ -n "$DATA_LEFT" ]; then
+  note "Some Docker Desktop data could not be removed (the system protects it)."
+  note "Docker Desktop cannot run from it, so there is nothing to do:$DATA_LEFT"
+fi
+
+if [ -n "$BLOCKING" ]; then
+  # stderr, so the block stays visible when chezmoi's output is piped.
+  {
+    echo ""
+    banner
+    printf '%s!!!  Docker Desktop is still installed, so this step failed:%s%s\n' "$RED" "$RESET" "$BLOCKING"
+    # [[ if eq .chezmoi.os "darwin" ]] #
+    echo "!!!  macOS (or sudo) refused to remove it. To finish:"
+    echo "!!!  1. In System Settings > Privacy & Security > App Management, allow"
+    echo "!!!     your terminal (${TERM_PROGRAM:-the app you run install.sh in})."
+    # A CI runner has no one to click; the pane only helps at a desk.
+    if [ -z "${CI:-}" ] && command -v open > /dev/null 2>&1 \
+      && open "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles"; then
+      echo "!!!     System Settings is now open on that page."
+    fi
+    echo "!!!  2. Quit the terminal (Cmd-Q) and reopen it."
+    echo "!!!  3. Then run install.sh again: it retries this step."
+    echo "!!!  If you cannot change that setting (a Mac managed by IT), drag Docker"
+    echo "!!!  from Applications to the Trash in Finder, then run install.sh again."
+    echo "!!!  If sudo refused your password, your account may lack admin rights:"
+    echo "!!!  ask your IT team to remove Docker Desktop."
+    # [[ else ]] #
+    echo "!!!  sudo refused to remove it. To finish:"
+    echo "!!!  1. Check that sudo works:  sudo -v"
+    echo "!!!  2. Then run install.sh again: it retries this step."
+    echo "!!!  Without admin rights, ask your IT team to remove the docker-desktop package."
+    # [[ end ]] #
+    banner
+    echo ""
+  } >&2
+  exit 1
+elif [ "$FOUND_DOCKER_DESKTOP" = true ]; then
+  step "Docker Desktop removal complete."
 else
   echo "No Docker Desktop installation found."
 fi
 
 # Warning file documenting the policy and replacements.
-mkdir -p "$HOME/.local/share"
+mkdir -p "$HOME/.local/share" || exit 0
 cat > "$HOME/.local/share/docker_desktop_warning.txt" << EOF
 This environment prohibits the use of Docker Desktop as part of the dotfiles policy.
 Please use one of the following alternatives:
