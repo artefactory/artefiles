@@ -50,6 +50,21 @@ step() {
   [ "$(yq -r '.jobs.install.steps[-1].name' "$CI_YML")" = "install into a folder that does not exist yet" ]
 }
 
+@test "the full route runs install.sh again and checks that it changed nothing" {
+  name="a second install changes nothing"
+  [ "$(yq -r ".jobs.install.steps[] | select(.name == \"$name\") | .if" "$CI_YML")" = "matrix.route == 'full'" ]
+  run step "$name"
+  [[ "$output" == *'sh ./install.sh'* ]]
+  [[ "$output" == *'chezmoi status'* ]]
+  [[ "$output" == *'.local/state/artefiles'*'backup-*'* ]]
+  # After the first install and its checks; before the step that installs elsewhere.
+  names=$(yq -r '.jobs.install.steps[].name' "$CI_YML")
+  first=$(printf '%s\n' "$names" | grep -nxF "install from the checkout" | cut -d: -f1)
+  doctor=$(printf '%s\n' "$names" | grep -nxF "dotfiles_doctor finds no problem" | cut -d: -f1)
+  again=$(printf '%s\n' "$names" | grep -nxF "$name" | cut -d: -f1)
+  [ "$first" -lt "$again" ] && [ "$doctor" -lt "$again" ]
+}
+
 @test "every job has a timeout" {
   for f in "$REPO_ROOT"/.github/workflows/*.y*ml; do
     missing=$(yq -r '.jobs | to_entries[] | select(.value."timeout-minutes" == null) | .key' "$f")
