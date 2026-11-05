@@ -120,6 +120,7 @@ If Runme stops with `malformed refspec`, your git config holds a fetch rule it c
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | [python_dev](.claude/skills/artefiles/references/python_dev.md) |
 | `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | [vscode](.claude/skills/artefiles/references/vscode.md) |
 | `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | [code_cli](.claude/skills/artefiles/references/code_cli.md) |
+| `antigravity` | Google Antigravity on macOS 13+: Google's agent-first IDE (desktop app) | [antigravity](.claude/skills/artefiles/references/antigravity.md) |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | [runme](.claude/skills/artefiles/references/runme.md) |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |
