@@ -47,11 +47,11 @@ setup() {
     brews=$(yq -r ".packages.darwin.modules.${module}.brews // [] | .[]" "$REPO_ROOT/.chezmoidata/packages.yaml")
     while IFS= read -r b; do
       [ -n "$b" ] || continue
-      if printf '%s\n' "$rendered_off" | grep -qxF "brew \"$b\""; then
+      if printf '%s\n' "$rendered_off" | grep -qE "^brew \"$b\"(, trusted: true)?$"; then
         echo "Module '$module' brew '$b' rendered when module disabled" >&2
         return 1
       fi
-      if [ "$(printf '%s\n' "$rendered_on" | grep -c "^brew \"$b\"$")" != "1" ]; then
+      if [ "$(printf '%s\n' "$rendered_on" | grep -cE "^brew \"$b\"(, trusted: true)?$")" != "1" ]; then
         echo "Module '$module' brew '$b' missing or duplicated when enabled" >&2
         return 1
       fi
@@ -60,11 +60,11 @@ setup() {
     casks=$(yq -r ".packages.darwin.modules.${module}.casks // [] | .[]" "$REPO_ROOT/.chezmoidata/packages.yaml")
     while IFS= read -r c; do
       [ -n "$c" ] || continue
-      if printf '%s\n' "$rendered_off" | grep -qxF "cask \"$c\""; then
+      if printf '%s\n' "$rendered_off" | grep -qE "^cask \"$c\"(, trusted: true)?$"; then
         echo "Module '$module' cask '$c' rendered when module disabled" >&2
         return 1
       fi
-      if [ "$(printf '%s\n' "$rendered_on" | grep -c "^cask \"$c\"$")" != "1" ]; then
+      if [ "$(printf '%s\n' "$rendered_on" | grep -cE "^cask \"$c\"(, trusted: true)?$")" != "1" ]; then
         echo "Module '$module' cask '$c' missing or duplicated when enabled" >&2
         return 1
       fi
@@ -94,10 +94,34 @@ every_qualified_package() {
     seed_chezmoi_config "$H" "{\"modules\":[\"$module\"]}"
     rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
     tap_line=$(printf '%s\n' "$rendered" | grep -nxF "tap \"${pkg%/*}\"" | head -1 | cut -d: -f1)
-    pkg_line=$(printf '%s\n' "$rendered" | grep -nE "^(brew|cask) \"$pkg\"$" | head -1 | cut -d: -f1)
+    pkg_line=$(printf '%s\n' "$rendered" | grep -nE "^(brew|cask) \"$pkg\"(, trusted: true)?$" | head -1 | cut -d: -f1)
     [ -n "$tap_line" ] && [ -n "$pkg_line" ] && [ "$tap_line" -lt "$pkg_line" ] \
       || { echo "$module: tap ${pkg%/*} is not declared before $pkg" >&2; return 1; }
   done < <(every_qualified_package)
+}
+
+# Since Homebrew 6, brew refuses to load a formula or cask from a third-party
+# tap until it is trusted. Trusting the package line, not the tap, lets the
+# install load only the packages it names from that tap.
+@test "a package from a third-party tap is trusted on its own line, its tap is not" {
+  while read -r module pkg; do
+    H=$(mk_fake_home "$BATS_TEST_TMPDIR/trust-$module")
+    seed_chezmoi_config "$H" "{\"modules\":[\"$module\"]}"
+    rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
+    [ -n "$rendered" ]
+    printf '%s\n' "$rendered" | grep -qE "^(brew|cask) \"$pkg\", trusted: true$" \
+      || { echo "$module: $pkg is not trusted" >&2; return 1; }
+    printf '%s\n' "$rendered" | grep -qxF "tap \"${pkg%/*}\"" \
+      || { echo "$module: the tap ${pkg%/*} should be declared without trust" >&2; return 1; }
+  done < <(every_qualified_package)
+}
+
+@test "packages from homebrew-core are not marked trusted" {
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/core")
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
+  printf '%s\n' "$rendered" | grep -q '^brew ' || { echo "no brew line rendered" >&2; return 1; }
+  if printf '%s\n' "$rendered" | grep -qE '^(brew|cask|tap) .*trusted'; then return 1; fi
 }
 
 @test "no tap is declared when no module needs one" {

@@ -62,7 +62,7 @@ refute() { if "$@"; then return 1; fi; }
   H2=$(mk_fake_home "$BATS_TEST_TMPDIR/h2")
   seed_chezmoi_config "$H2" '{"modules":["cmux"]}'
   out=$(chezmoi_render "$H2" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
-  printf '%s\n' "$out" | grep -qx 'cask "manaflow-ai/cmux/cmux"'
+  printf '%s\n' "$out" | grep -qxF 'cask "manaflow-ai/cmux/cmux", trusted: true'
   if printf '%s\n' "$out" | grep -qE 'zellij|"ghostty"'; then return 1; fi
 }
 
