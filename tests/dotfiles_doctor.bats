@@ -40,12 +40,14 @@ tools() {
   done
 }
 
-# run_doctor MODULES_JSON — render dotfiles_doctor for the modules and run it.
+# run_doctor MODULES_JSON [VAR=VALUE...] — render dotfiles_doctor for the
+# modules and run it, with the repository's functions autoloadable and the
+# given variables set.
 run_doctor() {
   seed_chezmoi_config "$H" "{\"modules\":$1}"
   chezmoi_render "$H" dot_config/fish/functions/dotfiles_doctor.fish.tmpl > "$BATS_TEST_TMPDIR/dd.fish"
-  run env -i HOME="$H" PATH="$BIN:/usr/bin:/bin" STATUS_FAIL="${STATUS_FAIL:-}" MANAGED_FAIL="${MANAGED_FAIL:-}" "$(command -v fish)" --no-config \
-    -c "source $BATS_TEST_TMPDIR/dd.fish; dotfiles_doctor"
+  run env -i HOME="$H" PATH="$BIN:/usr/bin:/bin" STATUS_FAIL="${STATUS_FAIL:-}" MANAGED_FAIL="${MANAGED_FAIL:-}" "${@:2}" "$(command -v fish)" --no-config \
+    -c "set -p fish_function_path $REPO_ROOT/dot_config/fish/functions; source $BATS_TEST_TMPDIR/dd.fish; dotfiles_doctor"
 }
 
 CORE=(fish starship git gh fnm mergiraf uv hostname)
@@ -113,4 +115,23 @@ CORE=(fish starship git gh fnm mergiraf uv hostname)
   MANAGED_FAIL=1 run_doctor '[]'
   [ "$status" -eq 1 ]
   [[ "$output" == *"✗ chezmoi managed failed, configs not checked: chezmoi: managed broke"* ]]
+}
+
+@test "the doctor names Alt+K's source inside herdr, and it is not a warning" {
+  tools "${CORE[@]}" herdr
+  run_doctor '[]' HERDR_PANE_ID=w1:p1
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"✓ scrollback (Alt+K): herdr"* ]]
+  [[ "$output" != *"! scrollback"* ]]
+}
+
+@test "the doctor says how to give Alt+K a source outside herdr and tmux" {
+  tools "${CORE[@]}"
+  run_doctor '[]'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"- scrollback (Alt+K): no source here; run the shell inside tmux, or pipe a command into e (cmd | e)"* ]]
+  [[ "$output" != *"! scrollback"* ]]
+  tools herdr
+  run_doctor '["herdr"]'
+  [[ "$output" == *"- scrollback (Alt+K): no source here; run the shell inside herdr or tmux, or pipe a command into e (cmd | e)"* ]]
 }
