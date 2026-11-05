@@ -16,15 +16,48 @@ references below; Claude Code reads the same files.
 | Change modules | `chezmoi init --prompt && chezmoi apply` |
 | Health check | `dotfiles_doctor` |
 
+### Chezmoi workflows
+
+The README runs the everyday ones: [check, edit, update, change modules](README.md#using-chezmoi) and [publish](README.md#make-it-yours). The rest:
+
+Check chezmoi itself for common problems (read-only):
+```sh {"name":"chezmoi-doctor","interactive":"false","tag":"check"}
+chezmoi doctor
+```
+
+Track a new file from your home directory:
+```sh {"name":"chezmoi-add","excludeFromRunAll":"true"}
+export FILE="$HOME/.config/gh/config.yml"
+chezmoi add "$FILE"
+```
+
+Merge edits made to a file in your home directory with its source, in a merge tool:
+```sh {"name":"chezmoi-merge","excludeFromRunAll":"true"}
+export FILE="$HOME/.config/fish/config.fish"
+chezmoi merge "$FILE"
+```
+
+Preview an update: pull the repo, then show what `chezmoi apply` would change, without applying:
+```sh {"name":"chezmoi-update-preview","excludeFromRunAll":"true"}
+chezmoi git -- pull --autostash --rebase
+chezmoi diff --no-pager
+```
+
+Reset one file to its managed version, overwriting your local edits:
+```sh {"name":"chezmoi-reset-file","excludeFromRunAll":"true"}
+export FILE="$HOME/.config/fish/config.fish"
+chezmoi apply --force "$FILE"
+```
+
 ### Remove All Chezmoi-Managed Files (Danger)
 
 Review first:
-```bash
+```bash {"name":"chezmoi-list-managed","interactive":"false","tag":"check"}
 chezmoi managed -p absolute
 ```
 
 Remove all managed files, then remove chezmoi state/source:
-```bash
+```bash {"name":"chezmoi-destroy","excludeFromRunAll":"true"}
 chezmoi managed -p absolute -0 | xargs -0 chezmoi destroy --force
 chezmoi purge --force
 ```
@@ -33,15 +66,32 @@ chezmoi purge --force
 
 If you declined the installer's offer to make fish your default shell:
 
-```bash
-# macOS
+macOS:
+```bash {"name":"fish-default-macos","excludeFromRunAll":"true"}
 command -v fish | sudo tee -a /etc/shells
 chsh -s "$(command -v fish)"
-# Linux
+```
+
+Linux:
+```bash {"name":"fish-default-linux","excludeFromRunAll":"true"}
 chsh -s "$(command -v fish)"
 ```
 
 Log out and back in, and fully quit and reopen your IDE, for the change to show.
+
+## Run these steps with runme
+
+Runme is optional: every shell block of the README and of this file also works when pasted into a terminal. The blocks are [Runme](https://docs.runme.dev) cells: a code block with a JSON annotation after the language, which GitHub does not show. A value set with `export` is shown for you to confirm or change before the cell runs. The `runme` module installs it (`chezmoi init --prompt && chezmoi apply` to add a module). Run it from the source directory (`chezmoi cd`), since Runme reads the Markdown files of the current project:
+
+```sh {"ignore":"true"}
+runme list                       # every named cell, with the file it lives in
+runme print fish-default-macos   # show a cell without running it
+runme run fish-default-macos     # run one cell
+```
+
+Cells that change anything (install, apply, edit, commit, push, change your shell, delete files) are marked `excludeFromRunAll`, so `runme run --all` skips them. The read-only checks are tagged `check`: `runme run -t check` runs them all.
+
+If Runme stops with `malformed refspec`, your git config holds a fetch rule it cannot read (jj-stack adds one). Name the file instead: `runme list --filename CHEATSHEET.md`.
 
 ## Tools by module
 
@@ -59,6 +109,7 @@ Log out and back in, and fully quit and reopen your IDE, for the change to show.
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | [review](.claude/skills/artefiles/references/review.md) |
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | [python_dev](.claude/skills/artefiles/references/python_dev.md) |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
+| `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | [runme](.claude/skills/artefiles/references/runme.md) |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | [prek](.claude/skills/artefiles/references/prek.md) |
 | `gcloud` | Google Cloud SDK: the gcloud CLI to manage Google Cloud resources | [gcloud](.claude/skills/artefiles/references/gcloud.md) |
@@ -79,7 +130,7 @@ Log out and back in, and fully quit and reopen your IDE, for the change to show.
 | Clean up test env | `rm -rf /tmp/chezmoi-test /tmp/test-xdg` |
 
 Example test config:
-```yaml
+```yaml {"ignore":"true"}
 data:
   name: "test-user"
   email: "test@example.com"
@@ -104,7 +155,7 @@ CI runs `install.sh` on fresh runners, then `.github/scripts/verify-install.sh` 
 
 To simulate a new user's install without touching your own machine:
 
-```bash
+```bash {"ignore":"true"}
 ./sandbox.sh                                   # the whole install, interactively, then a shell in the sandbox
 ./sandbox.sh --gh-token                        # same, lending your gh token so GitHub answers for real
 ./sandbox.sh --modules atuin,editor            # skip the install and prompts, seed these modules

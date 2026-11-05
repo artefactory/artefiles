@@ -32,7 +32,7 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
 }
 
 @test "every module offered has a help and the others are not offered" {
-  [ "$(prompt_module_names | wc -l)" -eq 19 ]
+  [ "$(prompt_module_names | wc -l)" -eq 20 ]
   [ "$(prompt_choices | wc -l)" -eq "$(prompt_module_names | wc -l)" ]
   [ "$(prompt_module_names | sort | uniq -d | wc -l)" -eq 0 ]
 }
@@ -111,5 +111,5 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
     --promptMultichoice "Select optional modules=$(prompt_choices | grep '^atuin | ')" < /dev/null
   [ "$status" -eq 0 ]
   stored_modules | jq -e '. == ["atuin"]'
-  grep -qxF '| Change modules | `chezmoi init --prompt && chezmoi apply` |' "$REPO_ROOT/README.md"
+  grep -qF 'chezmoi init --prompt && chezmoi apply' "$REPO_ROOT/README.md"
 }
