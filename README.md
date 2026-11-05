@@ -25,6 +25,10 @@ The [script](install.sh) does five things:
 
 Then open a new terminal (type `fish` if you declined the shell change) and run `dotfiles_doctor` to check the install.
 
+**Already have dotfiles?** Before it writes anything, the install copies every file it would change into a dated `backup-<date>` folder under `.local/state/artefiles` in your home, and prints that folder with the command to undo the install: `install.sh --restore <folder>`. The restore lists what it will do and asks first. It copies your files back, deletes the files the install created and removes chezmoi's config and its copy of artefiles. Software the install added (Homebrew packages, fish, the tools in `.local`) is not removed; the [cheatsheet](CHEATSHEET.md) lists how to remove it. If chezmoi already manages your dotfiles from another repository, the install stops without touching it and names the folder to move away first (or to update, for an older artefiles clone).
+
+You can run the install again. At the same version it changes no file, makes no new backup, runs no install step twice and does not ask you to sign in to GitHub when `gh` already is. If you edited a file the install manages, chezmoi asks before overwriting it; `chezmoi diff` shows your changes.
+
 **Variants**
 
 ```bash

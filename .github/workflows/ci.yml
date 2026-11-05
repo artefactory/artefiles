@@ -169,6 +169,25 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           fish -c dotfiles_doctor
 
+      # The README promises that running the install again changes nothing. A
+      # rerun that would change a file first saves it in a new backup folder,
+      # and chezmoi status also lists a script that would run again.
+      - name: a second install changes nothing
+        if: matrix.route == 'full'
+        run: |
+          backups() { find "$HOME/.local/state/artefiles" -maxdepth 1 -name 'backup-*' 2> /dev/null | wc -l; }
+          before=$(backups)
+          sh ./install.sh
+          [ "$(backups)" -eq "$before" ] || {
+            echo "the second install saved files in a new backup folder: it changed them" >&2
+            exit 1
+          }
+          pending=$(chezmoi status)
+          [ -z "$pending" ] || {
+            printf 'chezmoi still has changes to apply:\n%s\n' "$pending" >&2
+            exit 1
+          }
+
       # The Quick Start route runs no scripts, so their templates are rendered
       # here: a dry run renders every script it would run and fails on a
       # template error. The real chezmoi, not the wrapper, which would exclude them.

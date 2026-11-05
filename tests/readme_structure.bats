@@ -61,3 +61,10 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
     printf '%s\n' "$slugs" | grep -qxF "$a" || { echo "dangling anchor: #$a" >&2; return 1; }
   done < <(grep -oE '\]\(#[a-z0-9_-]+\)' "$README" | sed -E 's/^\]\(#//; s/\)$//' | sort -u)
 }
+
+@test "Install says what a rerun does with existing dotfiles and how to undo it" {
+  body=$(section "Install")
+  for word in 'Already have dotfiles?' 'run the install again' '.local/state/artefiles' 'install.sh --restore <folder>' 'chezmoi diff' 'not removed' 'from another repository'; do
+    printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }
+  done
+}

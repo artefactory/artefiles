@@ -450,6 +450,17 @@ preflight() {
     fail_check "artefiles needs git to fetch its files: install git."
   fi
 
+  # Without a checkout, chezmoi uses its source folder. chezmoi init reuses any
+  # git repository already there without checking what it is, so another one
+  # would be applied in place of artefiles, and the undo steps would purge it.
+  # The modules version file marks artefiles and its forks; a fork's remote
+  # differs, so the remote cannot tell them apart.
+  existing_source="${XDG_DATA_HOME:-${HOME}/.local/share}/chezmoi"
+  if [ ! -f "${script_dir}/.chezmoi.toml.tmpl" ] && [ -e "${existing_source}/.git" ] \
+    && [ ! -f "${existing_source}/.chezmoitemplates/modulesVersion" ]; then
+    fail_check "${existing_source} holds another chezmoi repository, not artefiles. If it is an older artefiles clone, update it (git -C ${existing_source} pull); otherwise move it elsewhere (its files stay in it) or remove it."
+  fi
+
   if [ "$has_curl" = "true" ] && [ "$dry_run" = "false" ] && [ "$interactive" = "true" ]; then
     reachable "$GITHUB_HOME" || fail_check "cannot reach ${GITHUB_HOME}: check the network connection or proxy."
     if [ "$os" = "Darwin" ] && ! command -v brew > /dev/null 2>&1; then
