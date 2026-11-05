@@ -26,6 +26,23 @@
   executable = true
 # [[ end ]] #
 
+# [[ $codeCliOs := dict "amd64" "cli-alpine-x64" "arm64" "cli-alpine-arm64" "arm" "cli-linux-armhf" ]] #
+# [[ if and (has "code_cli" $modules) (hasKey $codeCliOs .chezmoi.arch) ]] #
+# VS Code CLI - `code-cli tunnel` opens this machine from VS Code anywhere.
+# Installed as code-cli so it never shadows the `code` of the desktop app
+# (vscode module), which the extension install relies on. The URL names no
+# file, so the format is stated; a fixed URL is fetched again only once
+# refreshPeriod has passed. Microsoft builds it for these arches only; any
+# other gets none rather than a binary that cannot run.
+[".local/bin/code-cli"]
+  type = "archive-file"
+  url = # [[ printf "https://code.visualstudio.com/sha/download?build=stable&os=%s" (get $codeCliOs .chezmoi.arch) | quote ]] #
+  format = "tar.gz"
+  refreshPeriod = "672h"
+  executable = true
+  path = "code"
+# [[ end ]] #
+
 # [[ if has "shell_tools" $modules ]] #
 # eza - A modern replacement for 'ls'
 [".local/bin/eza"]

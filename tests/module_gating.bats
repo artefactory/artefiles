@@ -105,3 +105,8 @@ _assert_script_gating() {
 @test "python_dev module gates its install script" {
   _assert_script_gating python_dev .chezmoiscripts/zzzzz_install-python-tools.sh
 }
+
+@test "vscode module gates its linux install script" {
+  [ "$(uname -s)" = Linux ] || skip "linux-only script"
+  _assert_script_gating vscode .chezmoiscripts/linux/install-vscode.sh
+}
