@@ -75,6 +75,7 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `python_dev` | Python tools: nbdime (notebook diffs), VS Code extensions | — |
 | `vscode` | VS Code: the Microsoft desktop editor (code), with the team settings and extensions | — |
 | `code_cli` | VS Code CLI, Linux only, as code-cli: code-cli tunnel opens this machine (macOS: vscode has code tunnel) | — |
+| `antigravity` | Google Antigravity on macOS 13+: Google's agent-first IDE (desktop app) | — |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
 | `prek` | prek: faster Rust drop-in for pre-commit, same config. Alternative to pre_commit: pick one | `pre_commit` |
