@@ -321,6 +321,20 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     echo "  EDITOR: $EDITOR"
     echo "  TERM:   $TERM"
 
+    # Information, not a warning: a plain terminal has no source by design.
+    echo ""
+    echo "Terminal output in \$EDITOR:"
+    set -l source (__scrollback_source 2>/dev/null)
+    if test -n "$source"
+        echo "  ✓ scrollback (Alt+K): $source"
+    else
+        set -l inside tmux
+        # [[- if has "herdr" $modules ]] #
+        set inside herdr or tmux
+        # [[- end ]] #
+        echo "  - scrollback (Alt+K): no source here; run the shell inside $inside, or pipe a command into e (cmd | e)"
+    end
+
     echo ""
     echo "$__dd_problems problem(s), $__dd_warnings warning(s)."
     set -l problems $__dd_problems
