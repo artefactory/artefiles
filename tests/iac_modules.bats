@@ -23,14 +23,14 @@ DARWIN_TMPL=.chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl
   H=$(mk_fake_home "$BATS_TEST_TMPDIR/tf")
   seed_chezmoi_config "$H" '{"modules":["terraform"]}'
   tf=$(chezmoi_render "$H" "$DARWIN_TMPL")
-  printf '%s\n' "$tf" | grep -qxF 'brew "hashicorp/tap/terraform"'
+  printf '%s\n' "$tf" | grep -qxF 'brew "hashicorp/tap/terraform", trusted: true'
   if printf '%s\n' "$tf" | grep -qxF 'brew "opentofu"'; then return 1; fi
 
   H=$(mk_fake_home "$BATS_TEST_TMPDIR/tofu")
   seed_chezmoi_config "$H" '{"modules":["opentofu"]}'
   tofu=$(chezmoi_render "$H" "$DARWIN_TMPL")
   printf '%s\n' "$tofu" | grep -qxF 'brew "opentofu"'
-  if printf '%s\n' "$tofu" | grep -qxF 'brew "hashicorp/tap/terraform"'; then return 1; fi
+  if printf '%s\n' "$tofu" | grep -qF 'hashicorp/tap/terraform'; then return 1; fi
 
   H=$(mk_fake_home "$BATS_TEST_TMPDIR/none")
   seed_chezmoi_config "$H" '{"modules":[]}'

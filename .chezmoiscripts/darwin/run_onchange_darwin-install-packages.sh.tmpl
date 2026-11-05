@@ -2,6 +2,9 @@
 
 # A package named owner/tap/name only resolves once its tap is added, so a
 # module that uses one lists the tap and it is declared before any package.
+# Since Homebrew 6, brew also refuses to load code from a third-party tap until
+# it is trusted: `trusted: true` on the package line trusts that one formula or
+# cask, not everything the tap holds.
 brew bundle --verbose --upgrade --force --file=/dev/stdin << EOF
 {{- $modules := includeTemplate "modules" . | fromJson }}
 {{- range $name, $pkgs := .packages.darwin.modules }}
@@ -20,10 +23,10 @@ cask {{ . | quote }}
 {{- range $name, $pkgs := .packages.darwin.modules }}
 {{-   if has $name $modules }}
 {{-     range $pkgs.brews }}
-brew {{ . | quote }}
+brew {{ . | quote }}{{ if eq (len (splitList "/" .)) 3 }}, trusted: true{{ end }}
 {{-     end }}
 {{-     range $pkgs.casks }}
-cask {{ . | quote }}
+cask {{ . | quote }}{{ if eq (len (splitList "/" .)) 3 }}, trusted: true{{ end }}
 {{-     end }}
 {{-   end }}
 {{- end }}
