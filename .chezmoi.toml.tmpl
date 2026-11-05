@@ -30,8 +30,8 @@ credentialHelper = "!gh auth git-credential"
 # [[ $choices = append $choices "shell_tools | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd)" ]] #
 # [[ $choices = append $choices "cli_extras | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2" ]] #
 # [[ $choices = append $choices "rust | Rust toolchain (rustup, cargo) to build Rust tools" ]] #
-# [[ $choices = append $choices "ghostty | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one" ]] #
-# [[ $choices = append $choices "cmux | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one" ]] #
+# [[ $choices = append $choices "ghostty | Ghostty terminal, preconfigured: Catppuccin theme, FiraCode Nerd Font, macOS keys" ]] #
+# [[ $choices = append $choices "herdr | herdr: terminal workspace for coding agents: split panes, agent status, sessions that survive detach" ]] #
 # [[ $choices = append $choices "git_advanced | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, lazygit (TUI)" ]] #
 # [[ $choices = append $choices "atuin | Atuin: searchable shell history, synced across machines (Ctrl+R)" ]] #
 # [[ $choices = append $choices "review | tuicr: terminal UI to review a diff, a branch or a pull request (review command)" ]] #
@@ -56,8 +56,8 @@ credentialHelper = "!gh auth git-credential"
 # Tools every install gets, shown above the checklist.
 # [[ $required := "fish, git, gh, starship, mergiraf, uv and fnm" ]] #
 # Modules the install checklist starts with already selected.
-# [[ $defaults := list "editor" "shell_tools" "cli_extras" "rust" "git_advanced" "atuin" "python_dev" "vscode" "code_cli" "gcloud" ]] #
-# [[ $pairs := list (list "ghostty" "cmux") (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
+# [[ $defaults := list "editor" "shell_tools" "cli_extras" "rust" "ghostty" "herdr" "git_advanced" "atuin" "python_dev" "vscode" "code_cli" "gcloud" ]] #
+# [[ $pairs := list (list "pre_commit" "prek") (list "terraform" "opentofu") ]] #
 # The bare `chezmoi init` prompt starts with the same modules checked; the default must be the full choice text.
 # [[ $preselected := list ]] #
 # [[ range $choices ]] #
@@ -74,7 +74,8 @@ credentialHelper = "!gh auth git-credential"
 # [[ $modules := list ]] #
 # [[ range $stored ]] #
 # [[ $name := index (splitList " | " .) 0 ]] #
-# [[ $modules = append $modules (ternary "ghostty" $name (eq $name "terminal")) ]] #
+# [[/* terminal and cmux were the earlier names of the Ghostty setup. */]] #
+# [[ $modules = append $modules (ternary "ghostty" $name (has $name (list "terminal" "cmux"))) ]] #
 # [[ end ]] #
 # [[ if $legacy ]] #
 # [[ $modules = includeTemplate "modules" (dict "modules" $modules) | fromJson ]] #
