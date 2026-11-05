@@ -112,8 +112,8 @@ If Runme stops with `malformed refspec`, your git config holds a fetch rule it c
 | `shell_tools` | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd) | [shell_tools](.claude/skills/artefiles/references/shell_tools.md) |
 | `cli_extras` | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2 | [cli_extras](.claude/skills/artefiles/references/cli_extras.md) |
 | `rust` | Rust toolchain (rustup, cargo) to build Rust tools | [rust](.claude/skills/artefiles/references/rust.md) |
-| `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | [ghostty](.claude/skills/artefiles/references/ghostty.md) |
-| `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | [cmux](.claude/skills/artefiles/references/cmux.md) |
+| `ghostty` | Ghostty terminal, preconfigured: Catppuccin theme, FiraCode Nerd Font, macOS keys | [ghostty](.claude/skills/artefiles/references/ghostty.md) |
+| `herdr` | herdr: terminal workspace for coding agents: split panes, agent status, sessions that survive detach | [herdr](.claude/skills/artefiles/references/herdr.md) |
 | `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, lazygit (TUI) | [git_advanced](.claude/skills/artefiles/references/git_advanced.md) |
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | [atuin](.claude/skills/artefiles/references/atuin.md) |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | [review](.claude/skills/artefiles/references/review.md) |

@@ -257,6 +257,12 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     # [[- if has "pi" $modules ]] #
     __check_tool_with_configs pi "" $managed_files
     # [[- end ]] #
+    # [[- if has "herdr" $modules ]] #
+
+    echo ""
+    echo "## Terminal workspace"
+    __check_tool_with_configs herdr "" $managed_files
+    # [[- end ]] #
     # [[- if has "atuin" $modules ]] #
 
     echo ""

@@ -1,7 +1,9 @@
 #!/usr/bin/env bats
-# The terminal setup is one choice between two alternatives: ghostty (which
-# brings zellij) or cmux. `terminal` survives only as a legacy alias for
-# ghostty so stored configs keep their Ghostty setup; `multiplexer` is gone.
+# The terminal setup is the ghostty module: the Ghostty terminal with the shared
+# config. `terminal` survives only as a legacy alias for ghostty so stored
+# configs keep their Ghostty setup; `multiplexer` is gone. herdr_module.bats
+# covers herdr, which is started by typing `herdr`; Ghostty opens the login
+# shell.
 
 setup() {
   load 'helpers/setup'
@@ -12,18 +14,15 @@ setup() {
 # `! cmd` never fails a bats test unless it is the last line; refute always does.
 refute() { if "$@"; then return 1; fi; }
 
-@test "packages.yaml has ghostty (cask + zellij) and cmux, not terminal or multiplexer" {
+@test "packages.yaml has the ghostty cask, not terminal or multiplexer" {
   yq -e '.packages.darwin.modules.ghostty.casks | contains(["ghostty"])' "$PACKAGES"
-  yq -e '.packages.darwin.modules.ghostty.brews | contains(["zellij"])' "$PACKAGES"
-  yq -e '.packages.darwin.modules.cmux.casks | contains(["manaflow-ai/cmux/cmux"])' "$PACKAGES"
   refute yq -e '.packages.darwin.modules | has("terminal")' "$PACKAGES"
   refute yq -e '.packages.darwin.modules | has("multiplexer")' "$PACKAGES"
 }
 
-@test "init prompt offers ghostty and cmux, not terminal or multiplexer" {
+@test "init prompt offers ghostty, not terminal or multiplexer" {
   names=$(prompt_module_names)
   printf '%s\n' "$names" | grep -qx ghostty
-  printf '%s\n' "$names" | grep -qx cmux
   if printf '%s\n' "$names" | grep -qxE 'terminal|multiplexer'; then return 1; fi
 }
 
@@ -33,15 +32,15 @@ refute() { if "$@"; then return 1; fi; }
     "$PACKAGES" "$REPO_ROOT/dot_config/ghostty/config.tmpl"
 }
 
-@test "the shared Ghostty config applies for ghostty, cmux and the legacy terminal alias" {
-  for m in ghostty cmux terminal; do
+@test "the shared Ghostty config applies for ghostty and the legacy terminal alias" {
+  for m in ghostty terminal; do
     H=$(mk_fake_home "$BATS_TEST_TMPDIR/h-$m")
     seed_chezmoi_config "$H" "{\"modules\":[\"$m\"]}"
     chezmoi_managed "$H" | grep -qx '.config/ghostty/config'
   done
 }
 
-@test "the Ghostty config is absent when neither terminal is selected" {
+@test "the Ghostty config is absent when ghostty is not selected" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["editor"]}'
   if chezmoi_managed "$H" | grep -q '^\.config/ghostty'; then return 1; fi
@@ -51,19 +50,12 @@ refute() { if "$@"; then return 1; fi; }
   refute grep -n -i 'multiplexer' "$REPO_ROOT/dot_config/ghostty/config.tmpl"
 }
 
-@test "macOS install script brews zellij for ghostty and the cmux cask for cmux" {
+@test "macOS install script installs the Ghostty cask for ghostty, and nothing else of it" {
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":["ghostty"]}'
   out=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
   printf '%s\n' "$out" | grep -qx 'cask "ghostty"'
-  printf '%s\n' "$out" | grep -qx 'brew "zellij"'
-  if printf '%s\n' "$out" | grep -q 'cmux'; then return 1; fi
-
-  H2=$(mk_fake_home "$BATS_TEST_TMPDIR/h2")
-  seed_chezmoi_config "$H2" '{"modules":["cmux"]}'
-  out=$(chezmoi_render "$H2" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
-  printf '%s\n' "$out" | grep -qxF 'cask "manaflow-ai/cmux/cmux", trusted: true'
-  if printf '%s\n' "$out" | grep -qE 'zellij|"ghostty"'; then return 1; fi
+  if printf '%s\n' "$out" | grep -qiE 'zellij|cmux'; then return 1; fi
 }
 
 @test "init rewrites a stored terminal module to ghostty and drops multiplexer" {
@@ -82,8 +74,52 @@ refute() { if "$@"; then return 1; fi; }
   printf '%s' "$modules" | jq -e 'index("ghostty") != null and index("editor") != null and index("terminal") == null and index("multiplexer") == null'
 }
 
-@test "README documents ghostty and cmux, not terminal or multiplexer" {
+@test "README documents ghostty, not terminal or multiplexer" {
   grep -qE '^\| `ghostty` \|' "$REPO_ROOT/README.md"
-  grep -qE '^\| `cmux` \|' "$REPO_ROOT/README.md"
   refute grep -qE '^\| `(terminal|multiplexer)` \|' "$REPO_ROOT/README.md"
+}
+
+# ghostty_external [VAR=VALUE...] — 1 when the Linux externals, rendered with
+# the ghostty module and only these display variables set, download Ghostty;
+# else 0. The template is guarded by `eq .chezmoi.os "linux"`, so the guard is
+# forced. Rendering asks the GitHub API for the release assets. A failed or
+# empty render prints nothing and returns 1, so `-eq 0` cannot pass on it.
+ghostty_external() {
+  local out
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/ext-$RANDOM")
+  seed_chezmoi_config "$H" '{"modules":["ghostty"]}'
+  out=$(env -u DISPLAY -u WAYLAND_DISPLAY -u CODESPACES "$@" \
+    XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
+    --config "$H/.config/chezmoi/chezmoi.toml" --source "$REPO_ROOT" --destination "$H" \
+    < <(sed 's/eq \.chezmoi\.os "linux"/true/' "$REPO_ROOT/.chezmoiexternal.toml.tmpl")) \
+    || { echo "render of the externals failed" >&2; return 1; }
+  # The same sentinel as tests/externals.bats: the Linux branch rendered.
+  grep -qF '[".local/bin/starship"]' <<< "$out" || { echo "externals lack starship" >&2; return 1; }
+  grep -cxF '[".local/bin/ghostty"]' <<< "$out" || true
+}
+
+@test "on Linux, Ghostty is downloaded with an X11 or a Wayland session" {
+  [ "$(ghostty_external DISPLAY=:0)" -eq 1 ]
+  [ "$(ghostty_external WAYLAND_DISPLAY=wayland-0)" -eq 1 ]
+}
+
+@test "on Linux, Ghostty is skipped without a display and in a Codespace, as VS Code is" {
+  n=$(ghostty_external)
+  [ "$n" -eq 0 ]
+  n=$(ghostty_external DISPLAY=:0 CODESPACES=true)
+  [ "$n" -eq 0 ]
+  # The rule is the one the VS Code install script applies.
+  grep -qF '[ -n "${CODESPACES:-}" ] || { [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; }' \
+    "$REPO_ROOT/.chezmoiscripts/linux/run_install-vscode.sh"
+}
+
+@test "without a display the Ghostty config is still managed, and macOS still gets the cask" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":["ghostty"]}'
+  (
+    unset DISPLAY WAYLAND_DISPLAY
+    export CODESPACES=true
+    chezmoi_managed "$H" | grep -qx '.config/ghostty/config'
+    chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl | grep -qx 'cask "ghostty"'
+  )
 }

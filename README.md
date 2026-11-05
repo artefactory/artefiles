@@ -67,8 +67,8 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `shell_tools` | Shell tools: bat, eza, fd, fzf, ripgrep, zoxide, direnv (modern cat, ls, find, search, cd) | — |
 | `cli_extras` | Faster CLI replacements: dust, dysk, procs, sd, choose, hyperfine, bottom, rip2 | — |
 | `rust` | Rust toolchain (rustup, cargo) to build Rust tools | — |
-| `ghostty` | Ghostty terminal, preconfigured, plus Zellij (panes and tabs). Alternative to cmux: pick one | `cmux` |
-| `cmux` | cmux: Ghostty-based macOS terminal, vertical tabs, agent notifications. Alternative to ghostty: pick one | `ghostty` |
+| `ghostty` | Ghostty terminal, preconfigured: Catppuccin theme, FiraCode Nerd Font, macOS keys | — |
+| `herdr` | herdr: terminal workspace for coding agents: split panes, agent status, sessions that survive detach | — |
 | `git_advanced` | Extra git tools: difftastic (diffs), git-cliff (changelogs), git-lfs, git-extras, lazygit (TUI) | — |
 | `atuin` | Atuin: searchable shell history, synced across machines (Ctrl+R) | — |
 | `review` | tuicr: terminal UI to review a diff, a branch or a pull request (review command) | — |
@@ -90,7 +90,7 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
 | `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 
-Selected by default: `editor`, `shell_tools`, `cli_extras`, `rust`, `git_advanced`, `atuin`, `python_dev`, `vscode`, `code_cli`, `gcloud`.
+Selected by default: `editor`, `shell_tools`, `cli_extras`, `rust`, `ghostty`, `herdr`, `git_advanced`, `atuin`, `python_dev`, `vscode`, `code_cli`, `gcloud`.
 
 After installing: `atuin register` (or `atuin login`) turns on history sync, `gcloud init` sets up Google Cloud, and `az login` signs in to Azure. More commands and shortcuts are in the [cheatsheet](CHEATSHEET.md).
 
