@@ -90,6 +90,10 @@ packages:
       code_cli:
         brews: []
         casks: []
+      antigravity:
+        brews: []
+        casks:
+          - 'antigravity'
       pre_commit:
         brews: []
         casks: []
