@@ -231,6 +231,20 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     # [[- if $codeCli ]] #
     __check_tool_with_configs code-cli "" $managed_files
     # [[- end ]] #
+    # [[- if or (has "claude_code" $modules) (has "codex" $modules) (has "pi" $modules) ]] #
+
+    echo ""
+    echo "## Coding agents"
+    # [[- end ]] #
+    # [[- if has "claude_code" $modules ]] #
+    __check_tool_with_configs claude "" $managed_files
+    # [[- end ]] #
+    # [[- if has "codex" $modules ]] #
+    __check_tool_with_configs codex "" $managed_files
+    # [[- end ]] #
+    # [[- if has "pi" $modules ]] #
+    __check_tool_with_configs pi "" $managed_files
+    # [[- end ]] #
     # [[- if has "atuin" $modules ]] #
 
     echo ""

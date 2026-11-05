@@ -94,6 +94,16 @@ packages:
         brews: []
         casks:
           - 'antigravity'
+      claude_code:
+        brews: []
+        casks: []
+      codex:
+        brews: []
+        casks:
+          - 'codex'
+      pi:
+        brews: []
+        casks: []
       pre_commit:
         brews: []
         casks: []
