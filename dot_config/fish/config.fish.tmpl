@@ -238,6 +238,18 @@ if $interactive_init; and status is-interactive; and type -q fzf; and type -q at
 end
 # [[ end -]] #
 
+# Alt+K opens this terminal's output in $EDITOR (scrollback, read from herdr or
+# tmux). Alt+O, fish's own key for the file under the cursor, stays as it is.
+if status is-interactive
+    # __fish_echo prints the no-source hint below the command line instead of
+    # over the prompt.
+    set -l __scrollback_key 'if __scrollback_source >/dev/null; scrollback; else; __fish_echo scrollback; end; commandline -f repaint'
+    bind alt-k $__scrollback_key
+    if bind -M insert >/dev/null 2>&1
+        bind -M insert alt-k $__scrollback_key
+    end
+end
+
 # Docker - https://www.docker.com
 if type -q docker
     function __init_docker_completions --on-event fish_preexec

@@ -103,6 +103,20 @@ Cells that change anything (install, apply, edit, commit, push, change your shel
 
 If Runme stops with `malformed refspec`, your git config holds a fetch rule it cannot read (jj-stack adds one). Name the file instead: `runme list --filename CHEATSHEET.md`.
 
+## Terminal output in the editor
+
+| Task | Key or command |
+|------|----------------|
+| Open this terminal's output in `$EDITOR`, at its end | `Alt+K` (or `scrollback`) |
+| Open a command's output in `$EDITOR` | `cmd \| e` |
+| Read more herdr rows than the default 10000 | `set -U scrollback_lines 50000` |
+
+`Alt+K` reads the output from herdr, else tmux; in a plain terminal it says so
+and points to `cmd | e`. Colors and progress-bar redraws are removed, and the
+temporary file is deleted when the editor closes. `dotfiles_doctor` shows the
+active source. On macOS, Alt is the left Option key in Ghostty; VS Code and
+iTerm2 need Option set to send Meta (Esc+).
+
 ## Tools by module
 
 | Module | Tools | Guide |
