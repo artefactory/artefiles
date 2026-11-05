@@ -38,7 +38,7 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
 }
 
 @test "alternatives say 'Alternative to X: pick one' on both sides and nothing else does" {
-  [ "$(prompt_pairs | wc -l)" -eq 3 ]
+  [ "$(prompt_pairs | wc -l)" -eq 2 ]
   marked=""
   while read -r a b; do
     prompt_help "$a" | grep -qF "Alternative to $b: pick one"
@@ -75,7 +75,7 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
 }
 
 @test "a selection holding both modules of a pair stops init" {
-  [ "$(prompt_pairs | wc -l)" -eq 3 ]
+  [ "$(prompt_pairs | wc -l)" -eq 2 ]
   while read -r a b; do
     init_with "[\"$a\",\"$b\"]"
     [ "$status" -ne 0 ]
@@ -84,9 +84,9 @@ stored_modules() { grep '^modules = ' "$H/.config/chezmoi/chezmoi.toml" | sed 's
 }
 
 @test "one module of each pair is accepted" {
-  init_with '["ghostty","pre_commit","terraform"]'
+  init_with '["pre_commit","terraform"]'
   [ "$status" -eq 0 ]
-  init_with '["cmux","prek","opentofu"]'
+  init_with '["prek","opentofu"]'
   [ "$status" -eq 0 ]
 }
 
