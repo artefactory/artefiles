@@ -4,11 +4,25 @@ name: full install
 # as a new user gets it with no terminal. It stays out of the pull request and
 # release paths, where it would add 20 to 40 minutes per run: it runs weekly on
 # main and by hand (gh workflow run full-install.yml --ref <branch>).
+# By hand, extra modules can be added to the defaults, e.g. to install packages
+# from third-party taps, which the defaults never do:
+#   gh workflow run full-install.yml --ref <branch> -f modules=terraform -f os='["macos-15"]'
 
 on:
   schedule:
     - cron: "0 5 * * 1"
   workflow_dispatch:
+    inputs:
+      modules:
+        description: Comma-separated modules to add to the defaults (e.g. terraform)
+        default: ""
+      os:
+        description: JSON list of runners
+        default: '["ubuntu-latest", "macos-15"]'
+      tty:
+        description: Run install.sh in a terminal, as a user does, so prompts show
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,18 +32,61 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-15]
+        os: ${{ fromJSON(inputs.os || '["ubuntu-latest", "macos-15"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     env:
       GH_TOKEN: ${{ github.token }}
+      EXTRA_MODULES: ${{ inputs.modules }}
+      # The email is set beforehand so its prompt does not wait in tty mode.
+      CI_EMAIL: ci@example.com
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
-      - name: install with the default modules
+      # Homebrew 6 refuses packages from untrusted taps; an older brew would
+      # pass whatever the Brewfile says.
+      - name: Homebrew version
+        if: runner.os == 'macOS'
+        run: brew --version
+
+      # Without a terminal install.sh shows no checklist and chezmoi keeps the
+      # module list it finds, so the list is written first, as install.sh writes
+      # the checklist's result.
+      - name: select the extra modules
+        if: env.EXTRA_MODULES != ''
+        run: |
+          # shellcheck disable=SC2016 # the patterns match literal `$defaults` and `$choices`
+          defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' .chezmoi.toml.tmpl | tr ' ' ',')
+          extra=$(printf '%s' "$EXTRA_MODULES" | sed -E 's/([a-z_]+)/"\1"/g')
+          # shellcheck disable=SC2016
+          offered="[$(sed -nE 's/^# \[\[ \$choices = append \$choices "([a-z_]+) \|.*/"\1"/p' .chezmoi.toml.tmpl | paste -sd, -)]"
+          config="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi/chezmoi.toml"
+          mkdir -p "$(dirname "$config")"
+          printf '[data]\n  email = "%s"\n  modulesVersion = %s\n  modules = [%s,%s]\n  modulesOffered = %s\n' \
+            "$CI_EMAIL" "$(cat .chezmoitemplates/modulesVersion)" "$defaults" "$extra" "$offered" > "$config"
+          cat "$config"
+
+      - name: install
+        if: ${{ !inputs.tty }}
         run: sh ./install.sh
+
+      # A user runs install.sh in a terminal, outside CI: tools such as brew ask
+      # questions there that they skip in CI. script gives install.sh a
+      # terminal, CI and GITHUB_ACTIONS are unset, and every question is
+      # answered "n", so one that should not appear fails the run instead of
+      # waiting. The step timeout catches a question that ignores the answer.
+      - name: install in a terminal
+        if: ${{ inputs.tty }}
+        timeout-minutes: 30
+        run: |
+          rc="$RUNNER_TEMP/install-rc"
+          # shellcheck disable=SC2016 # $? and $1 expand in the inner sh
+          yes n | env -u CI -u GITHUB_ACTIONS script -q "$RUNNER_TEMP/install.log" \
+            sh -c 'sh ./install.sh; echo $? > "$1"' sh "$rc" || true
+          echo "install.sh exited $(cat "$rc" 2> /dev/null || echo '(no status: killed)')"
+          [ "$(cat "$rc" 2> /dev/null)" = 0 ]
 
       - name: verify the install
         run: sh .github/scripts/verify-install.sh "${{ github.sha }}"
@@ -40,3 +97,7 @@ jobs:
           fish --version
           starship --version
           git --version
+
+      - name: terraform runs
+        if: contains(env.EXTRA_MODULES, 'terraform')
+        run: terraform version
