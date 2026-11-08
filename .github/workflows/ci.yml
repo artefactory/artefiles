@@ -137,6 +137,23 @@ jobs:
           if [ -n "$conda_cmd" ]; then sudo rm -f "$conda_cmd"; fi
           if command -v conda; then exit 1; fi
 
+      # Without a terminal install.sh takes the default modules, and none of them
+      # uses a third-party tap. terraform comes from hashicorp/tap, which Homebrew
+      # loads only once trusted (#258), so it is added to exercise that trust. An
+      # existing config skips the checklist and chezmoi init keeps its modules, so
+      # this writes the config install.sh writes after the checklist.
+      - name: select the default modules and terraform
+        if: matrix.route == 'full'
+        run: |
+          # shellcheck disable=SC2016 # the patterns match a literal `$defaults` and `$choices`
+          defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' .chezmoi.toml.tmpl | tr ' ' ',')
+          # shellcheck disable=SC2016
+          offered="[$(sed -nE 's/^# \[\[ \$choices = append \$choices "([a-z_]+) \|.*/"\1"/p' .chezmoi.toml.tmpl | paste -sd, -)]"
+          mkdir -p "$HOME/.config/chezmoi"
+          printf '[data]\n  modulesVersion = %s\n  modules = [%s,"terraform"]\n  modulesOffered = %s\n' \
+            "$(cat .chezmoitemplates/modulesVersion)" "$defaults" "$offered" > "$HOME/.config/chezmoi/chezmoi.toml"
+          cat "$HOME/.config/chezmoi/chezmoi.toml"
+
       - name: install from the checkout
         if: matrix.route == 'full'
         run: sh ./install.sh
@@ -159,6 +176,7 @@ jobs:
           fish --version
           starship --version
           git --version
+          terraform version
 
       # The health check users run after an install: it returns 1 on a missing
       # tool of a selected module, a missing managed config, a forbidden tool
