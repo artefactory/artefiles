@@ -23,7 +23,7 @@ if ! fish -c "functions -q fisher" > /dev/null 2>&1; then
   mkdir -p "$FISHER_FUNCTIONS_DIR"
 
   # Download the fisher.fish function file
-  fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
+  fish -c "curl --retry 5 --retry-delay 2 -fsL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
 fi
 
 fish -c "fisher update"

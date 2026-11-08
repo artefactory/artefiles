@@ -7,7 +7,7 @@
 # -u: exit on unset variables
 set -eu
 
-STABLE=$(curl -fsSL https://dl.k8s.io/release/stable.txt)
+STABLE=$(curl --retry 5 --retry-delay 2 -fsSL https://dl.k8s.io/release/stable.txt)
 
 # An installed copy at the stable version needs no download.
 if command -v kubectl > /dev/null 2>&1 \
@@ -27,5 +27,5 @@ esac
 
 echo "Installing kubectl $STABLE..."
 mkdir -p "${HOME}/.local/bin"
-curl -fsSL -o "${HOME}/.local/bin/kubectl" "https://dl.k8s.io/release/${STABLE}/bin/linux/${ARCH}/kubectl"
+curl --retry 5 --retry-delay 2 -fsSL -o "${HOME}/.local/bin/kubectl" "https://dl.k8s.io/release/${STABLE}/bin/linux/${ARCH}/kubectl"
 chmod +x "${HOME}/.local/bin/kubectl"

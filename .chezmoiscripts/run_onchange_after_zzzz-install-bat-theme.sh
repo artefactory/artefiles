@@ -61,7 +61,7 @@ download_theme() {
 
   if [ "$method" = "curl" ]; then
     # Download with curl
-    curl -o "$theme_file" -sL "$url"
+    curl --retry 5 --retry-delay 2 -fsL -o "$theme_file" "$url"
   elif [ "$method" = "wget" ]; then
     # Download with wget
     wget -q -O "$theme_file" "$url"

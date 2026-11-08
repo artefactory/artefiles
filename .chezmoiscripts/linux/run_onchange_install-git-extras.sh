@@ -6,7 +6,7 @@ set -eu
 
 # Get the latest release version
 echo "Checking for the latest git-extras release..."
-LATEST_VERSION=$(curl -s https://api.github.com/repos/tj/git-extras/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+LATEST_VERSION=$(curl --retry 5 --retry-delay 2 -fs https://api.github.com/repos/tj/git-extras/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 echo "Latest git-extras version: $LATEST_VERSION"
 
 # An installed copy at that version needs no download.
@@ -28,7 +28,7 @@ cd "${TMP_DIR}"
 # Download the source tarball
 DOWNLOAD_URL="https://github.com/tj/git-extras/archive/refs/tags/${LATEST_VERSION}.tar.gz"
 echo "Downloading from $DOWNLOAD_URL"
-curl -L "$DOWNLOAD_URL" -o "git-extras-${LATEST_VERSION}.tar.gz"
+curl --retry 5 --retry-delay 2 -fL "$DOWNLOAD_URL" -o "git-extras-${LATEST_VERSION}.tar.gz"
 
 # Extract the source
 tar -xzf "git-extras-${LATEST_VERSION}.tar.gz"

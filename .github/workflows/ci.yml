@@ -105,7 +105,7 @@ jobs:
         run: |
           # Download to a file: `sh -c "$(curl ...)"` runs an empty script and
           # exits 0 when the download fails, leaving no chezmoi on the runner.
-          curl -fsSL --retry 3 --retry-all-errors https://get.chezmoi.io -o "$RUNNER_TEMP/get-chezmoi.sh"
+          curl -fsSL --retry 5 --retry-delay 2 https://get.chezmoi.io -o "$RUNNER_TEMP/get-chezmoi.sh"
           sh "$RUNNER_TEMP/get-chezmoi.sh" -b "$RUNNER_TEMP/chezmoi"
           "$RUNNER_TEMP/chezmoi/chezmoi" --version
 

@@ -51,7 +51,7 @@ else
 fi
 
 echo "Downloading Google Cloud SDK for $ARCH..."
-curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/$SDK_ARCHIVE"
+curl --retry 5 --retry-delay 2 -fO "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/$SDK_ARCHIVE"
 tar -xf "$SDK_ARCHIVE"
 
 # Create installation directory

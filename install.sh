@@ -148,7 +148,7 @@ install_homebrew() {
   fi
   echo "Installing Homebrew..." >&2
   [ "$dry_run" = "true" ] && return 0
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER")"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl --retry 5 --retry-delay 2 -fsSL "$HOMEBREW_INSTALLER")"
 }
 
 # Install GitHub CLI first if not already installed
@@ -165,7 +165,7 @@ install_github_cli() {
     fi
 
     # Get latest version
-    latest_version=$(curl -s "$GH_LATEST_RELEASE" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    latest_version=$(curl --retry 5 --retry-delay 2 -fs "$GH_LATEST_RELEASE" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 
     # Download and install for current architecture
     arch=$(uname -m)
@@ -186,7 +186,7 @@ install_github_cli() {
 
     download_url="${GH_DOWNLOADS}/v${latest_version}/gh_${latest_version}_${os}_${arch_name}.tar.gz"
     tmp_dir=$(mktemp -d)
-    curl -sL "${download_url}" | tar xz -C "${tmp_dir}"
+    curl --retry 5 --retry-delay 2 -fsL "${download_url}" | tar xz -C "${tmp_dir}"
     cp "${tmp_dir}"/gh_*/bin/gh "${bin_dir}/"
     rm -rf "${tmp_dir}"
     echo "GitHub CLI installed successfully" >&2
@@ -502,9 +502,20 @@ if [ "$dry_run" = "false" ]; then
     bin_dir="$(set_bin_dir)"
     chezmoi="${bin_dir}/chezmoi"
     echo "Installing chezmoi to '${chezmoi}'" >&2
-    chezmoi_install_script="$(curl -fsSL "$CHEZMOI_INSTALLER")"
-    sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"
-    unset chezmoi_install_script bin_dir
+    chezmoi_install_script="$(curl --retry 5 --retry-delay 2 -fsSL "$CHEZMOI_INSTALLER")"
+    # The installer downloads chezmoi with its own curl, which does not retry: a
+    # GitHub server error fails it, so the whole installer runs again.
+    attempt=1
+    until sh -c "${chezmoi_install_script}" -- -b "${bin_dir}"; do
+      if [ "$attempt" -ge 3 ]; then
+        echo "Could not install chezmoi after 3 tries: check the network connection, then run install.sh again." >&2
+        exit 1
+      fi
+      attempt=$((attempt + 1))
+      echo "Running the chezmoi installer again (try ${attempt} of 3)..." >&2
+      sleep 3
+    done
+    unset chezmoi_install_script bin_dir attempt
   fi
 else
   chezmoi="chezmoi"
