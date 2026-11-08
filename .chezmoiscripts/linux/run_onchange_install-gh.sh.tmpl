@@ -22,7 +22,7 @@ fi
 
 echo "Installing GitHub CLI..."
 
-latest_version=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+latest_version=$(curl --retry 5 --retry-delay 2 -fsSL https://api.github.com/repos/cli/cli/releases/latest \
   | grep '"tag_name":' | head -n 1 \
   | sed -E 's/.*"v([^"]+)".*/\1/')
 
@@ -54,7 +54,7 @@ esac
 download_url="https://github.com/cli/cli/releases/download/v${latest_version}/gh_${latest_version}_linux_${arch_name}.tar.gz"
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT
-curl -fsSL "${download_url}" | tar xz -C "${tmp_dir}"
+curl --retry 5 --retry-delay 2 -fsSL "${download_url}" | tar xz -C "${tmp_dir}"
 cp "${tmp_dir}"/gh_*/bin/gh "$LOCAL_GH"
 
 echo "GitHub CLI $latest_version installed to $LOCAL_GH"

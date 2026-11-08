@@ -10,7 +10,7 @@ echo "Checking Rust installation..."
 # Function to install Rust
 install_rust() {
   echo "Installing Rust using rustup..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  curl --retry 5 --retry-delay 2 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
   echo "Rust installed successfully."
 }
 

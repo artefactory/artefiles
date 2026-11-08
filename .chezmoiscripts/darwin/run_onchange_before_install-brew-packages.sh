@@ -5,7 +5,7 @@ set -eu
 # Check if Homebrew is installed
 if ! command -v brew > /dev/null 2>&1; then
   echo "Installing Homebrew without confirmation..."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl --retry 5 --retry-delay 2 -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   # Setup Homebrew in the current shell session
   if [ -d "/opt/homebrew/bin" ]; then

@@ -26,6 +26,6 @@ echo "Installing tuicr $TUICR_VERSION..."
 export TUICR_VERSION
 export TUICR_INSTALL_YES=1
 
-curl -fsSL https://tuicr.dev/install.sh | sh
+curl --retry 5 --retry-delay 2 -fsSL https://tuicr.dev/install.sh | sh
 
 echo "tuicr installed to ${TUICR_INSTALL_DIR:-$HOME/.local/bin}"
