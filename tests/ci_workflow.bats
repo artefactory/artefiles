@@ -101,3 +101,24 @@ step() {
   if yq -r '.jobs[].steps[].run // ""' "$f" | grep -q -- '--exclude'; then return 1; fi
   if grep -q 'full-install' "$REPO_ROOT/.github/workflows/release.yaml"; then return 1; fi
 }
+
+@test "the full install selects terraform on top of the default modules, before install.sh runs" {
+  name="select the default modules and terraform"
+  [ "$(yq -r ".jobs.install.steps[] | select(.name == \"$name\") | .if" "$CI_YML")" = "matrix.route == 'full'" ]
+  names=$(yq -r '.jobs.install.steps[].name' "$CI_YML")
+  [ "$(printf '%s\n' "$names" | grep -nxF "$name" | cut -d: -f1)" -lt \
+    "$(printf '%s\n' "$names" | grep -nxF "install from the checkout" | cut -d: -f1)" ]
+  # The step runs from the checkout and writes the config install.sh would write.
+  home="$BATS_TEST_TMPDIR/home"
+  mkdir -p "$home"
+  (cd "$REPO_ROOT" && env -u XDG_CONFIG_HOME HOME="$home" sh -euc "$(step "$name")")
+  config="$home/.config/chezmoi/chezmoi.toml"
+  defaults=$(sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$REPO_ROOT/.chezmoi.toml.tmpl" | tr -d '"' | tr ' ' ',')
+  [ "$(yq -p toml -r '.data.modules | join(",")' "$config")" = "${defaults},terraform" ]
+  [ "$(yq -p toml -r '.data.modulesVersion' "$config")" = "$(cat "$REPO_ROOT/.chezmoitemplates/modulesVersion")" ]
+  [ "$(yq -p toml -r '.data.modulesOffered | length' "$config")" -gt 0 ]
+}
+
+@test "the full install checks that terraform from the hashicorp tap runs" {
+  [[ "$(step "the installed tools run")" == *"terraform version"* ]]
+}
