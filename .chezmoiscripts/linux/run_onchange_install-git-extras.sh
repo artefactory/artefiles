@@ -6,7 +6,18 @@ set -eu
 
 # Get the latest release version
 echo "Checking for the latest git-extras release..."
-LATEST_VERSION=$(curl --retry 5 --retry-delay 2 -fs https://api.github.com/repos/tj/git-extras/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# curl runs on its own, not in a pipe: without pipefail a pipe takes the status
+# of its last command, so a failed request (a rate limit, no network) would
+# leave an empty version and the download would fail later on a bad URL.
+RELEASE=$(curl --retry 5 --retry-delay 2 -fsS https://api.github.com/repos/tj/git-extras/releases/latest) || {
+  echo "Error: failed to fetch the latest git-extras version from the GitHub API." >&2
+  exit 1
+}
+LATEST_VERSION=$(printf '%s\n' "$RELEASE" | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$LATEST_VERSION" ]; then
+  echo "Error: the GitHub API answer names no latest git-extras version." >&2
+  exit 1
+fi
 echo "Latest git-extras version: $LATEST_VERSION"
 
 # An installed copy at that version needs no download.
