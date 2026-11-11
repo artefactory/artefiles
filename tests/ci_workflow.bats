@@ -122,3 +122,29 @@ step() {
 @test "the full install checks that terraform from the hashicorp tap runs" {
   [[ "$(step "the installed tools run")" == *"terraform version"* ]]
 }
+
+# filters FILTER — the patterns of the pull request path filter FILTER.
+filters() {
+  yq -r '.jobs.changes.steps[] | select(.id == "filter") | .with.filters' "$CI_YML" | yq -r ".$1[]"
+}
+
+@test "the install path filter covers nested dotfiles" {
+  # paths-filter's `**` crosses folders only as a whole segment: `dot_**` acts as `dot_*`.
+  patterns=$(filters install)
+  for p in 'dot_*' 'dot_*/**' 'private_dot_*' 'private_dot_*/**'; do
+    printf '%s\n' "$patterns" | grep -qxF "$p" || {
+      echo "install filter lacks $p" >&2
+      return 1
+    }
+  done
+}
+
+@test "every path filter uses ** as a whole path segment only" {
+  for f in lint install; do
+    bad=$(filters "$f" | grep -E '[^/]\*\*|\*\*[^/]' || true)
+    [ -z "$bad" ] || {
+      echo "$f filter: ** glued to a name: $bad" >&2
+      return 1
+    }
+  done
+}

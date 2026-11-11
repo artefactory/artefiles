@@ -59,8 +59,12 @@ jobs:
               - '.chezmoidata/**'
               - '.chezmoiscripts/**'
               - '.chezmoitemplates/**'
-              - 'dot_**'
-              - 'private_dot_**'
+              # `**` crosses folders only as a whole path segment: `dot_**` would
+              # match top-level files only, never dot_config/fish/....
+              - 'dot_*'
+              - 'dot_*/**'
+              - 'private_dot_*'
+              - 'private_dot_*/**'
               - 'Library/**'
               - '.github/workflows/ci.yml'
               - '.github/scripts/**'
