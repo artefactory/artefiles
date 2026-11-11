@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # At the very end of install.sh the user is offered to star the repository.
-# Nothing is starred without an explicit y/yes, and the offer is skipped when
+# Nothing is starred without an explicit y/yes or install.sh --yes, and the offer is skipped when
 # nobody can answer (CI, Codespaces, no terminal) or the repo is already starred.
 
 setup() {
@@ -138,4 +138,24 @@ puts() { grep -c '^gh api -X PUT' "$CALLS" || true; }
   H=$(mk_fake_home)
   seed_chezmoi_config "$H" '{"modules":[]}'
   if chezmoi_managed "$H" | grep -F 'offer-star'; then return 1; fi
+}
+
+@test "ARTEFILES_YES stars the repository without reading the terminal, even when it would answer no" {
+  run_offer "n" ARTEFILES_YES=1
+  [ "$status" -eq 0 ]
+  [ "$(puts)" = "1" ]
+  [[ "$output" != *"[Y/n]"* ]]
+}
+
+@test "ARTEFILES_YES stars the repository without a terminal" {
+  run_offer "" ARTEFILES_YES=1 ARTEFILES_TTY=/nonexistent/tty
+  [ "$status" -eq 0 ]
+  [ "$(puts)" = "1" ]
+}
+
+@test "ARTEFILES_YES never stars from CI, nor a repository already starred" {
+  run_offer "" ARTEFILES_YES=1 CI=true
+  [ "$(puts)" = "0" ]
+  run_offer "" ARTEFILES_YES=1 STAR_STATE=starred
+  [ "$(puts)" = "0" ]
 }

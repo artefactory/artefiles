@@ -330,3 +330,15 @@ run_script() {
   [[ "$output" == *"not installed with apt or dnf"*"pacman"* ]]
   [[ "$output" != *"removal complete"* ]]
 }
+
+@test "ARTEFILES_YES removes Docker Desktop and its disk image without asking, even when the terminal would say no" {
+  fake_app
+  mkdir -p "$CONTAINER"
+  echo n > "$ANSWER"
+  render_darwin
+  run_script ARTEFILES_YES=1
+  [ "$status" -eq 0 ]
+  [ ! -e "$APP" ]
+  [ ! -e "$CONTAINER" ]
+  [[ "$output" != *"[y/N]"* ]]
+}

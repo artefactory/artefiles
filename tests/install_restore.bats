@@ -94,3 +94,19 @@ restore() {
   grep -q 'name = artefiles' "$H/.gitconfig"
   [ -e "$H/.config/starship.toml" ]
 }
+
+@test "--yes restores without a terminal and without asking" {
+  run env -u CI -u CODESPACES -u ARTEFILES_SELECT_TTY HOME="$H" XDG_CONFIG_HOME="$H/.config" \
+    XDG_DATA_HOME="$H/.local/share" PATH="$BIN:$PATH" SOURCE="$SOURCE" \
+    sh "$REPO_ROOT/install.sh" --yes --restore "$B" < /dev/null
+  [ "$status" -eq 0 ]
+  grep -q 'name = mine' "$H/.gitconfig"
+  [ ! -e "$H/.config/starship.toml" ]
+  [[ "$output" != *"[y/N]"* ]]
+}
+
+@test "--yes restores even when the terminal would answer no" {
+  restore n "$B" --yes
+  [ "$status" -eq 0 ]
+  grep -q 'name = mine' "$H/.gitconfig"
+}

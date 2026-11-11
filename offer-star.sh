@@ -3,9 +3,9 @@
 # shell offer, once chezmoi has finished.
 #
 # An empty answer (Enter), "y" or "yes", read from the terminal, accepts; any
-# other answer, or input that ends, declines. The
-# offer is skipped silently when nobody can answer (CI, Codespaces, no
-# terminal), when gh is missing, when the repository is already starred, or when
+# other answer, or input that ends, declines; ARTEFILES_YES (install.sh --yes)
+# accepts without asking. The offer is skipped silently in CI and Codespaces,
+# without a terminal unless ARTEFILES_YES is set, when gh is missing, when the repository is already starred, or when
 # GitHub answers anything but "not starred". Every path exits 0, so a refusal or
 # a failure here never fails the install.
 #
@@ -18,7 +18,12 @@ tty_dev="${ARTEFILES_TTY:-/dev/tty}"
 
 command -v gh > /dev/null 2>&1 || exit 0
 
-if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ] || ! ( : < "$tty_dev" ) 2> /dev/null; then
+# ARTEFILES_YES (install.sh --yes) answers yes without a terminal; CI and
+# Codespaces never star.
+if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ]; then
+  exit 0
+fi
+if [ -z "${ARTEFILES_YES:-}" ] && ! ( : < "$tty_dev" ) 2> /dev/null; then
   exit 0
 fi
 
@@ -40,9 +45,14 @@ To star ${repo} later, open https://github.com/${repo} or run:
 MANUAL
 }
 
-printf '\nEnjoying artefiles? Star %s on GitHub? [Y/n] ' "$repo" >&2
-answer=""
-IFS= read -r answer < "$tty_dev" || answer="n"
+if [ -n "${ARTEFILES_YES:-}" ]; then
+  echo "Starring ${repo} (--yes)." >&2
+  answer="y"
+else
+  printf '\nEnjoying artefiles? Star %s on GitHub? [Y/n] ' "$repo" >&2
+  answer=""
+  IFS= read -r answer < "$tty_dev" || answer="n"
+fi
 
 case "$answer" in
   "" | y | Y | yes | YES | Yes) ;;

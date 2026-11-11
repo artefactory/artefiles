@@ -37,7 +37,12 @@ ARTEFILES_VERSION=main sh -c "$(curl -fsLS https://raw.githubusercontent.com/art
 
 # No browser (CI, a remote machine): sign in with a token
 GH_TOKEN=<token> sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
+
+# Unattended: answer every question (same as ./install.sh --yes from a clone)
+ARTEFILES_YES=1 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 ```
+
+`--yes` (or `ARTEFILES_YES=1`) answers every question with its default, so the install runs unattended: default modules, fish as the login shell, no new modules, the repository starred, Docker Desktop's data deleted. The sudo password is still asked once, and without `GH_TOKEN` or a `gh` login the install stops and says how to sign in.
 
 In Codespaces, set this repo as your [dotfiles repository](https://github.com/settings/codespaces); it installs itself.
 

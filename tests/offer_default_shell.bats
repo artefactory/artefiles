@@ -147,3 +147,24 @@ chsh_calls() { grep -c '^chsh ' "$CALLS" || true; }
   seed_chezmoi_config "$H" '{"modules":[]}'
   ! chezmoi_managed "$H" | grep -F 'offer-default-shell'
 }
+
+@test "ARTEFILES_YES changes the shell through sudo chsh without reading the terminal" {
+  run_offer "n" ARTEFILES_YES=1
+  [ "$status" -eq 0 ]
+  grep -qx "sudo chsh -s $STUBS/fish $(id -un)" "$CALLS"
+  [ "$(chsh_calls)" = "1" ]
+  grep -qx "$STUBS/fish" "$SHELLS_FILE"
+  [[ "$output" != *"[Y/n]"* ]]
+}
+
+@test "ARTEFILES_YES changes the shell even without a terminal" {
+  run_offer "" ARTEFILES_YES=1 ARTEFILES_TTY=/nonexistent/tty
+  [ "$status" -eq 0 ]
+  grep -qx "sudo chsh -s $STUBS/fish $(id -un)" "$CALLS"
+}
+
+@test "ARTEFILES_YES never changes the shell in CI" {
+  run_offer "" ARTEFILES_YES=1 CI=true
+  [ "$status" -eq 0 ]
+  [ "$(chsh_calls)" = "0" ]
+}

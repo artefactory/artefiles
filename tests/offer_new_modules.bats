@@ -123,3 +123,17 @@ DOWN=$'\033[B'
   modulesOffered = '"$(all_names)"
   [ -z "$(chezmoi_render "$H" "$SCRIPT" | tr -d '[:space:]')" ]
 }
+
+@test "ARTEFILES_YES adds no module and leaves the offer for a later apply" {
+  seed '  modules = ["editor"]'
+  before=$(cat "$CONFIG")
+  # The terminal would pick everything: n clears, then the rows are toggled; it must never be read.
+  printf 'q' > "$ANSWERS"
+  chezmoi_render "$H" "$SCRIPT" > "$BATS_TEST_TMPDIR/offer.sh"
+  run env HOME="$H" CHEZMOI_CONFIG_FILE="$CONFIG" ARTEFILES_SELECT_TTY="$ANSWERS" ARTEFILES_YES=1 \
+    sh "$BATS_TEST_TMPDIR/offer.sh"
+  [ "$status" -eq 0 ]
+  [ "$(cat "$CONFIG")" = "$before" ]
+  [[ "$output" == *"New modules:"* ]]
+  [[ "$output" != *"Submit"* ]]
+}
