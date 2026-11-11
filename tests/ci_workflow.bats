@@ -83,16 +83,17 @@ step() {
   [[ "$(yq -r '.jobs.changes.if' "$CI_YML")" == *'!github.event.pull_request.draft'* ]]
 }
 
-@test "a pull request runs the full install on Linux and macOS; the queue adds the Quick Start route" {
-  [ "$(yq -r '.jobs.install.strategy.matrix.os | join(",")' "$CI_YML")" = "ubuntu-latest,macos-15" ]
+@test "a pull request runs the full install on Linux; the queue adds macOS and the Quick Start route" {
+  # The matrix is computed from the event: both branches of each expression are checked.
+  os=$(yq -r '.jobs.install.strategy.matrix.os' "$CI_YML")
+  [[ "$os" == *"github.event_name == 'pull_request' && '[\"ubuntu-latest\"]' || '[\"ubuntu-latest\", \"macos-15\"]'"* ]]
   route=$(yq -r '.jobs.install.strategy.matrix.route' "$CI_YML")
-  [[ "$route" == *"'pull_request' && '[\"full\"]'"* ]]
+  [[ "$route" == *"github.event_name == 'pull_request' && '[\"full\"]' || '[\"full\", \"quick-start\"]'"* ]]
   # The full route uses the real chezmoi: the wrapper and the render step are Quick Start only.
   for s in "install chezmoi" "never run scripts or download externals" "render every script without running it"; do
     [ "$(yq -r ".jobs.install.steps[] | select(.name == \"$s\") | .if" "$CI_YML")" = "matrix.route == 'quick-start'" ]
   done
   [ "$(yq -r '.jobs.install.steps[] | select(.name == "install from the checkout") | .if' "$CI_YML")" = "matrix.route == 'full'" ]
-  [[ "$route" == *'quick-start'* ]]
 }
 
 @test "the full install runs only on a schedule or by hand, with no exclusion" {
