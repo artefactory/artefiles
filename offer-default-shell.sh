@@ -8,6 +8,11 @@
 # other answer, or input that ends, declines. Every other path prints the manual commands and exits 0, so a refusal or a
 # failure here never fails the install.
 #
+# ARTEFILES_YES (install.sh --yes) accepts without asking, with or without a
+# terminal, and changes the shell with `sudo chsh`: plain chsh asks for the
+# password, while the install has already cached sudo. CI and Codespaces are
+# never changed.
+#
 # ARTEFILES_TTY and ARTEFILES_SHELLS_FILE only exist so tests can feed an
 # answer and avoid touching /etc/shells.
 
@@ -40,14 +45,24 @@ MANUAL
 
 # CI and Codespaces have nobody to answer, and a missing terminal means nobody
 # is watching: never act without both.
-if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ] || ! ( : < "$tty_dev" ) 2> /dev/null; then
+if [ -n "${CI:-}" ] || [ -n "${CODESPACES:-}" ]; then
   print_manual
   exit 0
 fi
 
-printf '\nMake fish your default shell? This runs sudo and chsh. [Y/n] ' >&2
-answer=""
-IFS= read -r answer < "$tty_dev" || answer="n"
+chsh_cmd="chsh"
+if [ -n "${ARTEFILES_YES:-}" ]; then
+  echo "Making fish your default shell (--yes)." >&2
+  answer="y"
+  chsh_cmd="sudo chsh"
+elif ! ( : < "$tty_dev" ) 2> /dev/null; then
+  print_manual
+  exit 0
+else
+  printf '\nMake fish your default shell? This runs sudo and chsh. [Y/n] ' >&2
+  answer=""
+  IFS= read -r answer < "$tty_dev" || answer="n"
+fi
 
 case "$answer" in
   "" | y | Y | yes | YES | Yes) ;;
@@ -65,7 +80,16 @@ if ! grep -qxF "$fish_path" "$shells_file" 2> /dev/null; then
   fi
 fi
 
-if chsh -s "$fish_path"; then
+change_shell() {
+  if [ "$chsh_cmd" = "sudo chsh" ]; then
+    # sudo runs chsh as root, so the user is named.
+    sudo chsh -s "$fish_path" "$(id -un)"
+  else
+    chsh -s "$fish_path"
+  fi
+}
+
+if change_shell; then
   echo "fish is now your default shell. Open a new terminal to use it." >&2
 else
   echo "chsh failed; your default shell is unchanged." >&2

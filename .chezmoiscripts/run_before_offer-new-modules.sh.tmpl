@@ -22,7 +22,8 @@
 # modules shown are saved in chezmoi's config. chezmoi holds its state lock for
 # the whole apply, so the modules chosen install on the next `chezmoi apply`;
 # a warning block says so.
-# Without a terminal nothing changes and the offer waits for the next apply.
+# Without a terminal, or with ARTEFILES_YES (install.sh --yes), no module is
+# added: nothing changes and the offer waits for the next apply at a terminal.
 
 set -eu
 
@@ -37,7 +38,7 @@ all='{{ $names | toJson }}'
 json_lines() { printf '%s' "$1" | tr -d '[]" ' | tr ',' '\n' | sed '/^$/d'; }
 
 tty_dev="${ARTEFILES_SELECT_TTY:-/dev/tty}"
-if ! (: < "$tty_dev") 2> /dev/null; then
+if [ -n "${ARTEFILES_YES:-}" ] || ! (: < "$tty_dev") 2> /dev/null; then
   echo "New modules: $(printf '%s\n' "$unseen" | paste -sd, - | sed 's/,/, /g'). They are offered on the next chezmoi apply at a terminal."
   exit 0
 fi

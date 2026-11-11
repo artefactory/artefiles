@@ -19,12 +19,17 @@ NETWORK_TIMEOUT=10
 dry_run=false
 destination=""
 restore=""
+yes=false
 
 # Parse --dry-run / --destination before any other work
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run)
       dry_run=true
+      shift
+      ;;
+    --yes | -y)
+      yes=true
       shift
       ;;
     --destination)
@@ -44,6 +49,15 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+# --yes (or ARTEFILES_YES=1) gives every question its automatic answer, so the
+# install runs unattended. The variable is exported because the questions asked
+# during chezmoi apply come from scripts chezmoi starts.
+[ -z "${ARTEFILES_YES:-}" ] || yes=true
+if [ "$yes" = "true" ]; then
+  ARTEFILES_YES=1
+  export ARTEFILES_YES
+fi
 
 # The tag or branch to install: ARTEFILES_VERSION when set, else the latest GitHub
 # release, else (no release, or gh cannot reach it) the default branch with a
@@ -226,6 +240,13 @@ ensure_github_auth() {
     return 0
   fi
 
+  # The browser login waits for someone, so an unattended install stops here.
+  if [ "$yes" = "true" ]; then
+    echo "ERROR: --yes does not open the GitHub login in a browser." >&2
+    echo "Run gh auth login first, or set GH_TOKEN, then run the install again." >&2
+    exit 1
+  fi
+
   # Check if we're in an interactive environment. Stderr feeds the install log,
   # so the terminal is fd 4; the login prompts there.
   if [ -t 0 ] && [ -t 1 ] && [ -t 4 ]; then
@@ -269,8 +290,8 @@ elif [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then
 fi
 
 # install.sh --restore FOLDER: undo an install from the backup folder the
-# install printed. Lists what it will do and asks first; without a terminal it
-# changes nothing. chezmoi purge deletes the source folder too, so it only runs
+# install printed. Lists what it will do and asks first; --yes answers
+# yes, and without a terminal or --yes it changes nothing. chezmoi purge deletes the source folder too, so it only runs
 # when the source is the clone the install made; a checkout of the user's own
 # is kept and only chezmoi's config and state are removed.
 restore_backup() {
@@ -293,20 +314,23 @@ restore_backup() {
     echo "  remove chezmoi's config and state in ${config_dir}${source_dir:+; ${source_dir} is kept}" >&2
   fi
   echo "Software the install added (Homebrew packages, fish, the tools in ~/.local) is not removed; CHEATSHEET.md lists how to remove it." >&2
-  if [ "$interactive" != "true" ]; then
-    echo "--restore asks before changing anything and needs a terminal; nothing was changed." >&2
+  if [ "$yes" = "true" ]; then
+    echo "Restore? yes (--yes)" >&2
+  elif [ "$interactive" != "true" ]; then
+    echo "--restore asks before changing anything and needs a terminal; nothing was changed. With --yes it restores without asking." >&2
     exit 1
+  else
+    printf 'Restore? [y/N] ' >&2
+    answer=""
+    read -r answer < "${ARTEFILES_TTY:-/dev/tty}" || :
+    case "$answer" in
+      y | Y | yes | YES) ;;
+      *)
+        echo "Nothing was changed." >&2
+        exit 1
+        ;;
+    esac
   fi
-  printf 'Restore? [y/N] ' >&2
-  answer=""
-  read -r answer < "${ARTEFILES_TTY:-/dev/tty}" || :
-  case "$answer" in
-    y | Y | yes | YES) ;;
-    *)
-      echo "Nothing was changed." >&2
-      exit 1
-      ;;
-  esac
   [ ! -d "${restore}/files" ] || cp -Rp "${restore}/files/." "${dest}/"
   # Deepest paths first, so a folder is empty by the time it is reached; a
   # folder that holds anything else stays.
@@ -551,11 +575,12 @@ start_log
 # POSIX way to get script's dir: https://stackoverflow.com/a/29834779/12156188
 script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 
-# The module checklist runs only at a terminal, outside a dry run, and never over
-# an existing chezmoi config (see below).
+# The module checklist runs only at a terminal, outside a dry run, without
+# --yes (chezmoi init then takes the default modules), and never over an
+# existing chezmoi config (see below).
 chezmoi_config="${XDG_CONFIG_HOME:-${HOME}/.config}/chezmoi/chezmoi.toml"
 checklist=false
-if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ ! -f "$chezmoi_config" ]; then
+if [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] && [ "$yes" = "false" ] && [ ! -f "$chezmoi_config" ]; then
   checklist=true
 fi
 
@@ -796,9 +821,11 @@ if [ -n "${destination}" ]; then
   set -- "$@" "--destination=${destination}"
   apply_destination="--destination=${destination}"
 fi
-# chezmoi's prompts need a terminal and fail without one; there, every prompt
-# takes its default (the GitHub email, the default modules).
-[ -t 0 ] || set -- "$@" --promptDefaults
+# chezmoi's prompts need a terminal and fail without one; there, and with
+# --yes, every prompt takes its default (the GitHub email, the default modules).
+if [ "$yes" = "true" ] || [ ! -t 0 ]; then
+  set -- "$@" --promptDefaults
+fi
 
 # Before chezmoi init: everything it is given must be usable. A version that a
 # clone or checkout_ref has not already found must exist on GitHub, since chezmoi
@@ -905,7 +932,7 @@ MSG
 # terminal and the log only names the step. The checklist and an earlier
 # install both leave the answer, so init is logged on most runs.
 init_stderr=2
-if [ -t 0 ] && [ -z "$(sed -n '/^[[:space:]]*modules[[:space:]]*=/p' "$chezmoi_config" 2> /dev/null)" ]; then
+if [ "$yes" = "false" ] && [ -t 0 ] && [ -z "$(sed -n '/^[[:space:]]*modules[[:space:]]*=/p' "$chezmoi_config" 2> /dev/null)" ]; then
   init_stderr=4
 fi
 "$chezmoi" "$@" 2>&"$init_stderr" 5>&- 6>&-

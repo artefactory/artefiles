@@ -39,9 +39,10 @@ TTY="${ARTEFILES_TTY:-/dev/tty}"
 KEEP_DISK=false
 
 # at_terminal — whether someone can answer a question. Without a terminal
-# (CI, an IDE task, ssh without -t) nobody can: the removal goes on unasked.
+# (CI, an IDE task, ssh without -t) nobody can, and ARTEFILES_YES
+# (install.sh --yes) means nobody will: the removal goes on unasked.
 at_terminal() {
-  [ -z "${CI:-}" ] && (: < "$TTY") 2> /dev/null
+  [ -z "${ARTEFILES_YES:-}" ] && [ -z "${CI:-}" ] && (: < "$TTY") 2> /dev/null
 }
 
 # ask QUESTION — prints QUESTION [y/N] and succeeds on a yes read from the terminal.
