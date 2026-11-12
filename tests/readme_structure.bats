@@ -68,3 +68,14 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
     printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }
   done
 }
+
+@test "Install says what each failed step already changed and how to run it again" {
+  body=$(section "Install")
+  for word in '**If the install fails**' 'install-<date>.log' 'run the same command again' \
+    'Machine check' 'chezmoi init' 'Files you changed since the last install' 'never fail the install'; do
+    printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }
+  done
+  # The retry command the README gives is the one install.sh prints after a failed step.
+  grep -qF 'To retry only the failed ones: chezmoi apply --keep-going' "$REPO_ROOT/install.sh"
+  printf '%s\n' "$body" | grep -qF '`chezmoi apply --keep-going` retries only the failed steps'
+}

@@ -29,6 +29,17 @@ Then open a new terminal (type `fish` if you declined the shell change) and run 
 
 You can run the install again. At the same version it changes no file, makes no new backup and does not ask you to sign in to GitHub when `gh` already is. If you edited a file the install manages, chezmoi asks before overwriting it; `chezmoi diff` shows your changes. Without a terminal, or with `--yes`, nobody can answer, so the install stops before changing anything, shows the files you changed and the commands to keep your version or take the update.
 
+**If the install fails**, it says which step failed and prints the path of its log (`.local/state/artefiles/install-<date>.log` in your home); attach that log to a bug report. Fix what it names, then run the same command again: every step can run more than once, and a rerun skips the work already done.
+
+| Step that fails | What it already changed | What to do |
+|---|---|---|
+| Machine check (system, tools, write access, network) | Nothing; it lists every problem at once | Fix them, then run the install again |
+| Homebrew, `gh`, GitHub sign-in, chezmoi | The tools installed before the failure, which a rerun keeps | Run the install again |
+| `chezmoi init` (module checklist, config) | chezmoi's config and its copy of artefiles | Run the install again |
+| Files you changed since the last install (no terminal, or `--yes`) | Nothing | Run the commands it prints, then run the install again |
+| `chezmoi apply` (your files, then the install steps such as packages and fonts) | Every file, and every install step that succeeded, which is recorded | `chezmoi apply --keep-going` retries only the failed steps; running the install again also works |
+| Default shell and star offers | Nothing more | They never fail the install |
+
 **Variants**
 
 ```bash {"ignore":"true"}
