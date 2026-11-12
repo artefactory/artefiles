@@ -926,6 +926,38 @@ not removed by these steps; CHEATSHEET.md lists how to remove it.
 MSG
 }
 
+# chezmoi asks before it overwrites a file changed since it last wrote it, and
+# fails when it cannot ask. When nobody can answer (no terminal, or --yes), the
+# install stops before changing anything and lists those files, one per line:
+# chezmoi's status code, the full path, what the user and the update did. The hint
+# only suggests diff and apply --force: forget, merge and re-add would edit the
+# source clone and make the next update conflict. In `chezmoi status` the first
+# letter is the user's change since chezmoi last wrote the file (M edited, D
+# deleted, A created again), the second what the update would do.
+stop_on_changed_files() {
+  changed="$("$chezmoi" status --exclude=scripts,externals ${apply_destination:+"$apply_destination"} 2> /dev/null \
+    | sed -n '/^[ADM][ADM] /p')" || changed=""
+  [ -n "$changed" ] || return 0
+  dest="${destination:-$HOME}"
+  cm="chezmoi${apply_destination:+ }${apply_destination}"
+  count="$(printf '%s\n' "$changed" | wc -l | tr -d ' ')"
+  {
+    echo "ERROR: ${count} file(s) changed outside the install cannot be updated: overwriting them needs your confirmation, and there is no terminal or --yes was given."
+    printf '%s\n' "$changed" | while IFS= read -r line; do
+      case "$(printf '%s' "$line" | cut -c1-2)" in
+        M[MA]) why="you edited it; the update would replace your edits" ;;
+        MD) why="you edited it; the update would delete it" ;;
+        D?) why="you deleted it; the update would write it again" ;;
+        *) why="you created it again; the update would delete it" ;;
+      esac
+      # chezmoi takes the full path; a path relative to the home fails elsewhere.
+      printf '  %s %s  %s\n' "$(printf '%s' "$line" | cut -c1-2)" "${dest}/$(printf '%s' "$line" | cut -c4-)" "$why"
+    done
+    echo "None of your files was changed. See a difference: ${cm} diff <file>. Take the update (save your version first if you need it): ${cm} apply --force <file>. To decide per file, run the install in a terminal without --yes."
+  } >&2
+  exit 1
+}
+
 [ -z "$destination" ] || mkdir -p "$destination"
 # chezmoi's module prompt draws on stderr, so when it can appear (a terminal on
 # stdin and a config that does not answer `modules` yet) init keeps the
@@ -936,6 +968,9 @@ if [ "$yes" = "false" ] && [ -t 0 ] && [ -z "$(sed -n '/^[[:space:]]*modules[[:s
   init_stderr=4
 fi
 "$chezmoi" "$@" 2>&"$init_stderr" 5>&- 6>&-
+if [ "$interactive" = "false" ] || [ "$yes" = "true" ]; then
+  stop_on_changed_files
+fi
 step backup
 backup="$(backup_before_apply)" || exit 1
 step "chezmoi apply"
