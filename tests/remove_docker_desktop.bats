@@ -208,7 +208,7 @@ run_script() {
   fake_app
   printf '#!/bin/sh\nexit 1\n' > "$STUBS/sudo"
   render_darwin
-  run_script CI=true
+  run_script CI=true ARTEFILES_YES=1
   [ "$status" -ne 0 ]
   [[ "$output" == *"!!! ======"*"App Management"* ]]
   [[ "$output" != *"System Settings is now open"* ]]
@@ -281,21 +281,48 @@ run_script() {
   [ ! -e "$CONTAINER" ]
 }
 
-@test "without a terminal or in CI, Docker Desktop is removed without asking" {
+@test "without a terminal or in CI, Docker Desktop and its data are kept and the step fails" {
   fake_app
+  mkdir -p "$CONTAINER"
+  render_darwin
+  rm "$ANSWER"
+  run_script
+  [ "$status" -ne 0 ]
+  [ -d "$APP" ]
+  [ -d "$CONTAINER" ]
+  [ ! -e "$CALLS" ]
+  [[ "$output" == *"ERROR: Docker Desktop is installed and must be removed"* ]]
+  [[ "$output" == *"docker save"*"answer y, or run install.sh --yes"* ]]
+  [[ "$output" != *"[y/N]"* ]]
+
+  # CI cannot answer either, even when its terminal would say yes.
+  echo y > "$ANSWER"
+  run_script CI=true
+  [ "$status" -ne 0 ]
+  [ -d "$APP" ]
+  [ ! -e "$CALLS" ]
+}
+
+@test "without a terminal, the disk image of a Docker Desktop already gone is kept and the step succeeds" {
+  mkdir -p "$CONTAINER"
   render_darwin
   rm "$ANSWER"
   run_script
   [ "$status" -eq 0 ]
-  [ ! -e "$APP" ]
-  [[ "$output" != *"[y/N]"* ]]
+  [ -d "$CONTAINER" ]
+  [[ "$output" == *"was kept. To delete it: rm -rf \"$CONTAINER\""* ]]
+}
 
-  fake_app
-  echo n > "$ANSWER"
-  run_script CI=true
-  [ "$status" -eq 0 ]
-  [ ! -e "$APP" ]
-  [[ "$output" != *"[y/N]"* ]]
+@test "on Linux, without a terminal an installed docker-desktop and its data are kept and the step fails" {
+  printf '#!/bin/sh\nexit 0\n' > "$STUBS/docker-desktop"
+  chmod +x "$STUBS/docker-desktop"
+  mkdir -p "$H/.docker/desktop"
+  render_linux
+  rm "$ANSWER"
+  run_script
+  [ "$status" -ne 0 ]
+  [ -d "$H/.docker/desktop" ]
+  [[ "$output" == *"ERROR: Docker Desktop is installed"* ]]
 }
 
 @test "on Linux, answering no keeps an installed docker-desktop and its data" {
