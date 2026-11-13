@@ -53,7 +53,7 @@ GH_TOKEN=<token> sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefacto
 ARTEFILES_YES=1 sh -c "$(curl -fsLS https://raw.githubusercontent.com/artefactory/artefiles/main/install.sh)"
 ```
 
-`--yes` (or `ARTEFILES_YES=1`) answers every question with its default, so the install runs unattended: default modules, fish as the login shell, no new modules, the repository starred, Docker Desktop's data deleted. The sudo password is still asked once, and without `GH_TOKEN` or a `gh` login the install stops and says how to sign in.
+`--yes` (or `ARTEFILES_YES=1`) answers every question with its default, so the install runs unattended: default modules, fish as the login shell, no new modules, the repository starred, Docker Desktop's data deleted. Without a terminal and without `--yes`, nothing confirms that deletion: an installed Docker Desktop is kept with its data, and its step fails with the commands to save the data and run the install again. The sudo password is still asked once, and without `GH_TOKEN` or a `gh` login the install stops and says how to sign in.
 
 In Codespaces, set this repo as your [dotfiles repository](https://github.com/settings/codespaces); it installs itself.
 

@@ -38,11 +38,19 @@ TTY="${ARTEFILES_TTY:-/dev/tty}"
 # Set when the user keeps the disk image of a Docker Desktop already removed.
 KEEP_DISK=false
 
-# at_terminal — whether someone can answer a question. Without a terminal
-# (CI, an IDE task, ssh without -t) nobody can, and ARTEFILES_YES
-# (install.sh --yes) means nobody will: the removal goes on unasked.
-at_terminal() {
-  [ -z "${ARTEFILES_YES:-}" ] && [ -z "${CI:-}" ] && (: < "$TTY") 2> /dev/null
+# answer_mode — who decides on deleting Docker Desktop's data: "yes" with
+# ARTEFILES_YES (install.sh --yes, the user's explicit consent), "ask" at a
+# terminal, "none" without one (CI, an IDE task, a scripted chezmoi update,
+# ssh without -t). With "none" nothing is deleted: the data may hold a local
+# database, and nobody agreed to lose it.
+answer_mode() {
+  if [ -n "${ARTEFILES_YES:-}" ]; then
+    echo yes
+  elif [ -z "${CI:-}" ] && (: < "$TTY") 2> /dev/null; then
+    echo ask
+  else
+    echo none
+  fi
 }
 
 # ask QUESTION — prints QUESTION [y/N] and succeeds on a yes read from the terminal.
@@ -56,12 +64,43 @@ ask() {
   return 1
 }
 
+# save_data_steps HOW — the commands that save the data before a removal, HOW
+# being the way to confirm it on the next run.
+save_data_steps() {
+  echo "!!!  To save your data first, with Docker Desktop running:"
+  echo "!!!  1. Images:   docker save -o ~/docker-images.tar IMAGE..."
+  echo "!!!  2. Volumes:  docker run --rm -v VOLUME:/data -v \"\$HOME\":/backup \\"
+  echo "!!!                 alpine tar czf /backup/VOLUME.tgz -C /data ."
+  echo "!!!     (list them with: docker volume ls)"
+  echo "!!!  3. $1"
+  echo "!!!  After the install, Colima's docker restores them:"
+  echo "!!!    docker load -i ~/docker-images.tar"
+  echo "!!!    docker volume create VOLUME && docker run --rm -v VOLUME:/data \\"
+  echo "!!!      -v \"\$HOME\":/backup alpine tar xzf /backup/VOLUME.tgz -C /data"
+}
+
 # confirm_app_removal — removing Docker Desktop deletes its containers, images
-# and volumes (a volume may hold a local database). Asked once at a terminal; a
-# "no" keeps everything and fails the step with the commands that save the
-# data, and the next install.sh run asks again.
+# and volumes. ARTEFILES_YES removes it; at a terminal it is asked once; a "no",
+# or no terminal, keeps everything and fails the step with the commands that
+# save the data, and the next run (chezmoi retries a failed run_once_ script)
+# decides again.
 confirm_app_removal() {
-  at_terminal || return 0
+  case "$(answer_mode)" in
+    yes) return 0 ;;
+    none)
+      {
+        echo ""
+        banner
+        echo "!!!  ERROR: Docker Desktop is installed and must be removed, which DELETES its"
+        echo "!!!  containers, images and volumes. Nobody can confirm that without a terminal,"
+        echo "!!!  so Docker Desktop and its data were kept and this step failed."
+        save_data_steps "Run install.sh again at a terminal and answer y, or run install.sh --yes."
+        banner
+        echo ""
+      } >&2
+      exit 1
+      ;;
+  esac
   {
     echo ""
     banner
@@ -73,17 +112,8 @@ confirm_app_removal() {
   {
     echo ""
     banner
-    echo "!!!  Docker Desktop was kept, so this step failed. To save your data first,"
-    echo "!!!  with Docker Desktop running:"
-    echo "!!!  1. Images:   docker save -o ~/docker-images.tar IMAGE..."
-    echo "!!!  2. Volumes:  docker run --rm -v VOLUME:/data -v \"\$HOME\":/backup \\"
-    echo "!!!                 alpine tar czf /backup/VOLUME.tgz -C /data ."
-    echo "!!!     (list them with: docker volume ls)"
-    echo "!!!  3. Run install.sh again and answer y."
-    echo "!!!  After the install, Colima's docker restores them:"
-    echo "!!!    docker load -i ~/docker-images.tar"
-    echo "!!!    docker volume create VOLUME && docker run --rm -v VOLUME:/data \\"
-    echo "!!!      -v \"\$HOME\":/backup alpine tar xzf /backup/VOLUME.tgz -C /data"
+    echo "!!!  Docker Desktop was kept, so this step failed."
+    save_data_steps "Run install.sh again and answer y."
     banner
     echo ""
   } >&2
@@ -91,10 +121,18 @@ confirm_app_removal() {
 }
 
 # confirm_disk_removal DIR — Docker Desktop is gone but DIR still holds its disk
-# image (containers, images, volumes). Nothing can run from it, so a "no" keeps
-# it and the step still succeeds: answering no must never block the install.
+# image (containers, images, volumes). Nothing can run from it, so a "no", or
+# no terminal, keeps it and the step still succeeds: the image never blocks
+# the install.
 confirm_disk_removal() {
-  at_terminal || return 0
+  case "$(answer_mode)" in
+    yes) return 0 ;;
+    none)
+      note "Docker Desktop is no longer installed; its old disk image in $1 was kept. To delete it: rm -rf \"$1\"" >&2
+      KEEP_DISK=true
+      return 0
+      ;;
+  esac
   {
     echo ""
     note "Docker Desktop is no longer installed, but its old disk image (containers,"
