@@ -18,23 +18,7 @@ function _fuzzy_complete_insert --description 'Replace the current token with a 
         set suffix ''
     end
 
-    # Backslash escaping, never quotes: a quoted '~/dir/' or '$VAR' no longer
-    # expands, and the next Tab finds nothing inside it. The part of the
-    # candidate the user typed (fish matches it case-insensitively) keeps its
-    # '$' bare, as fish's own Tab does; a '$' after it stays escaped, since a
-    # file name can hold one.
-    set -l typed ''
-    set -l rest $cand
-    set -l n (string length -- "$token")
-    if test $n -gt 0; and test (string lower -- (string sub -l $n -- $cand)) = (string lower -- $token)
-        set typed (string sub -l $n -- $cand)
-        set rest (string sub -s (math $n + 1) -- $cand)
-    end
-    set -l escaped (string escape -n -- $typed | string replace -a '\\$' '$')(string escape -n -- $rest)
-    # A leading '~' the user typed stays bare too, so it still expands.
-    if string match -q '~*' -- $token
-        set escaped (string replace -r '^\\\\~' '~' -- $escaped)
-    end
+    set -l escaped (_fuzzy_complete_escape $cand $token)
 
     # The whole token is replaced, as fish's own Tab does, and the cursor
     # lands right after the inserted candidate.

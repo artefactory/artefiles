@@ -1,8 +1,19 @@
 # _fuzzy_complete_render [CMDLINE] — the `complete -C CMDLINE` candidates as
 # fzf rows. Without CMDLINE, the candidate lines are read from stdin.
+# _fuzzy_complete_render --split PREFIX TOKEN — what the picker's reload
+# passes: after `cd`, the rows of _fuzzy_complete_cd --self; elsewhere a
+# token holding a wildcard is listed by _fuzzy_complete_glob --any, and
+# anything else by `complete -C` on PREFIX and TOKEN joined.
 function _fuzzy_complete_render --description 'Render complete -C candidates as fzf rows: candidate + dimmed description'
     set -l comps
-    if set -q argv[1]
+    if test "$argv[1]" = --split
+        set -l words (string split -n ' ' -- (string trim -- $argv[2]))
+        if test "$words[1]" = cd
+            set comps (_fuzzy_complete_cd --self -- $argv[2] $argv[3])
+        else if not set comps (_fuzzy_complete_glob --any -- $argv[3])
+            set comps (complete -C "$argv[2]$argv[3]")
+        end
+    else if set -q argv[1]
         set comps (complete -C $argv[1])
     else
         # A command substitution does not read the function's stdin.
