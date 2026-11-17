@@ -158,8 +158,8 @@ if type -q zoxide
         # autoloading completions/cd.fish for the rest of THIS interactive
         # session - so the ranked-jump completion must also be registered
         # here explicitly. completions/cd.fish still autoloads normally in
-        # the fresh non-interactive `fish -c` subshells fuzzy_complete's
-        # change:reload spawns, since those never source zoxide init.
+        # the fresh `fish --no-config` subshells fuzzy_complete's reload
+        # spawns, since those never source zoxide init.
         source $__fish_config_dir/completions/cd.fish
         functions --erase __init_zoxide
     end

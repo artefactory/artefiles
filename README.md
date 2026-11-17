@@ -77,7 +77,7 @@ Every install gives you the **Fish** shell (suggestions as you type) with the **
 | `cd` | `cd` ranked by use ([zoxide](https://github.com/ajeetdsouza/zoxide)) | `shell_tools` |
 | `rm` / `du` / `ps` / `sed` | `rip` / `dust` / `procs` / `sd` | `cli_extras` |
 
-**Keys:** `Tab` opens an fzf picker over every completion. `Ctrl+R` searches [Atuin](https://atuin.sh/) history, synced across machines (`atuin` module). `review` opens a terminal UI to review a diff, a branch or a pull request (`review` module). `git diff` uses difftastic (`git_advanced` module).
+**Keys:** `Tab` opens an fzf picker over every completion; in it, `Tab` completes the next folder of the highlighted path, `Shift+Tab` goes back one. Paths with `**` work (`src/**/test_fo<Tab>`). After `cd`, the picker lists local folders, then the most used matches (zoxide). `Ctrl+R` searches [Atuin](https://atuin.sh/) history, synced across machines (`atuin` module). `review` opens a terminal UI to review a diff, a branch or a pull request (`review` module). `git diff` uses difftastic (`git_advanced` module).
 
 All modules (without a terminal, chezmoi's own prompt lists them):
 
