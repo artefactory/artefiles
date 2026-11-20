@@ -71,11 +71,13 @@ _TEMPLATE_KEYWORD_RE='([-#/]+[[:space:]])?(\{\{|\[\[)[[:space:]-]*(if|else|end|r
   # template-renders them regardless of extension, so their directives are
   # never "leftover". Files in
   # .chezmoitemplates are exempt for the same reason: they are templates by location.
+  # docs/ is exempt because .chezmoiignore keeps chezmoi from ever copying it,
+  # and its ADRs quote templates on purpose.
   fail=0
   while IFS= read -r f; do
     rel=${f#"$REPO_ROOT"/}
     case "$rel" in
-      .git/* | .workspaces/* | tests/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .claude/* | .chezmoiignore | .chezmoiremove | .chezmoitemplates/*) continue ;;
+      .git/* | .workspaces/* | tests/* | docs/* | CHEATSHEET.md | README.md | CHANGELOG.md | CLAUDE.md | .claude/* | .chezmoiignore | .chezmoiremove | .chezmoitemplates/*) continue ;;
     esac
     # Skip binary-encoded files
     file --mime-encoding "$f" 2> /dev/null | grep -q binary && continue
