@@ -43,14 +43,20 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
 @test "Using chezmoi documents the day-to-day commands" {
   body=$(section "Using chezmoi")
   for cmd in 'chezmoi init --prompt && chezmoi apply' 'chezmoi status' 'chezmoi diff' 'chezmoi edit' 'chezmoi apply' 'chezmoi update'; do
-    printf '%s\n' "$body" | grep -qF "$cmd" || { echo "missing: $cmd" >&2; return 1; }
+    printf '%s\n' "$body" | grep -qF "$cmd" || {
+      echo "missing: $cmd" >&2
+      return 1
+    }
   done
 }
 
 @test "Make it yours covers fork, init, edit, diff, apply and upstream updates" {
   body=$(section "Make it yours")
   for word in 'fork' 'chezmoi init --apply' 'chezmoi edit' 'chezmoi diff' 'chezmoi apply' 'upstream'; do
-    printf '%s\n' "$body" | grep -qiF "$word" || { echo "missing: $word" >&2; return 1; }
+    printf '%s\n' "$body" | grep -qiF "$word" || {
+      echo "missing: $word" >&2
+      return 1
+    }
   done
 }
 
@@ -58,14 +64,20 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
   slugs=$(grep -E '^#{2,4} ' "$README" | sed -E 's/^#+ //; s/\([^)]*\)//g' | tr 'A-Z' 'a-z' \
     | sed -E 's/[^a-z0-9 _-]//g; s/ +$//; s/ /-/g')
   while read -r a; do
-    printf '%s\n' "$slugs" | grep -qxF "$a" || { echo "dangling anchor: #$a" >&2; return 1; }
+    printf '%s\n' "$slugs" | grep -qxF "$a" || {
+      echo "dangling anchor: #$a" >&2
+      return 1
+    }
   done < <(grep -oE '\]\(#[a-z0-9_-]+\)' "$README" | sed -E 's/^\]\(#//; s/\)$//' | sort -u)
 }
 
 @test "Install says what a rerun does with existing dotfiles and how to undo it" {
   body=$(section "Install")
   for word in 'Already have dotfiles?' 'run the install again' '.local/state/artefiles' 'install.sh --restore <folder>' 'chezmoi diff' 'not removed' 'from another repository'; do
-    printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }
+    printf '%s\n' "$body" | grep -qF -- "$word" || {
+      echo "missing: $word" >&2
+      return 1
+    }
   done
 }
 
@@ -73,9 +85,12 @@ line_of() { grep -nxF "## $1" "$README" | head -1 | cut -d: -f1; }
   body=$(section "Install")
   for word in '**If the install fails**' 'install-<date>.log' 'run the same command again' \
     'Machine check' 'chezmoi init' 'Files you changed since the last install' 'never fail the install'; do
-    printf '%s\n' "$body" | grep -qF -- "$word" || { echo "missing: $word" >&2; return 1; }
+    printf '%s\n' "$body" | grep -qF -- "$word" || {
+      echo "missing: $word" >&2
+      return 1
+    }
   done
   # The retry command the README gives is the one install.sh prints after a failed step.
-  grep -qF 'To retry only the failed ones: chezmoi apply --keep-going' "$REPO_ROOT/install.sh"
+  grep -qF 'To retry only the failed ones, run: ' "$REPO_ROOT/install.sh"
   printf '%s\n' "$body" | grep -qF '`chezmoi apply --keep-going` retries only the failed steps'
 }
