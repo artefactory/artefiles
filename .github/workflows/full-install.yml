@@ -40,3 +40,26 @@ jobs:
           fish --version
           starship --version
           git --version
+
+  # Every module's Homebrew packages exist: a Homebrew rename fails here the
+  # week it happens, even when no default module uses the package.
+  brew-exists:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: yq is available
+        run: command -v yq || brew install yq
+      - name: check the packages of every module
+        run: |
+          # Exit 1 means a package is missing; 2 means brew itself failed
+          # (network, rate limit), which says nothing about the packages.
+          rc=0
+          sh scripts/check-brew-packages.sh || rc=$?
+          if [ "$rc" -eq 2 ]; then
+            echo "::warning::brew info was inconclusive, not failing the queue"
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
