@@ -119,7 +119,7 @@ the_log() {
   grep -q 'chezmoi apply' "$log"
   [[ "$output" == *"$log"* ]]
   # The failed-steps summary stays the last thing printed.
-  [ "$(printf '%s\n' "$output" | tail -n 1)" = "Every other step finished and is recorded. To retry only the failed ones: chezmoi apply --keep-going" ]
+  [ "$(printf '%s\n' "$output" | tail -n 1)" = "Every other step finished and is recorded. To retry only the failed ones, run: $BIN/chezmoi apply --keep-going --destination=$H/dest" ]
 }
 
 @test "a step that fails before chezmoi is named in the log, and the path is printed last" {

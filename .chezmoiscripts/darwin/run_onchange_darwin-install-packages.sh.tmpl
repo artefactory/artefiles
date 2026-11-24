@@ -5,29 +5,54 @@
 # Since Homebrew 6, brew also refuses to load code from a third-party tap until
 # it is trusted: `trusted: true` on the package line trusts that one formula or
 # cask, not everything the tap holds.
-brew bundle --verbose --upgrade --force --file=/dev/stdin << EOF
+#
+# Casks go first and alone: some need sudo, and the Mosyle admin window that
+# allows it closes after about 5 minutes. brew bundle batches entries by type
+# (formulae together, casks together) instead of following the file order, so
+# the order cannot be trusted: two runs do it, each with the taps. The script
+# has no set -e; chezmoi records it only on exit 0, so either failed pass fails
+# the script and the next apply runs it again.
 {{- $modules := includeTemplate "modules" . | fromJson }}
+{{- $taps := list }}
+{{- $brews := list }}
+{{- $casks := list }}
+{{- range .packages.darwin.core.brews }}
+{{-   $brews = append $brews (printf "brew %s" (. | quote)) }}
+{{- end }}
+{{- range .packages.darwin.core.casks }}
+{{-   $casks = append $casks (printf "cask %s" (. | quote)) }}
+{{- end }}
 {{- range $name, $pkgs := .packages.darwin.modules }}
 {{-   if has $name $modules }}
 {{-     range (index $pkgs "taps") }}
-tap {{ . | quote }}
+{{-       $taps = append $taps (printf "tap %s" (. | quote)) }}
 {{-     end }}
-{{-   end }}
-{{- end }}
-{{- range .packages.darwin.core.brews }}
-brew {{ . | quote }}
-{{- end }}
-{{- range .packages.darwin.core.casks }}
-cask {{ . | quote }}
-{{- end }}
-{{- range $name, $pkgs := .packages.darwin.modules }}
-{{-   if has $name $modules }}
 {{-     range $pkgs.brews }}
-brew {{ . | quote }}{{ if eq (len (splitList "/" .)) 3 }}, trusted: true{{ end }}
+{{-       $brews = append $brews (printf "brew %s%s" (. | quote) (ternary ", trusted: true" "" (eq (len (splitList "/" .)) 3))) }}
 {{-     end }}
 {{-     range $pkgs.casks }}
-cask {{ . | quote }}{{ if eq (len (splitList "/" .)) 3 }}, trusted: true{{ end }}
+{{-       $casks = append $casks (printf "cask %s%s" (. | quote) (ternary ", trusted: true" "" (eq (len (splitList "/" .)) 3))) }}
 {{-     end }}
 {{-   end }}
 {{- end }}
+echo "Installing the casks."
+brew bundle --verbose --upgrade --force --file=/dev/stdin << EOF
+{{- range $taps }}
+{{ . }}
+{{- end }}
+{{- range $casks }}
+{{ . }}
+{{- end }}
 EOF
+casks_status=$?
+echo "Installing command-line tools (formulae)."
+brew bundle --verbose --upgrade --force --file=/dev/stdin << EOF
+{{- range $taps }}
+{{ . }}
+{{- end }}
+{{- range $brews }}
+{{ . }}
+{{- end }}
+EOF
+brews_status=$?
+[ "$casks_status" -eq 0 ] && [ "$brews_status" -eq 0 ]

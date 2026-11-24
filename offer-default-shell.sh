@@ -55,7 +55,7 @@ if [ -n "${ARTEFILES_YES:-}" ]; then
   echo "Making fish your default shell (--yes)." >&2
   answer="y"
   chsh_cmd="sudo chsh"
-elif ! ( : < "$tty_dev" ) 2> /dev/null; then
+elif ! (: < "$tty_dev") 2> /dev/null; then
   print_manual
   exit 0
 else
@@ -71,6 +71,20 @@ case "$answer" in
     exit 0
     ;;
 esac
+
+# A closed admin window makes the sudo below fail; say where to look.
+if [ "$(uname)" = "Darwin" ] && ! sudo -n true 2> /dev/null && (: < "$tty_dev") 2> /dev/null; then
+  # git is not called before the Command Line Tools exist: the macOS stub would
+  # open an installer dialog.
+  shell_email=""
+  if command -v git > /dev/null 2>&1 && xcode-select -p > /dev/null 2>&1; then
+    shell_email="$(git config --get user.email 2> /dev/null)" || shell_email=""
+  fi
+  case "$shell_email" in
+    *@artefact.com) echo "Admin rights are needed for this step; open the Self Service app and request administrator rights if sudo is refused." >&2 ;;
+    *) echo "Admin rights are needed for this step; ask your administrator for admin rights if sudo is refused." >&2 ;;
+  esac
+fi
 
 if ! grep -qxF "$fish_path" "$shells_file" 2> /dev/null; then
   if ! printf '%s\n' "$fish_path" | sudo tee -a "$shells_file" > /dev/null; then

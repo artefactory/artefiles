@@ -168,3 +168,39 @@ chsh_calls() { grep -c '^chsh ' "$CALLS" || true; }
   [ "$status" -eq 0 ]
   [ "$(chsh_calls)" = "0" ]
 }
+
+@test "the Self Service hint appears on macOS when sudo has no ticket, never on Linux" {
+  printf '#!/bin/sh\necho Darwin\n' > "$STUBS/uname"
+  printf '#!/bin/sh\nexit 0\n' > "$STUBS/xcode-select"
+  printf '#!/bin/sh\n[ "$1" = "-n" ] && exit 1\necho "sudo $*" >> "%s"\nexec "$@"\n' "$CALLS" > "$STUBS/sudo"
+  chmod +x "$STUBS"/*
+  printf '[user]\n\temail = dev@artefact.com\n' > "$BATS_TEST_TMPDIR/home/.gitconfig"
+  run_offer y
+  [[ "$output" == *"open the Self Service app"* ]]
+  printf '#!/bin/sh\necho Linux\n' > "$STUBS/uname"
+  run_offer y
+  [[ "$output" != *"Self Service"* ]]
+}
+
+@test "a non-artefact email gets the generic admin hint, without Self Service or the email" {
+  printf '#!/bin/sh\necho Darwin\n' > "$STUBS/uname"
+  printf '#!/bin/sh\nexit 0\n' > "$STUBS/xcode-select"
+  printf '#!/bin/sh\n[ "$1" = "-n" ] && exit 1\necho "sudo $*" >> "%s"\nexec "$@"\n' "$CALLS" > "$STUBS/sudo"
+  chmod +x "$STUBS"/*
+  printf '[user]\n\temail = dev@example.org\n' > "$BATS_TEST_TMPDIR/home/.gitconfig"
+  run_offer y
+  [[ "$output" == *"ask your administrator for admin rights"* ]]
+  [[ "$output" != *"Self Service"* ]]
+  [[ "$output" != *"example.org"* ]]
+}
+
+@test "git is not called on macOS before the Command Line Tools exist" {
+  printf '#!/bin/sh\necho Darwin\n' > "$STUBS/uname"
+  printf '#!/bin/sh\n[ "$1" = "-n" ] && exit 1\necho "sudo $*" >> "%s"\nexec "$@"\n' "$CALLS" > "$STUBS/sudo"
+  printf '#!/bin/sh\nexit 2\n' > "$STUBS/xcode-select"
+  printf '#!/bin/sh\necho "git $*" >> "%s"\n' "$CALLS" > "$STUBS/git"
+  chmod +x "$STUBS"/*
+  run_offer y
+  [[ "$output" == *"ask your administrator for admin rights"* ]]
+  if grep -q '^git ' "$CALLS"; then return 1; fi
+}

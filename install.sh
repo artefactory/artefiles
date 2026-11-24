@@ -364,26 +364,52 @@ stop_sudo_keepalive() {
     sudo_keepalive_pid=""
   fi
 }
+# True for an @artefact.com email: the Self Service hints only fit that account.
+# git is not called before the Command Line Tools exist, because the macOS stub
+# would open an installer dialog. On a fresh Mac git has no user.email yet, so
+# the email chezmoi already holds (its config, once init ran) is the fallback;
+# when neither knows one, the hints use the generic wording.
+artefact_user() {
+  au_email=""
+  if command -v git > /dev/null 2>&1 && { [ "$(uname)" != "Darwin" ] || xcode-select -p > /dev/null 2>&1; }; then
+    au_email="$(git config --get user.email 2> /dev/null)" || au_email=""
+  fi
+  if [ -z "$au_email" ] && [ -n "${chezmoi:-}" ]; then
+    au_email="$("$chezmoi" execute-template '{{ .email }}' 2> /dev/null)" || au_email=""
+  fi
+  case "$au_email" in *@artefact.com) return 0 ;; esac
+  return 1
+}
+# The one line that says how to get admin rights again.
+admin_rights_hint() {
+  if artefact_user; then
+    echo "Open the Self Service app, request administrator rights, then run the install again."
+  else
+    echo "Ask your administrator for admin rights, then run the install again."
+  fi
+}
 start_sudo_keepalive() {
   [ "$dry_run" = "false" ] && [ "$interactive" = "true" ] || return 0
   [ "$(uname)" = "Darwin" ] && command -v sudo > /dev/null 2>&1 || return 0
   echo "Some steps need administrator rights: enter your password once if asked." >&2
   if ! sudo -v; then
     if ! command -v brew > /dev/null 2>&1; then
-      cat >&2 << 'MSG'
-Homebrew needs administrator rights to install, and sudo was refused. Your
-account may not be allowed to use sudo (a managed Mac can remove it). Ask your
-IT team to restore administrator rights, then run the install again.
-MSG
+      echo "Homebrew needs administrator rights to install, and sudo was refused. Your" >&2
+      echo "account may not be allowed to use sudo." >&2
+      admin_rights_hint >&2
       exit 1
     fi
-    cat >&2 << 'MSG'
-Your account may not be allowed to use sudo (a managed Mac can remove it).
-Homebrew and casks such as ghostty will fail without it. Ask your IT team to
-restore administrator rights, then run the install again. Continuing anyway.
-MSG
+    echo "Your account may not be allowed to use sudo." >&2
+    echo "Homebrew and casks such as ghostty will fail without it." >&2
+    admin_rights_hint >&2
+    echo "Continuing anyway." >&2
     return 0
   fi
+  start_sudo_refresh
+}
+# The refresh loop alone, so need_admin can restart it after a new sudo -v
+# without asking the question again.
+start_sudo_refresh() {
   # $$ is the install's pid even in the subshell, so the loop ends with it.
   # Killing the subshell leaves a running sleep behind, so the TERM trap kills
   # it too. The loop holds none of the install's output: whoever reads it (a
@@ -401,6 +427,98 @@ MSG
   sudo_keepalive_pid=$!
 }
 
+# Mosyle grants administrator rights for about 5 minutes, so the window can be
+# closed by the time the apply runs. This never fails and never exits: the
+# worst case is a banner, then the install goes on without admin rights.
+# Banner box: admin_box TITLE LINE...
+admin_box() {
+  printf '+%58s+\n' '' | tr ' ' '-'
+  for admin_line in "$@"; do
+    printf '| %-56s |\n' "$admin_line"
+  done
+  printf '+%58s+\n' '' | tr ' ' '-'
+}
+# admin_show TITLE LINE...: the box on stdout, bold yellow with the title in red
+# when use_color is true.
+admin_show() {
+  if [ "$use_color" != "true" ]; then
+    admin_box "$@"
+    return 0
+  fi
+  admin_n=0
+  admin_box "$@" | while IFS= read -r admin_line; do
+    admin_n=$((admin_n + 1))
+    if [ "$admin_n" -eq 2 ]; then
+      printf '\033[1;31m%s\033[0m\n' "$admin_line"
+    else
+      printf '\033[1;33m%s\033[0m\n' "$admin_line"
+    fi
+  done
+}
+# The failed banner goes to the terminal in color with a plain copy in the log,
+# or plain to stderr, which the log already copies.
+admin_failed_banner() {
+  if [ "$use_color" = "true" ]; then
+    admin_show "ADMIN RIGHTS MISSING - the install could not finish" \
+      "$admin_mosyle_line" "2. Run again:  $(admin_rerun_command)" "Step: $1" >&4
+    log_note "$(admin_box "ADMIN RIGHTS MISSING - the install could not finish" \
+      "$admin_mosyle_line" "2. Run again:  $(admin_rerun_command)" "Step: $1")"
+  else
+    admin_box "ADMIN RIGHTS MISSING - the install could not finish" \
+      "$admin_mosyle_line" "2. Run again:  $(admin_rerun_command)" "Step: $1" >&2
+  fi
+  if ! chezmoi_on_path; then
+    say plain "chezmoi is not on your current shell's PATH yet, so use the full path."
+  fi
+}
+need_admin() {
+  if artefact_user; then
+    admin_mosyle_line="1. Open Self Service (Mosyle), request admin rights"
+  else
+    admin_mosyle_line="1. Ask your administrator for admin rights"
+  fi
+  admin_step="$1"
+  [ "$dry_run" = "false" ] && [ "$(uname)" = "Darwin" ] || return 0
+  if [ "$interactive" = "true" ] && [ "$yes" = "false" ]; then
+    # Only with a terminal: without a cached ticket `sudo -n true` fails even
+    # for an admin, which would be a false alarm.
+    sudo -n true > /dev/null 2>&1 && return 0
+  else
+    id -Gn | tr ' ' '\n' | grep -qx admin && return 0
+    echo "This account is not an administrator; steps that need sudo will fail." >&2
+    admin_rights_hint >&2
+    return 0
+  fi
+  admin_tries=0
+  while [ "$admin_tries" -lt 3 ]; do
+    {
+      echo
+      admin_show "ADMIN RIGHTS MISSING - the install paused, nothing lost" \
+        "$admin_mosyle_line" "2. Come back here and press Enter (s + Enter to skip)" "Step: ${admin_step}"
+      printf 'Press Enter when you have admin rights: '
+    } >&4
+    admin_answer=""
+    read -r admin_answer < "${ARTEFILES_TTY:-/dev/tty}" || admin_answer="s"
+    case "$admin_answer" in s | S) break ;; esac
+    if sudo -v; then
+      stop_sudo_keepalive
+      start_sudo_refresh
+      return 0
+    fi
+    admin_tries=$((admin_tries + 1))
+  done
+  echo "Continuing without admin rights; steps that need it will fail." >&2
+  return 0
+}
+admin_rerun_command() {
+  printf '%s apply --keep-going%s' "$chezmoi" "${apply_destination:+ }${apply_destination}"
+}
+# The chezmoi the install found or installed may sit in a folder the user's
+# shell does not search yet, so every retry command names it in full.
+chezmoi_on_path() {
+  [ "$(command -v chezmoi 2> /dev/null)" = "$chezmoi" ]
+}
+
 # Every run but a dry run keeps a log of its steps next to the backups, in the
 # state folder: macOS empties /tmp at reboot, and the log is meant for a bug
 # report written later. Stderr goes through tee, so the terminal sees every byte
@@ -413,6 +531,28 @@ MSG
 # running would otherwise hold the log open and could write to it unredacted.
 LOG_KEEP=10
 exec 4>&2
+# Color only on a terminal that wants it (https://no-color.org).
+use_color=false
+if [ -t 4 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != "dumb" ]; then
+  use_color=true
+fi
+# say STYLE TEXT: with color, TEXT styled (an SGR code, or "plain") on the
+# terminal with a plain copy in the log; without, plain on stderr.
+say() {
+  if [ "$use_color" = "true" ] && [ "$1" != "plain" ]; then
+    printf '\033[%sm%s\033[0m\n' "$1" "$2" >&4
+    log_note "$2"
+  elif [ "$use_color" = "true" ]; then
+    printf '%s\n' "$2" >&4
+    log_note "$2"
+  else
+    printf '%s\n' "$2" >&2
+  fi
+}
+settle_terminal() {
+  [ "$use_color" = "true" ] && [ -n "$log_pid" ] || return 0
+  sleep 0.3 2> /dev/null || sleep 1 2> /dev/null || :
+}
 log_file=""
 log_pid=""
 log_reported=false
@@ -971,6 +1111,7 @@ fi
 if [ "$interactive" = "false" ] || [ "$yes" = "true" ]; then
   stop_on_changed_files
 fi
+need_admin "installing apps"
 step backup
 backup="$(backup_before_apply)" || exit 1
 step "chezmoi apply"
@@ -989,18 +1130,66 @@ apply_status="$(cat "${apply_log}.status")"
 if [ "$apply_status" -ne 0 ]; then
   # chezmoi reports a failed script as "chezmoi: <script>: exit status <n>".
   failed="$(sed -n 's/^chezmoi: \(.*\): exit status [0-9]*$/\1/p' "$apply_log")"
+  # Strings sudo and Homebrew print when there are no admin rights: sudo's
+  # "sudo: a password is required" (-n without a ticket) and "<user> is not in
+  # the sudoers file", "<user> is not allowed to run sudo on <host>", Homebrew's
+  # "Need sudo access on macOS" and "Insufficient permissions to install
+  # Homebrew", plus the prompt-less forms "a terminal is required", "no tty
+  # present", "Sorry, try again" and "N incorrect password attempts". Bare
+  # "Permission denied" is too common to count.
+  admin_sig='a password is required|a terminal is required|no tty present|Sorry, try again|incorrect password|not in the sudoers|is not allowed to run sudo|Need sudo access|sudo: .* required|Sudo access required|Insufficient permissions to install Homebrew'
+  admin_missing=false
+  package_failed=false
+  if grep -Eq 'has failed!|No available formula|brew bundle. failed!' "$apply_log"; then
+    package_failed=true
+  fi
+  if grep -Eqi "$admin_sig" "$apply_log"; then
+    admin_missing=true
+  fi
+  # Up to 3 lines that say why: chezmoi's "Error:" lines and sudo signatures.
+  # Most specific first: the formula or cask that failed, then brew bundle's
+  # own summary, then any "Error:" line or sudo signature.
+  went_wrong="$(
+    {
+      grep -E 'has failed!|No available formula' "$apply_log" || :
+      grep -E 'brew bundle. failed!' "$apply_log" || :
+      grep -Ei "^Error:|${admin_sig}" "$apply_log" || :
+    } | awk '!seen[$0]++' | head -n 3 | sed 's/^/  /'
+  )"
   rm -f "$apply_log" "${apply_log}.status"
   # The path comes before the summary, which stays the last thing printed.
+  # With color, the summary goes straight to the terminal while chezmoi's
+  # output still travels through the log filter: let that output land first so
+  # the two cannot swap places.
+  settle_terminal
   if [ -n "$log_file" ]; then
-    echo "The log of this install is in ${log_file}; attach it to a bug report." >&2
+    say plain "The log of this install is in ${log_file}; attach it to a bug report."
     log_reported=true
   fi
+  retry="$(admin_rerun_command)"
   if [ -n "$failed" ]; then
-    echo "$(printf '%s\n' "$failed" | wc -l | tr -d ' ') install step(s) failed:" >&2
-    printf '%s\n' "$failed" | sed 's/^/  - /' >&2
-    echo "Every other step finished and is recorded. To retry only the failed ones: chezmoi apply --keep-going" >&2
+    say "1;31" "$(printf '%s\n' "$failed" | wc -l | tr -d ' ') install step(s) failed:"
+    say "1;31" "$(printf '%s\n' "$failed" | sed 's/^/  - /')"
+  fi
+  [ -z "$went_wrong" ] || say "31" "What went wrong:
+${went_wrong}"
+  # The admin banner carries its own copy of this note.
+  [ "$admin_missing" = "true" ] || chezmoi_on_path || say plain "chezmoi is not on your current shell's PATH yet, so use the full path."
+  # A package failure repeats on every run: say so, instead of inviting a retry
+  # that cannot help. A sudo failure is different, so it keeps the retry advice.
+  if [ "$package_failed" = "true" ] && [ "$admin_missing" = "false" ]; then
+    say "1;33" "The rest of the install completed. Running it again will fail the same way until that package is fixed.${log_file:+ Attach ${log_file} to a bug report.}"
+  fi
+  if [ -n "$failed" ]; then
+    # A package-only failure repeats on every run, so no retry line is offered.
+    if [ "$package_failed" = "false" ] || [ "$admin_missing" = "true" ]; then
+      say "1;33" "Every other step finished and is recorded. To retry only the failed ones, run: ${retry}"
+    fi
   else
-    echo "The install stopped on the error above. To retry: chezmoi apply --keep-going" >&2
+    say "1;33" "The install stopped on the error above. To retry, run: ${retry}"
+  fi
+  if [ "$admin_missing" = "true" ]; then
+    admin_failed_banner "chezmoi apply"
   fi
   exit "$apply_status"
 fi

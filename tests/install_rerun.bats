@@ -47,9 +47,9 @@ cz() { "$BIN/chezmoi" "$@" --destination "$H"; }
   grep -qx ok "$LOG"
   [ "$(cat "$H/.hello")" = hello ]
   [[ "$output" == *"1 install step(s) failed:"*"  - .chezmoiscripts/10-fail.sh"* ]]
-  [[ "$output" == *"To retry only the failed ones: chezmoi apply --keep-going"* ]]
+  [[ "$output" == *"To retry only the failed ones, run: $BIN/chezmoi apply --keep-going"* ]]
   # The summary is the last thing printed.
-  [ "$(printf '%s\n' "$output" | tail -n 1)" = "Every other step finished and is recorded. To retry only the failed ones: chezmoi apply --keep-going" ]
+  [ "$(printf '%s\n' "$output" | tail -n 1)" = "Every other step finished and is recorded. To retry only the failed ones, run: $BIN/chezmoi apply --keep-going --destination=$H" ]
   [ "$(cksum < "$H/.config/chezmoi/chezmoi.toml")" = "$config_before" ]
   # The retry runs only the failed step.
   touch "$H/fixed"

@@ -84,7 +84,10 @@ every_qualified_package() {
   while read -r module pkg; do
     tap="${pkg%/*}"
     yq -e ".packages.darwin.modules.$module.taps | contains([\"$tap\"])" "$REPO_ROOT/.chezmoidata/packages.yaml" > /dev/null \
-      || { echo "$module: $pkg needs the tap $tap" >&2; return 1; }
+      || {
+        echo "$module: $pkg needs the tap $tap" >&2
+        return 1
+      }
   done < <(every_qualified_package)
 }
 
@@ -96,7 +99,10 @@ every_qualified_package() {
     tap_line=$(printf '%s\n' "$rendered" | grep -nxF "tap \"${pkg%/*}\"" | head -1 | cut -d: -f1)
     pkg_line=$(printf '%s\n' "$rendered" | grep -nE "^(brew|cask) \"$pkg\"(, trusted: true)?$" | head -1 | cut -d: -f1)
     [ -n "$tap_line" ] && [ -n "$pkg_line" ] && [ "$tap_line" -lt "$pkg_line" ] \
-      || { echo "$module: tap ${pkg%/*} is not declared before $pkg" >&2; return 1; }
+      || {
+        echo "$module: tap ${pkg%/*} is not declared before $pkg" >&2
+        return 1
+      }
   done < <(every_qualified_package)
 }
 
@@ -110,9 +116,15 @@ every_qualified_package() {
     rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
     [ -n "$rendered" ]
     printf '%s\n' "$rendered" | grep -qE "^(brew|cask) \"$pkg\", trusted: true$" \
-      || { echo "$module: $pkg is not trusted" >&2; return 1; }
+      || {
+        echo "$module: $pkg is not trusted" >&2
+        return 1
+      }
     printf '%s\n' "$rendered" | grep -qxF "tap \"${pkg%/*}\"" \
-      || { echo "$module: the tap ${pkg%/*} should be declared without trust" >&2; return 1; }
+      || {
+        echo "$module: the tap ${pkg%/*} should be declared without trust" >&2
+        return 1
+      }
   done < <(every_qualified_package)
 }
 
@@ -120,7 +132,10 @@ every_qualified_package() {
   H=$(mk_fake_home "$BATS_TEST_TMPDIR/core")
   seed_chezmoi_config "$H" '{"modules":[]}'
   rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
-  printf '%s\n' "$rendered" | grep -q '^brew ' || { echo "no brew line rendered" >&2; return 1; }
+  printf '%s\n' "$rendered" | grep -q '^brew ' || {
+    echo "no brew line rendered" >&2
+    return 1
+  }
   if printf '%s\n' "$rendered" | grep -qE '^(brew|cask|tap) .*trusted'; then return 1; fi
 }
 
@@ -129,4 +144,28 @@ every_qualified_package() {
   seed_chezmoi_config "$H" '{"modules":[]}'
   rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
   if printf '%s\n' "$rendered" | grep -q '^tap '; then return 1; fi
+}
+
+@test "darwin packages: casks install in their own first pass, and a failed pass fails the script" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":[]}'
+  rendered=$(chezmoi_render "$H" .chezmoiscripts/darwin/run_onchange_darwin-install-packages.sh.tmpl)
+  [ "$(printf '%s\n' "$rendered" | grep -c '^brew bundle')" = "2" ]
+  first_cask=$(printf '%s\n' "$rendered" | grep -n '^cask ' | head -1 | cut -d: -f1)
+  first_brew=$(printf '%s\n' "$rendered" | grep -n '^brew "' | head -1 | cut -d: -f1)
+  [ "$first_cask" -lt "$first_brew" ]
+  # A stub brew records what each pass is fed and fails the cask pass.
+  mkdir -p "$BATS_TEST_TMPDIR/bin"
+  cat > "$BATS_TEST_TMPDIR/bin/brew" << 'STUB'
+#!/bin/sh
+in=$(cat)
+if printf '%s\n' "$in" | grep -q '^cask '; then echo cask-pass >> "$PASSES"; exit 1; fi
+echo brew-pass >> "$PASSES"
+STUB
+  chmod +x "$BATS_TEST_TMPDIR/bin/brew"
+  PASSES="$BATS_TEST_TMPDIR/passes"
+  : > "$PASSES"
+  run env PATH="$BATS_TEST_TMPDIR/bin:$PATH" PASSES="$PASSES" bash -c "$rendered"
+  [ "$status" -ne 0 ]
+  [ "$(cat "$PASSES")" = "$(printf 'cask-pass\nbrew-pass')" ]
 }
