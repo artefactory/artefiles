@@ -125,9 +125,9 @@ packages:
           - 'runme'
         casks: []
       azure:
-        brews:
+        brews: []
+        casks:
           - 'azure-cli'
-        casks: []
       containers:
         brews:
           - 'colima'

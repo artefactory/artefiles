@@ -53,9 +53,10 @@ uv_stub() {
   [[ "$(prompt_help data)" == *DuckDB*harlequin* ]]
 }
 
-@test "azure installs the azure-cli brew on macOS, only when selected" {
-  [ "$(yq -r '.packages.darwin.modules.azure.brews[0]' "$REPO_ROOT/$PKG")" = azure-cli ]
-  brews '["azure"]' | grep -qxF 'brew "azure-cli"'
+@test "azure installs azure-cli as a cask on macOS (Homebrew moved it out of core), only when selected" {
+  out=$(brews '["azure"]')
+  printf '%s\n' "$out" | grep -qxF 'cask "azure-cli"'
+  [ "$(printf '%s\n' "$out" | grep -cxF 'brew "azure-cli"')" -eq 0 ]
   [ "$(brews '[]' | grep -c 'azure-cli')" -eq 0 ]
 }
 
