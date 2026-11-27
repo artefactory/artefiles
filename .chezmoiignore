@@ -67,6 +67,12 @@ Library/Application Support/Code/User/settings.json
 {{ if not (has "pi" $modules) }}
 .chezmoiscripts/install-pi.sh
 {{ end }}
+# pi-kit, the team's pi packages, is opt-in (pi_kit), needs pi, and is only for
+# an @artefact.com email, in any case. `get` reads a config without an email as
+# an empty one.
+{{ if not (and (has "pi" $modules) (has "pi_kit" $modules) (regexMatch "(?i)^[^@\\s]+@artefact\\.com$" (get . "email" | toString | trim))) }}
+.chezmoiscripts/zzzzzz_install-pikit.sh
+{{ end }}
 {{ if not (has "review" $modules) }}
 .config/tuicr/**
 .config/fish/functions/review.fish

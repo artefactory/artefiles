@@ -39,6 +39,19 @@ function __check_tool_with_configs --description "Check tool installation and it
     end
 end
 
+function __check_pikit --description "Check that pi's settings list pi-kit"
+    set -l settings "$HOME/.pi/agent/settings.json"
+    if test -n "$PI_CODING_AGENT_DIR"
+        set settings "$PI_CODING_AGENT_DIR/settings.json"
+    end
+    if jq -e 'any(.packages[]?; (if type == "object" then .source else . end) == "git:git@github.com:artefactory/pi-kit")' \
+            "$settings" >/dev/null 2>&1
+        echo "  ✓ pi-kit: in $settings"
+    else
+        __dd_warning "pi-kit: not found in $settings (chezmoi apply says why; see the artefiles pi_kit reference to run it again)"
+    end
+end
+
 function __check_forbidden_conda --description "Flag conda installations (forbidden by policy)"
     set -l found 0
     for path in "$HOME/anaconda3" "$HOME/miniconda3" "$HOME/anaconda" "$HOME/miniconda" \
@@ -243,7 +256,7 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
         end
     end
     # [[- end ]] #
-    # [[- if or (has "claude_code" $modules) (has "codex" $modules) (has "pi" $modules) ]] #
+    # [[- if or (has "claude_code" $modules) (has "codex" $modules) (has "pi" $modules) (has "pi_kit" $modules) ]] #
 
     echo ""
     echo "## Coding agents"
@@ -256,6 +269,16 @@ function dotfiles_doctor --description "Check dotfiles health and tool installat
     # [[- end ]] #
     # [[- if has "pi" $modules ]] #
     __check_tool_with_configs pi "" $managed_files
+    __check_tool_with_configs jq "" $managed_files
+    # [[- end ]] #
+    # [[- if has "pi_kit" $modules ]] #
+    # [[- if not (has "pi" $modules) ]] #
+    __dd_warning "pi-kit: not set up, it needs the pi module"
+    # [[- else if not (regexMatch "(?i)^[^@\\s]+@artefact\\.com$" (get . "email" | toString | trim)) ]] #
+    __dd_warning "pi-kit: not set up, it needs an @artefact.com email"
+    # [[- else ]] #
+    __check_pikit
+    # [[- end ]] #
     # [[- end ]] #
     # [[- if has "herdr" $modules ]] #
 

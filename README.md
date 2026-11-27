@@ -99,6 +99,7 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `claude_code` | Claude Code: Anthropic's coding agent in the terminal (claude), from its self-updating installer | — |
 | `codex` | Codex CLI: OpenAI's coding agent in the terminal (codex) | — |
 | `pi` | pi: a minimal, extensible coding agent in the terminal (pi), from its official installer | — |
+| `pi_kit` | pi-kit: the team's pi packages and defaults, installed once; needs pi, @artefact.com email, GitHub SSH | — |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | — |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | — |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | `prek` |
@@ -110,7 +111,7 @@ All modules (without a terminal, chezmoi's own prompt lists them):
 | `terraform` | Terraform: infrastructure-as-code CLI to plan and apply cloud resources. Alternative to opentofu: pick one | `opentofu` |
 | `opentofu` | OpenTofu: open-source fork of Terraform, same workflow (tofu). Alternative to terraform: pick one | `terraform` |
 
-Selected by default: `editor`, `shell_tools`, `cli_extras`, `rust`, `ghostty`, `herdr`, `git_advanced`, `atuin`, `python_dev`, `vscode`, `code_cli`, `gcloud`.
+Selected by default: `editor`, `shell_tools`, `cli_extras`, `rust`, `ghostty`, `herdr`, `git_advanced`, `atuin`, `python_dev`, `vscode`, `code_cli`, `pi`, `gcloud`.
 
 After installing: `atuin register` (or `atuin login`) turns on history sync, `gcloud init` sets up Google Cloud, and `az login` signs in to Azure. More commands and shortcuts are in the [cheatsheet](CHEATSHEET.md).
 

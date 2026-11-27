@@ -182,6 +182,15 @@
   executable = true
   path = "fnm"
 
+# [[ if has "pi" $modules ]] #
+# jq - pi-kit's installer and run_after_zzzzzz_install-pikit.sh read pi's settings
+# with it; the release asset is the bare binary.
+[".local/bin/jq"]
+  type = "file"
+  url = # [[ gitHubLatestReleaseAssetURL "jqlang/jq" (printf "jq-linux-%s" .chezmoi.arch) | quote ]] #
+  executable = true
+# [[ end ]] #
+
 # [[ if has "shell_tools" $modules ]] #
 # fzf - A command-line fuzzy finder
 [".local/bin/fzf"]

@@ -99,6 +99,10 @@ packages:
         casks:
           - 'codex'
       pi:
+        brews:
+          - 'jq'
+        casks: []
+      pi_kit:
         brews: []
         casks: []
       pre_commit:

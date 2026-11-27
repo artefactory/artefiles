@@ -118,3 +118,51 @@ _assert_script_gating() {
 @test "pi module gates its install script, on any OS" {
   _assert_script_gating pi .chezmoiscripts/install-pi.sh
 }
+
+# pikit_managed NAME DATA_JSON [no-email] — succeeds when the pi-kit script is
+# managed under that config; no-email drops the email key from it. A failing
+# chezmoi returns 2, so it never reads as "not managed".
+pikit_managed() {
+  local h managed
+  h=$(mk_fake_home "$BATS_TEST_TMPDIR/pikit-$1")
+  seed_chezmoi_config "$h" "$2"
+  if [ "${3:-}" = no-email ]; then
+    sed '/^email = /d' "$h/.config/chezmoi/chezmoi.toml" > "$h/no-email.toml"
+    mv "$h/no-email.toml" "$h/.config/chezmoi/chezmoi.toml"
+  fi
+  managed=$(chezmoi_managed_with_scripts "$h") || return 2
+  grep -qxF .chezmoiscripts/zzzzzz_install-pikit.sh <<< "$managed"
+}
+
+@test "the pi-kit script needs the pi and pi_kit modules and an @artefact.com email, in any case" {
+  pikit_managed lower '{"modules":["pi","pi_kit"],"email":"jane.doe@artefact.com"}'
+  pikit_managed upper '{"modules":["pi","pi_kit"],"email":"Jane.Doe@ARTEFACT.Com"}'
+  local i=0 modules
+  for modules in '[]' '["pi"]' '["pi_kit"]'; do
+    i=$((i + 1))
+    run pikit_managed "off-$i" "{\"modules\":$modules,\"email\":\"jane.doe@artefact.com\"}"
+    [ "$status" -eq 1 ]
+  done
+}
+
+@test "any other email, an empty one or none leaves the pi-kit script out" {
+  local i=0 email
+  for email in jane@example.com jane@notartefact.com jane@artefact.com.evil.io \
+    jane@sub.artefact.com jane@artefactxcom @artefact.com jane@evil.io@artefact.com \
+    artefact.com ""; do
+    i=$((i + 1))
+    run pikit_managed "other-$i" "$(jq -nc --arg e "$email" '{modules:["pi","pi_kit"],email:$e}')"
+    [ "$status" -eq 1 ] || {
+      echo "email '$email': status $status" >&2
+      return 1
+    }
+  done
+  run pikit_managed missing '{"modules":["pi","pi_kit"]}' no-email
+  [ "$status" -eq 1 ]
+}
+
+@test "pi itself is installed whatever the email" {
+  H=$(mk_fake_home)
+  seed_chezmoi_config "$H" '{"modules":["pi"],"email":"jane@example.com"}'
+  chezmoi_managed_with_scripts "$H" | grep -qxF .chezmoiscripts/install-pi.sh
+}

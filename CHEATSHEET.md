@@ -138,6 +138,7 @@ iTerm2 need Option set to send Meta (Esc+).
 | `claude_code` | Claude Code: Anthropic's coding agent in the terminal (claude), from its self-updating installer | [claude_code](.claude/skills/artefiles/references/claude_code.md) |
 | `codex` | Codex CLI: OpenAI's coding agent in the terminal (codex) | [codex](.claude/skills/artefiles/references/codex.md) |
 | `pi` | pi: a minimal, extensible coding agent in the terminal (pi), from its official installer | [pi](.claude/skills/artefiles/references/pi.md) |
+| `pi_kit` | pi-kit: the team's pi packages and defaults, installed once; needs pi, @artefact.com email, GitHub SSH | [pi_kit](.claude/skills/artefiles/references/pi_kit.md) |
 | `data` | Data tools: DuckDB (SQL on CSV and Parquet files) and harlequin (SQL client in the terminal) | [data](.claude/skills/artefiles/references/data.md) |
 | `runme` | Runme: run the shell blocks of the README and the cheatsheet by name | [runme](.claude/skills/artefiles/references/runme.md) |
 | `pre_commit` | pre-commit: Git hook manager running linters and formatters on commit. Alternative to prek: pick one | [pre_commit](.claude/skills/artefiles/references/pre_commit.md) |
