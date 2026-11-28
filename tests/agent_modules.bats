@@ -2,7 +2,7 @@
 # The coding-agent modules: claude_code (Claude Code, from Anthropic's native
 # installer, which updates itself), codex (OpenAI Codex CLI: Homebrew cask on
 # macOS, GitHub release on Linux) and pi (pi coding agent, from its official
-# installer with the Node that fnm installs). None is selected by default.
+# installer with the Node that fnm installs). Only pi is selected by default.
 
 setup() {
   load 'helpers/setup'
@@ -28,11 +28,12 @@ defaults() {
   sed -nE 's/^# \[\[ \$defaults := list (.*) \]\] #$/\1/p' "$REPO_ROOT/.chezmoi.toml.tmpl" | tr -d '"' | tr ' ' '\n'
 }
 
-@test "the init prompt offers claude_code, codex and pi right after antigravity, none checked by default" {
+@test "the init prompt offers claude_code, codex and pi right after antigravity, only pi checked by default" {
   [ "$(prompt_module_names | grep -A3 -x antigravity | tail -n +2 | tr '\n' ' ')" = "claude_code codex pi " ]
-  for m in "${AGENTS[@]}"; do
+  for m in claude_code codex; do
     [ "$(defaults | grep -cx "$m")" -eq 0 ]
   done
+  [ "$(defaults | grep -cx pi)" -eq 1 ]
   [[ "$(prompt_help claude_code)" == *"Claude Code"* ]]
   [[ "$(prompt_help codex)" == *"Codex"* ]]
   [[ "$(prompt_help pi)" == *"pi"* ]]
@@ -45,10 +46,13 @@ defaults() {
   [ "$(render '[]' "$DARWIN_TMPL" | grep -c '"codex"')" -eq 0 ]
 }
 
-@test "claude_code and pi install no Homebrew package: their own installers do" {
-  for m in claude_code pi; do
-    [ "$(yq -r ".packages.darwin.modules.$m | ((.brews // []) + (.casks // [])) | length" "$REPO_ROOT/$PKG")" -eq 0 ]
-  done
+@test "claude_code and pi get their agent from its own installer, not Homebrew" {
+  [ "$(yq -r '.packages.darwin.modules.claude_code | ((.brews // []) + (.casks // [])) | length' "$REPO_ROOT/$PKG")" -eq 0 ]
+  # pi's only package is jq, which pi-kit's setup reads settings with. Every pi
+  # user gets it, with or without the kit.
+  [ "$(yq -o=json -I=0 '.packages.darwin.modules.pi | (.brews // []) + (.casks // [])' "$REPO_ROOT/$PKG")" = '["jq"]' ]
+  render '["pi"]' "$DARWIN_TMPL" | grep -qxF 'brew "jq"'
+  [ "$(render '[]' "$DARWIN_TMPL" | grep -c '"jq"')" -eq 0 ]
   # One install path: the native installer, never the claude-code cask too.
   [ "$(grep -c 'claude-code' "$REPO_ROOT/$PKG")" -eq 0 ]
 }
@@ -279,8 +283,26 @@ STUB
     grep -qxF "    __check_tool_with_configs $2 \"\" \$managed_files" <<< "$out"
     [ "$(grep -c '## Coding agents' <<< "$out")" -eq 1 ]
     [ "$(grep -cE '__check_tool_with_configs (claude|codex|pi) ' <<< "$out")" -eq 1 ]
+    [ "$(grep -c '__check_tool_with_configs jq ' <<< "$out")" -eq "$([ "$1" = pi ] && echo 1 || echo 0)" ]
   done
   [ "$(render '["claude_code","codex","pi"]' "$DOCTOR" | grep -c '## Coding agents')" -eq 1 ]
+}
+
+@test "pi_kit is offered after pi and is not selected by default" {
+  [ "$(prompt_module_names | grep -A1 -x pi | tail -n 1)" = pi_kit ]
+  [ "$(defaults | grep -cx pi_kit)" -eq 0 ]
+}
+
+@test "the doctor checks pi-kit only with the pi_kit module, as a warning" {
+  [ "$(render '["pi"]' "$DOCTOR" | grep -c '__check_pikit$')" -eq 0 ]
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/doctor-kit")
+  for case in 'jane@artefact.com|["pi","pi_kit"]|    __check_pikit' \
+    'jane@example.com|["pi","pi_kit"]|it needs an @artefact.com email' \
+    'jane@artefact.com|["pi_kit"]|it needs the pi module'; do
+    IFS='|' read -r email modules want <<< "$case"
+    seed_chezmoi_config "$H" "{\"modules\":$modules,\"email\":\"$email\"}"
+    chezmoi_render "$H" "$DOCTOR" | grep -qF "$want"
+  done
 }
 
 @test "the three modules have their README and cheatsheet rows and a reference" {

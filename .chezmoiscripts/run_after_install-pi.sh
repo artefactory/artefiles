@@ -14,7 +14,8 @@
 #
 # It runs unattended where there is no controlling terminal (CI, containers).
 # At a terminal it shows one install menu on /dev/tty, which Enter accepts; no
-# redirection can hide /dev/tty. Its output goes to a file, not the terminal,
+# redirection can hide /dev/tty, so with ARTEFILES_YES (install.sh --yes) it
+# runs in a new session, which has no controlling terminal. Its output goes to a file, not the terminal,
 # because the installer offers to start pi when stdout is a terminal, and
 # accepting would run pi in the middle of the apply.
 #
@@ -74,10 +75,28 @@ if ! curl --retry 5 --retry-delay 2 -fsSL -o "$installer" "$url"; then
   exit 1
 fi
 
-# Its output is held until it ends, so a key prompt on /dev/tty would look like
-# a hang without this line.
-echo "Installing pi with its installer; at a terminal it may wait for a key: press Enter to accept its default install."
+# perl starts the new session: macOS has no setsid command.
+if [ -n "${ARTEFILES_YES:-}" ] && command -v perl > /dev/null 2>&1; then
+  echo "Installing pi with its installer."
+  # shellcheck disable=SC2016 # the $ belong to perl
+  set -- perl -MPOSIX -e '
+    defined(my $pid = fork) or die "fork: $!\n";
+    if (!$pid) {
+      POSIX::setsid() != -1 or die "setsid: $!\n";
+      exec @ARGV or die "exec: $!\n";
+    }
+    # Ctrl-C at the terminal does not reach another session.
+    $SIG{INT} = $SIG{TERM} = sub { kill "TERM", -$pid; exit 130 };
+    waitpid $pid, 0;
+    exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
+  '
+else
+  # Its output is held until it ends, so a key prompt on /dev/tty would look
+  # like a hang without this line.
+  echo "Installing pi with its installer; at a terminal it may wait for a key: press Enter to accept its default install."
+  set --
+fi
 status=0
-fnm exec --using=default bash "$installer" < /dev/null > "$log" 2>&1 || status=$?
+"$@" fnm exec --using=default bash "$installer" < /dev/null > "$log" 2>&1 || status=$?
 cat "$log"
 exit "$status"

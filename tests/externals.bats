@@ -230,3 +230,27 @@ codex_block() {
 @test "codex is not installed on linux without the codex module" {
   [ -z "$(codex_block amd64 '[]')" ]
 }
+
+# jq_block ARCH MODULES_JSON — the jq entry of the Linux externals, rendered as
+# on a host of ARCH.
+jq_block() {
+  H=$(mk_fake_home "$BATS_TEST_TMPDIR/$RANDOM")
+  seed_chezmoi_config "$H" "{\"modules\":$2}"
+  XDG_CONFIG_HOME="$H/.config" HOME="$H" chezmoi execute-template \
+    --config "$H/.config/chezmoi/chezmoi.toml" --source "$REPO_ROOT" --destination "$H" \
+    < <(sed -e 's/eq \.chezmoi\.os "linux"/true/' -e "s/\\.chezmoi\\.arch/\"$1\"/g" "$REPO_ROOT/.chezmoiexternal.toml.tmpl") \
+    | awk '/^\[/ { on = ($0 == "[\".local/bin/jq\"]") } on'
+}
+
+@test "jq is installed on linux with the pi module, as the release binary for the host arch" {
+  for arch in amd64 arm64; do
+    block=$(jq_block "$arch" '["pi"]')
+    grep -qxF '  type = "file"' <<< "$block"
+    grep -qE "^  url = \"https://github\.com/jqlang/jq/releases/download/[^\"]+/jq-linux-$arch\"$" <<< "$block"
+    grep -qxF '  executable = true' <<< "$block"
+  done
+}
+
+@test "jq is not installed on linux without the pi module" {
+  [ -z "$(jq_block amd64 '[]')" ]
+}
